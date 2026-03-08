@@ -1,39 +1,42 @@
 # App Description
 
 ## One-Liner
-Kado is a curated gifting platform that lets you send meaningful gift cards and store credit to anyone, anywhere—bundled however you want.
+Kado is a curated gifting platform that lets you send store credit or gift cards to anyone, anywhere—bundled however you want. Redeem with a simple QR code scan.
 
 ---
 
 ## Short Description (For App Store)
-Give the gift of choice without the awkwardness of cash. Browse thousands of local and beloved brands, send individual gift cards or create custom bundles, and keep all your received gifts in one place. Support the businesses you love while delighting the people you care about.
+Give store credit or gift cards from your favorite brands. Send individually or create custom bundles. Recipients simply scan a QR code at checkout to redeem—no codes to remember, no hassle. Perfect for meaningful gifting worldwide.
 
 ---
 
 ## Long Description
 
 ### What We Do
-Kado is a modern gifting platform that reimagines how people give—and receive—meaningful gifts. Instead of cash or generic presents, give store credit, curated items, or bundled experiences from the brands your friends actually love.
+Kado is a modern gifting platform that reimagines how people give—and receive—meaningful gifts. Send store credit or curated gift items from trusted, beloved brands to anyone in the world. Redeem with a simple QR code scan at checkout—no friction, no codes to track.
 
 ### The Problem We Solve
 - **Givers struggle** with impersonal cash gifts and one-size-fits-all presents
-- **Receivers end up with clutter** or gifts they don't want
-- **Gift cards scatter everywhere**—one from this store, another from that restaurant, impossible to track
-- **Small businesses miss out** on customer loyalty from gift card programs
+- **Distance makes gifting harder** – You can't easily send gifts to people in other cities or countries
+- **Gift codes scatter everywhere** – One from this store, another from that restaurant, impossible to track
+- **Redemption is complicated** – Users forget codes, need to remember balances, complex checkout processes
+- **No easy way to bundle** – You want to send multiple gifts but it's tedious and expensive
 
 ### How It Works
 
 **For Givers:**
-- Browse thousands of restaurants, shops, spas, gyms, and local businesses
-- Choose individual gift cards or create custom gift bundles (e.g., "Adventure Day" with Nike + Starbucks + Movie Theater, or "Self-Care Package" with Spa + Yoga Studio + Health Food Store)
-- Send instantly to friends and family via link, message, or email
+- Browse curated gift cards from trusted, well-known brands (restaurants, shops, spas, gyms, boutiques)
+- Send gifts globally – Gift to anyone, anywhere, in their local currency and brands
+- Create custom gift bundles (e.g., "Adventure Day" with Nike + Starbucks + Movie Theater, or "Self-Care Package" with Spa + Yoga Studio + Coffee Shop)
+- Send instantly via link, message, or email
 - Add personal notes and choose delivery timing
 
 **For Receivers:**
-- Receive gifts as digital store credit or specific items
-- Store all gift cards in one organized wallet
-- Redeem instantly online or in-store
-- Never lose a gift card again
+- Receive store credit or gift items from trusted brands
+- Store all gifts in one wallet—never lose a gift card
+- Redeem instantly: Just show the QR code at checkout
+- Track balance and expiration dates
+- Access gifts across multiple brands and locations
 
 **For Businesses:**
 - Reach new customers through gifting
@@ -45,44 +48,50 @@ Kado is a modern gifting platform that reimagines how people give—and receive�
 ## Key Features
 
 ✨ **Curated Brand Directory**  
-Access restaurants, shops, spas, gyms, boutiques, and everything in between—local favorites and beloved brands.
+Access trusted restaurants, shops, spas, gyms, boutiques, and more—the brands people actually love and use.
+
+💳 **Store Credit & Gift Items**  
+Send store credit for full flexibility, or gift specific items. Both options available for most brands—equal ways to give.
+
+📱 **QR Code Redemption**  
+Recipients simply scan a QR code at checkout to redeem their gift. No codes to remember, no balance tracking—just scan and use their credit instantly.
 
 🎁 **Custom Gift Bundles**  
-Combine multiple gift cards into one thoughtful package. Create themed bundles for any occasion.
+Combine store credits and gift items into one thoughtful package. Create themed bundles for any occasion or mood.
 
-💳 **Universal Gift Card Wallet**  
-All your received gifts in one place. Track balances, expiration dates, and redemption options.
+💰 **Universal Gift Card Wallet**  
+All your received gifts in one place. Track balances, expiration dates, and redemption status at a glance.
+
+🌍 **Gift Globally**  
+Send gifts to people anywhere in the world. Access local brands in their city, not yours.
 
 🚀 **Instant Gifting**  
-Send gifts immediately or schedule them for a specific date. Perfect for birthdays, holidays, or just-because moments.
-
-✅ **Flexible Gift Options**  
-Give store credit for full freedom, or select specific items for a more curated experience.
+Send gifts immediately or schedule them for a specific date. Perfect for birthdays, holidays, or spontaneous moments.
 
 🔒 **Secure & Simple**  
-No complicated redemption processes. Receivers can use gifts online or show their digital card in-store.
+Digital delivery with zero hassle. Recipients access their gifts instantly—no waiting for physical cards or complicated registration.
 
 ---
 
 ## Why Kado?
 
 **Meaningful Gifting**  
-Move beyond cash and clutter. Give experiences and support for brands your friends love.
+Move beyond cash and clutter. Give experiences from brands your friends actually love.
 
-**Supports Small Business**  
-Every gift strengthens local economies and helps small businesses thrive.
+**Global Connection**  
+Stay connected to the people you care about, no matter the distance. Send gifts that feel personal and thoughtful.
 
-**One Gift, Many Options**  
-Bundle gifts, mix and match stores, or go solo. Complete control over how you give.
+**One Wallet, All Gifts**  
+Never lose a gift card again. Everything organized, accessible, and ready to use.
 
-**Never Lose a Gift Card**  
-Digital wallet keeps everything organized and accessible.
+**Trusted Brands**  
+Curated selection of well-known, reliable brands—no unknowns, just quality.
 
-**For Every Occasion**  
-Birthdays, holidays, thank-yous, celebrations—or no occasion at all.
+**For Every Occasion & Mood**  
+Birthdays, holidays, thank-yous, celebrations, or no occasion at all. Send exactly what they'll love.
 
 ---
 
 ## The Vision
 
-Kado believes the best gifts tell a story about what you know and love about someone. We're building the platform where thoughtful giving meets supporting the businesses that make communities special.
+Kado believes the best gifts tell a story about what you know and love about someone. We're building the platform where thoughtful, intentional gifting meets global accessibility—making it effortless to stay generous and connected, wherever you and your loved ones are in the world.
