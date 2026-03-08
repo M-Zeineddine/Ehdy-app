@@ -1,50 +1,88 @@
-# Welcome to your Expo app 👋
+# App Description
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## One-Liner
+Kado is a curated gifting platform that lets you send meaningful gift cards and store credit to anyone, anywhere—bundled however you want.
 
-## Get started
+---
 
-1. Install dependencies
+## Short Description (For App Store)
+Give the gift of choice without the awkwardness of cash. Browse thousands of local and beloved brands, send individual gift cards or create custom bundles, and keep all your received gifts in one place. Support the businesses you love while delighting the people you care about.
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
+## Long Description
 
-   ```bash
-   npx expo start
-   ```
+### What We Do
+Kado is a modern gifting platform that reimagines how people give—and receive—meaningful gifts. Instead of cash or generic presents, give store credit, curated items, or bundled experiences from the brands your friends actually love.
 
-In the output, you'll find options to open the app in a
+### The Problem We Solve
+- **Givers struggle** with impersonal cash gifts and one-size-fits-all presents
+- **Receivers end up with clutter** or gifts they don't want
+- **Gift cards scatter everywhere**—one from this store, another from that restaurant, impossible to track
+- **Small businesses miss out** on customer loyalty from gift card programs
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### How It Works
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+**For Givers:**
+- Browse thousands of restaurants, shops, spas, gyms, and local businesses
+- Choose individual gift cards or create custom gift bundles (e.g., "Adventure Day" with Nike + Starbucks + Movie Theater, or "Self-Care Package" with Spa + Yoga Studio + Health Food Store)
+- Send instantly to friends and family via link, message, or email
+- Add personal notes and choose delivery timing
 
-## Get a fresh project
+**For Receivers:**
+- Receive gifts as digital store credit or specific items
+- Store all gift cards in one organized wallet
+- Redeem instantly online or in-store
+- Never lose a gift card again
 
-When you're ready, run:
+**For Businesses:**
+- Reach new customers through gifting
+- Increase customer lifetime value
+- Access gifting data and insights
 
-```bash
-npm run reset-project
-```
+---
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Key Features
 
-## Learn more
+✨ **Curated Brand Directory**  
+Access restaurants, shops, spas, gyms, boutiques, and everything in between—local favorites and beloved brands.
 
-To learn more about developing your project with Expo, look at the following resources:
+🎁 **Custom Gift Bundles**  
+Combine multiple gift cards into one thoughtful package. Create themed bundles for any occasion.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+💳 **Universal Gift Card Wallet**  
+All your received gifts in one place. Track balances, expiration dates, and redemption options.
 
-## Join the community
+🚀 **Instant Gifting**  
+Send gifts immediately or schedule them for a specific date. Perfect for birthdays, holidays, or just-because moments.
 
-Join our community of developers creating universal apps.
+✅ **Flexible Gift Options**  
+Give store credit for full freedom, or select specific items for a more curated experience.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+🔒 **Secure & Simple**  
+No complicated redemption processes. Receivers can use gifts online or show their digital card in-store.
+
+---
+
+## Why Kado?
+
+**Meaningful Gifting**  
+Move beyond cash and clutter. Give experiences and support for brands your friends love.
+
+**Supports Small Business**  
+Every gift strengthens local economies and helps small businesses thrive.
+
+**One Gift, Many Options**  
+Bundle gifts, mix and match stores, or go solo. Complete control over how you give.
+
+**Never Lose a Gift Card**  
+Digital wallet keeps everything organized and accessible.
+
+**For Every Occasion**  
+Birthdays, holidays, thank-yous, celebrations—or no occasion at all.
+
+---
+
+## The Vision
+
+Kado believes the best gifts tell a story about what you know and love about someone. We're building the platform where thoughtful giving meets supporting the businesses that make communities special.
