@@ -1,98 +1,153 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import {
+  ScrollView, View, StyleSheet, FlatList, RefreshControl,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useQuery } from '@tanstack/react-query';
+import { router } from 'expo-router';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { Colors } from '@/src/constants/colors';
+import { Spacing } from '@/src/constants/layout';
+import { getMerchants } from '@/src/services/merchantService';
+
+import { HomeHeader } from '@/src/components/home/HomeHeader';
+import { FeaturedBanner } from '@/src/components/home/FeaturedBanner';
+import { CategoryRow } from '@/src/components/home/CategoryRow';
+import { MerchantCard } from '@/src/components/home/MerchantCard';
+import { GiftCardItem } from '@/src/components/home/GiftCardItem';
+import { SectionHeader } from '@/src/components/home/SectionHeader';
+import { SearchBar } from '@/src/components/ui/SearchBar';
+import type { GiftCard, Merchant } from '@/src/types';
+
+// Placeholder gift card data until purchases/gift cards endpoint is wired
+const MOCK_GIFTS: GiftCard[] = [
+  {
+    id: '1', merchant_id: '', merchant_name: 'Patchi',
+    name: 'Patchi Box', description: '', type: 'gift_item',
+    amount: 2500000, currency_code: 'LBP',
+    image_url: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&q=80',
+  },
+  {
+    id: '2', merchant_id: '', merchant_name: 'Bliss House',
+    name: 'Spa Day', description: '', type: 'gift_item',
+    amount: 4500000, currency_code: 'LBP',
+    image_url: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400&q=80',
+  },
+  {
+    id: '3', merchant_id: '', merchant_name: 'Cafe Younes',
+    name: 'Coffee Bundle', description: '', type: 'store_credit',
+    amount: 150000, currency_code: 'LBP',
+    image_url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&q=80',
+  },
+  {
+    id: '4', merchant_id: '', merchant_name: 'Em Sherif',
+    name: 'Dinner for Two', description: '', type: 'gift_item',
+    amount: 8000000, currency_code: 'LBP',
+    image_url: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&q=80',
+  },
+];
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const [search, setSearch] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const { data: merchants = [], refetch } = useQuery({
+    queryKey: ['merchants'],
+    queryFn: () => getMerchants({ limit: 10 }),
+  });
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }
+
+  // Chunk gifts into rows of 2
+  const giftRows = MOCK_GIFTS.reduce<GiftCard[][]>((rows, item, i) => {
+    if (i % 2 === 0) rows.push([item]);
+    else rows[rows.length - 1].push(item);
+    return rows;
+  }, []);
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={Colors.primary} />}
+      >
+        {/* Header */}
+        <View style={styles.section}>
+          <HomeHeader firstName="Nour" onNotificationPress={() => {}} unreadCount={2} />
+        </View>
+
+        {/* Search */}
+        <View style={styles.section}>
+          <SearchBar value={search} onChangeText={setSearch} />
+        </View>
+
+        {/* Featured Banner */}
+        <View style={styles.section}>
+          <FeaturedBanner onPress={() => {}} />
+        </View>
+
+        {/* Categories */}
+        <View style={styles.sectionHeader}>
+          <SectionHeader title="Categories" />
+        </View>
+        <CategoryRow onSelect={(id) => console.log('category', id)} />
+
+        {/* Featured Merchants */}
+        {merchants.length > 0 && (
+          <>
+            <View style={[styles.section, styles.sectionHeader]}>
+              <SectionHeader title="Featured Merchants" onSeeAll={() => router.push('/browse')} />
+            </View>
+            <FlatList
+              data={merchants}
+              keyExtractor={(m: Merchant) => m.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalList}
+              ItemSeparatorComponent={() => <View style={{ width: Spacing.sm }} />}
+              renderItem={({ item }: { item: Merchant }) => (
+                <MerchantCard merchant={item} onPress={() => {}} />
+              )}
+            />
+          </>
+        )}
+
+        {/* Popular Gifts */}
+        <View style={[styles.section, styles.sectionHeader]}>
+          <SectionHeader title="Popular Gifts" onSeeAll={() => {}} />
+        </View>
+        <View style={styles.section}>
+          {giftRows.map((row, i) => (
+            <View key={i} style={styles.giftRow}>
+              {row.map((gift) => (
+                <GiftCardItem
+                  key={gift.id}
+                  item={gift}
+                  onPress={() => {}}
+                  onAdd={() => {}}
+                />
+              ))}
+              {row.length === 1 && <View style={{ flex: 1 }} />}
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+  safe: { flex: 1, backgroundColor: Colors.background },
+  scroll: { flex: 1 },
+  content: { paddingBottom: Spacing.xl },
+  section: { paddingHorizontal: Spacing.md, marginBottom: Spacing.lg },
+  sectionHeader: { marginBottom: Spacing.md },
+  horizontalList: { paddingHorizontal: Spacing.md, paddingBottom: 4 },
+  giftRow: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.sm },
 });
