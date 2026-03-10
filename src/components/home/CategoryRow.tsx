@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
   },
   pillActive: {
     backgroundColor: '#FFF0EC',
-    borderWidth: 0.5,
+    borderWidth: 1,
     borderColor: Colors.primary,
   },
   iconWrap: {
