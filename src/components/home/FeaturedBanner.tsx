@@ -32,8 +32,8 @@ export function FeaturedBanner({ onPress }: FeaturedBannerProps) {
           <AppText variant="caption" color="rgba(255,255,255,0.8)" style={styles.subtitle}>
             Send instant joy with digital vouchers{'\n'}from Lebanon's best spots.
           </AppText>
-          <Button label="Start Gifting" onPress={onPress} style={styles.btn} size="sm" rightIcon={
-            <AppText color="#fff" style={{ fontSize: 13, fontWeight: '600' }}> →</AppText>
+          <Button label="Start Gifting" onPress={onPress} style={styles.btn} size="md" rightIcon={
+            <AppText color="#fff" style={{ fontSize: 18, fontWeight: '600' }}> →</AppText>
           } />
         </View>
       </ImageBackground>

@@ -27,7 +27,9 @@ export interface GiftCard {
 export interface Category {
   id: string;
   label: string;
-  emoji: string;
+  icon: string;
+  color: string;
+  bgColor: string;
 }
 
 export interface User {

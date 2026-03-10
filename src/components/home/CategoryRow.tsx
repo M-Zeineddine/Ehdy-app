@@ -1,17 +1,27 @@
 import React, { useState } from 'react';
-import { ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { ScrollView, TouchableOpacity, StyleSheet, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
-import { Radius, Spacing } from '../../constants/layout';
+import { Radius, Spacing, Fonts } from '../../constants/layout';
 import { AppText } from '../ui/AppText';
-import type { Category } from '../../types';
 
-const CATEGORIES: Category[] = [
-  { id: 'all',     label: 'All',     emoji: '✨' },
-  { id: 'coffee',  label: 'Coffee',  emoji: '☕' },
-  { id: 'dessert', label: 'Dessert', emoji: '🍰' },
-  { id: 'meals',   label: 'Meals',   emoji: '🍽️' },
-  { id: 'spa',     label: 'Spa',     emoji: '💆' },
-  { id: 'fashion', label: 'Fashion', emoji: '👗' },
+type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
+
+interface CategoryDef {
+  id: string;
+  label: string;
+  icon: IconName;
+  color: string;
+  bgColor: string;
+}
+
+const CATEGORIES: CategoryDef[] = [
+  { id: 'all', label: 'All', icon: 'star-four-points', color: '#F07856', bgColor: '#FFF0EC' },
+  { id: 'coffee', label: 'Coffee', icon: 'coffee', color: '#F07856', bgColor: '#FFF0EC' },
+  { id: 'dessert', label: 'Dessert', icon: 'cake-variant', color: '#D4709A', bgColor: '#FDF0F6' },
+  { id: 'meals', label: 'Meals', icon: 'silverware-fork-knife', color: '#4CAF7D', bgColor: '#EBF7F1' },
+  { id: 'spa', label: 'Spa', icon: 'spa', color: '#9B7EDE', bgColor: '#F3EEFF' },
+  { id: 'fashion', label: 'Fashion', icon: 'hanger', color: '#5B9BD5', bgColor: '#EBF3FC' },
 ];
 
 interface CategoryRowProps {
@@ -34,14 +44,13 @@ export function CategoryRow({ onSelect }: CategoryRowProps) {
           <TouchableOpacity
             key={cat.id}
             onPress={() => handleSelect(cat.id)}
-            activeOpacity={0.7}
+            activeOpacity={0.75}
             style={[styles.pill, isActive && styles.pillActive]}
           >
-            <AppText style={styles.emoji}>{cat.emoji}</AppText>
-            <AppText
-              variant="caption"
-              style={[styles.label, isActive && styles.labelActive]}
-            >
+            <View style={[styles.iconWrap, { backgroundColor: isActive ? `${cat.color}25` : cat.bgColor }]}>
+              <MaterialCommunityIcons name={cat.icon} size={18} color={cat.color} />
+            </View>
+            <AppText style={[styles.label, isActive && { color: Colors.text.primary }]}>
               {cat.label}
             </AppText>
           </TouchableOpacity>
@@ -52,19 +61,36 @@ export function CategoryRow({ onSelect }: CategoryRowProps) {
 }
 
 const styles = StyleSheet.create({
-  scroll: { paddingHorizontal: Spacing.md, gap: Spacing.sm, paddingVertical: 2 },
+  scroll: { paddingHorizontal: Spacing.md, gap: Spacing.sm, paddingVertical: 4 },
   pill: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 14, paddingVertical: 9,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.surface,
-    borderWidth: 1, borderColor: Colors.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: Colors.card,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
   },
   pillActive: {
-    backgroundColor: '#FFF1EC',
+    backgroundColor: '#FFF0EC',
+    borderWidth: 0.5,
     borderColor: Colors.primary,
   },
-  emoji: { fontSize: 14 },
-  label: { fontWeight: '500', color: Colors.text.secondary },
-  labelActive: { color: Colors.primary, fontWeight: '600' },
+  iconWrap: {
+    width: 30,
+    height: 30,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  label: {
+    fontSize: 15,
+    fontFamily: Fonts.semiBold,
+    color: Colors.text.secondary,
+  },
 });

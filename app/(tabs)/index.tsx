@@ -79,7 +79,7 @@ export default function HomeScreen() {
       >
         {/* Header */}
         <View style={styles.section}>
-          <HomeHeader firstName="Nour" onNotificationPress={() => {}} unreadCount={2} />
+          <HomeHeader firstName="Mohammad" onNotificationPress={() => { }} unreadCount={2} />
         </View>
 
         {/* Search */}
@@ -89,11 +89,11 @@ export default function HomeScreen() {
 
         {/* Featured Banner */}
         <View style={styles.section}>
-          <FeaturedBanner onPress={() => {}} />
+          <FeaturedBanner onPress={() => { }} />
         </View>
 
         {/* Categories */}
-        <View style={styles.sectionHeader}>
+        <View style={[styles.section, styles.sectionHeader, { marginTop: 12 }]}>
           <SectionHeader title="Categories" />
         </View>
         <CategoryRow onSelect={(id) => console.log('category', id)} />
@@ -112,15 +112,15 @@ export default function HomeScreen() {
               contentContainerStyle={styles.horizontalList}
               ItemSeparatorComponent={() => <View style={{ width: Spacing.sm }} />}
               renderItem={({ item }: { item: Merchant }) => (
-                <MerchantCard merchant={item} onPress={() => {}} />
+                <MerchantCard merchant={item} onPress={() => { }} />
               )}
             />
           </>
         )}
 
         {/* Popular Gifts */}
-        <View style={[styles.section, styles.sectionHeader]}>
-          <SectionHeader title="Popular Gifts" onSeeAll={() => {}} />
+        <View style={[styles.section, styles.sectionHeader, { marginTop: 20 }]}>
+          <SectionHeader title="Popular Gifts" onSeeAll={() => { }} />
         </View>
         <View style={styles.section}>
           {giftRows.map((row, i) => (
@@ -129,8 +129,8 @@ export default function HomeScreen() {
                 <GiftCardItem
                   key={gift.id}
                   item={gift}
-                  onPress={() => {}}
-                  onAdd={() => {}}
+                  onPress={() => { }}
+                  onAdd={() => { }}
                 />
               ))}
               {row.length === 1 && <View style={{ flex: 1 }} />}
@@ -146,8 +146,8 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
   scroll: { flex: 1 },
   content: { paddingBottom: Spacing.xl },
-  section: { paddingHorizontal: Spacing.md, marginBottom: Spacing.lg },
-  sectionHeader: { marginBottom: Spacing.md },
+  section: { paddingHorizontal: Spacing.md, marginBottom: Spacing.md },
+  sectionHeader: { marginBottom: Spacing.sm },
   horizontalList: { paddingHorizontal: Spacing.md, paddingBottom: 4 },
-  giftRow: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.sm },
+  giftRow: { flexDirection: 'row', gap: Spacing.md, marginBottom: Spacing.md },
 });

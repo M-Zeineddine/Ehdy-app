@@ -15,7 +15,7 @@ export function SearchBar({ value, onChangeText, onFilterPress, placeholder = 'F
   return (
     <View style={styles.container}>
       <View style={styles.input}>
-        <Ionicons name="search-outline" size={18} color={Colors.text.tertiary} />
+        <Ionicons name="search-outline" size={20} color={Colors.text.tertiary} />
         <TextInput
           value={value}
           onChangeText={onChangeText}
@@ -25,7 +25,7 @@ export function SearchBar({ value, onChangeText, onFilterPress, placeholder = 'F
         />
       </View>
       <TouchableOpacity onPress={onFilterPress} style={styles.filterBtn} activeOpacity={0.7}>
-        <Ionicons name="options-outline" size={18} color={Colors.text.secondary} />
+        <Ionicons name="options-outline" size={20} color={Colors.text.secondary} />
       </TouchableOpacity>
     </View>
   );
@@ -41,11 +41,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderRadius: Radius.full,
     paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
+    paddingVertical: 13,
   },
-  textInput: { flex: 1, fontSize: 14, color: Colors.text.primary, padding: 0 },
+  textInput: { flex: 1, fontSize: 15, color: Colors.text.primary, padding: 0 },
   filterBtn: {
-    width: 40, height: 40,
+    width: 48, height: 48,
     borderRadius: Radius.full,
     backgroundColor: Colors.surface,
     alignItems: 'center', justifyContent: 'center',

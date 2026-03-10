@@ -14,7 +14,7 @@ export function SectionHeader({ title, onSeeAll }: SectionHeaderProps) {
       <AppText variant="subheading">{title}</AppText>
       {onSeeAll && (
         <TouchableOpacity onPress={onSeeAll} activeOpacity={0.7}>
-          <AppText variant="caption" color={Colors.primary} style={{ fontWeight: '600' }}>
+          <AppText bold color={Colors.primary} style={{ fontSize: 14 }}>
             See All →
           </AppText>
         </TouchableOpacity>
