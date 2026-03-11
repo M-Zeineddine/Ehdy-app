@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 9,
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 7,
     borderRadius: 999,
     backgroundColor: Colors.card,
     shadowColor: '#000',
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   label: {
-    fontSize: 15,
+    fontSize: 14,
     fontFamily: Fonts.semiBold,
     color: Colors.text.secondary,
   },

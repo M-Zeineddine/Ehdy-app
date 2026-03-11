@@ -42,12 +42,16 @@ const styles = StyleSheet.create({
     borderRadius: Radius.full,
     paddingHorizontal: Spacing.md,
     paddingVertical: 13,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   textInput: { flex: 1, fontSize: 15, color: Colors.text.primary, padding: 0 },
   filterBtn: {
     width: 48, height: 48,
     borderRadius: Radius.full,
     backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
     alignItems: 'center', justifyContent: 'center',
   },
 });

@@ -83,7 +83,7 @@ export default function HomeScreen() {
         </View>
 
         {/* Search */}
-        <View style={styles.section}>
+        <View style={[styles.section, { marginTop: 6 }]}>
           <SearchBar value={search} onChangeText={setSearch} />
         </View>
 
@@ -122,7 +122,7 @@ export default function HomeScreen() {
         <View style={[styles.section, styles.sectionHeader, { marginTop: 20 }]}>
           <SectionHeader title="Popular Gifts" onSeeAll={() => { }} />
         </View>
-        <View style={styles.section}>
+        <View style={[styles.section, { marginTop: 5 }]}>
           {giftRows.map((row, i) => (
             <View key={i} style={styles.giftRow}>
               {row.map((gift) => (
