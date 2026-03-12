@@ -3,20 +3,20 @@ import { View, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Colors } from '../../constants/colors';
 import { Radius } from '../../constants/layout';
 import { AppText } from '../ui/AppText';
-import type { GiftCard } from '../../types';
+import type { MerchantItem } from '../../types';
 
 const FALLBACK = 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&q=80';
 
 interface GiftCardItemProps {
-  item: GiftCard;
+  item: MerchantItem & { merchant_name?: string };
   onPress?: () => void;
   onAdd?: () => void;
 }
 
 export function GiftCardItem({ item, onPress, onAdd }: GiftCardItemProps) {
   const image = item.image_url ?? FALLBACK;
-  const displayPrice = item.credit_amount
-    ? `${item.currency_code} ${item.credit_amount.toLocaleString()}`
+  const displayPrice = item.price
+    ? `${item.currency_code} ${parseFloat(String(item.price)).toLocaleString()}`
     : item.currency_code + ' —';
 
   return (
@@ -24,6 +24,7 @@ export function GiftCardItem({ item, onPress, onAdd }: GiftCardItemProps) {
       <Image source={{ uri: image }} style={styles.image} resizeMode="cover" />
       <View style={styles.info}>
         <AppText variant="caption" semiBold numberOfLines={2} style={[styles.name, { marginTop: 12 }]}>{item.name}</AppText>
+        <View style={{ flex: 1 }} />
         <View style={styles.row}>
           <AppText variant="price">{displayPrice}</AppText>
           <TouchableOpacity onPress={onAdd} style={styles.addBtn} activeOpacity={0.55}>
@@ -38,7 +39,7 @@ export function GiftCardItem({ item, onPress, onAdd }: GiftCardItemProps) {
 const styles = StyleSheet.create({
   container: { flex: 1, borderRadius: Radius.lg, backgroundColor: Colors.card, overflow: 'hidden' },
   image: { width: '100%', height: 108 },
-  info: { paddingHorizontal: 12, paddingBottom: 12, gap: 6 },
+  info: { flex: 1, paddingHorizontal: 12, paddingBottom: 12, gap: 6 },
   name: { color: Colors.text.primary, lineHeight: 20, fontSize: 15 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   addBtn: {

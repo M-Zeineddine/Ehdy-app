@@ -13,20 +13,33 @@ export interface Merchant {
   rating?: number;
   review_count?: number;
   is_verified?: boolean;
+  items?: MerchantItem[];
+  store_credit_presets?: StoreCreditPreset[];
 }
 
+export interface MerchantItem {
+  id: string;
+  name: string;
+  description: string | null;
+  image_url: string | null;
+  price: number | null;
+  currency_code: string;
+  item_sku: string | null;
+}
+
+export interface StoreCreditPreset {
+  id: string;
+  amount: number;
+  currency_code: string;
+}
+
+// Represents an actual gift card created by a user to send to a recipient (future)
 export interface GiftCard {
   id: string;
-  merchant_id: string;
-  merchant_name?: string;
-  merchant_slug?: string;
   name: string;
-  description: string;
-  type: 'store_credit' | 'gift_item';
-  is_store_credit: boolean;
+  image_url: string | null;
   credit_amount: number | null;
   currency_code: string;
-  image_url: string | null;
 }
 
 export interface Category {

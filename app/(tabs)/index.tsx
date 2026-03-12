@@ -8,7 +8,7 @@ import { router } from 'expo-router';
 
 import { Colors } from '@/src/constants/colors';
 import { Spacing } from '@/src/constants/layout';
-import { getMerchants, getGiftCards } from '@/src/services/merchantService';
+import { getMerchants, getMerchantItems } from '@/src/services/merchantService';
 import { useAuthStore } from '@/src/store/authStore';
 
 import { HomeHeader } from '@/src/components/home/HomeHeader';
@@ -18,7 +18,7 @@ import { MerchantCard } from '@/src/components/home/MerchantCard';
 import { GiftCardItem } from '@/src/components/home/GiftCardItem';
 import { SectionHeader } from '@/src/components/home/SectionHeader';
 import { SearchBar } from '@/src/components/ui/SearchBar';
-import type { GiftCard, Merchant } from '@/src/types';
+import type { Merchant, MerchantItem } from '@/src/types';
 
 export default function HomeScreen() {
   const [search, setSearch] = useState('');
@@ -30,23 +30,22 @@ export default function HomeScreen() {
     queryFn: () => getMerchants({ featured: true, limit: 10 }),
   });
 
-  const { data: giftCards = [], refetch: refetchGiftCards } = useQuery({
-    queryKey: ['gift-cards-popular'],
-    queryFn: () => getGiftCards({ limit: 6 }),
+  const { data: popularItems = [], refetch: refetchItems } = useQuery({
+    queryKey: ['merchant-items-popular'],
+    queryFn: () => getMerchantItems({ limit: 6 }),
   });
 
-  async function handleRefresh() {
-    setRefreshing(true);
-    await Promise.all([refetchMerchants(), refetchGiftCards()]);
-    setRefreshing(false);
-  }
-
-  // Chunk gift cards into rows of 2
-  const giftRows = giftCards.reduce<GiftCard[][]>((rows, item, i) => {
+  const itemRows = popularItems.reduce<MerchantItem[][]>((rows, item, i) => {
     if (i % 2 === 0) rows.push([item]);
     else rows[rows.length - 1].push(item);
     return rows;
   }, []);
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    await Promise.all([refetchMerchants(), refetchItems()]);
+    setRefreshing(false);
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -99,21 +98,16 @@ export default function HomeScreen() {
         )}
 
         {/* Popular Gifts */}
-        {giftCards.length > 0 && (
+        {popularItems.length > 0 && (
           <>
             <View style={[styles.section, styles.sectionHeader, { marginTop: 25 }]}>
               <SectionHeader title="Popular Gifts" onSeeAll={() => { }} />
             </View>
             <View style={[styles.section, { marginTop: 10 }]}>
-              {giftRows.map((row, i) => (
+              {itemRows.map((row, i) => (
                 <View key={i} style={styles.giftRow}>
-                  {row.map((gift) => (
-                    <GiftCardItem
-                      key={gift.id}
-                      item={gift}
-                      onPress={() => { }}
-                      onAdd={() => { }}
-                    />
+                  {row.map(gift => (
+                    <GiftCardItem key={gift.id} item={gift} onPress={() => { }} onAdd={() => { }} />
                   ))}
                   {row.length === 1 && <View style={{ flex: 1 }} />}
                 </View>
@@ -121,6 +115,7 @@ export default function HomeScreen() {
             </View>
           </>
         )}
+
       </ScrollView>
     </SafeAreaView>
   );

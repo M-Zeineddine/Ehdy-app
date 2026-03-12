@@ -12,7 +12,7 @@ import { getMerchant } from '@/src/services/merchantService';
 import { AppText } from '@/src/components/ui/AppText';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, Fonts } from '@/src/constants/layout';
-import type { GiftCard } from '@/src/types';
+import type { MerchantItem, StoreCreditPreset } from '@/src/types';
 
 const BANNER_HEIGHT = 210;
 const LOGO_SIZE = 100;
@@ -31,14 +31,11 @@ export default function MerchantScreen() {
     enabled: !!id,
   });
 
-  const allCards: GiftCard[] = (merchant as any)?.gift_cards ?? [];
-  const giftItems = allCards.filter(gc => gc.type === 'gift_item');
-  const storeCredits = allCards.filter(gc => gc.type === 'store_credit');
+  const itemsToShow: MerchantItem[] = merchant?.items ?? [];
+  const storeCredits: StoreCreditPreset[] = merchant?.store_credit_presets ?? [];
 
-  const itemsToShow = giftItems;
-
-  function toRows(cards: GiftCard[]) {
-    return cards.reduce<GiftCard[][]>((rows, item, i) => {
+  function toRows(cards: MerchantItem[]) {
+    return cards.reduce<MerchantItem[][]>((rows, item, i) => {
       if (i % 2 === 0) rows.push([item]);
       else rows[rows.length - 1].push(item);
       return rows;
@@ -115,15 +112,28 @@ export default function MerchantScreen() {
           <View style={styles.infoSection}>
             <AppText style={styles.merchantName}>{merchant.name}</AppText>
             <View style={styles.metaRow}>
-              <AppText variant="caption">{merchant.category_name}</AppText>
-              {merchant.city && (
-                <>
-                  <AppText variant="caption" color={Colors.text.tertiary}> • </AppText>
-                  <Ionicons name="location-outline" size={12} color={Colors.text.tertiary} />
-                  <AppText variant="caption" color={Colors.text.tertiary}> {merchant.city}</AppText>
-                </>
+              {(merchant as any).is_featured ? (
+                <AppText style={styles.metaText} color={Colors.text.secondary}>⭐ Featured</AppText>
+              ) : (merchant as any).is_verified ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Ionicons name="checkmark-circle" size={14} color={Colors.primary} />
+                  <AppText style={styles.metaText} color={Colors.text.accent}>Verified</AppText>
+                </View>
+              ) : (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Ionicons name="gift-outline" size={14} color={Colors.text.secondary} />
+                  <AppText style={styles.metaText} color={Colors.text.secondary}>Gift-Ready</AppText>
+                </View>
               )}
+              <AppText style={styles.metaText} color={Colors.text.tertiary}>{`    •    `}</AppText>
+              <AppText style={styles.metaText} color={Colors.text.secondary}>{merchant.category_name}</AppText>
             </View>
+            {merchant.city && (
+              <View style={styles.metaRow}>
+                <Ionicons name="location-outline" size={14} color={Colors.text.secondary} />
+                <AppText style={styles.metaText} color={Colors.text.secondary}> {merchant.city}</AppText>
+              </View>
+            )}
           </View>
 
           {/* Call / Map / Share */}
@@ -204,11 +214,11 @@ export default function MerchantScreen() {
                       <TouchableOpacity
                         key={gc.id}
                         style={styles.amountChip}
-                        onPress={() => setCustomAmount(String(gc.credit_amount ?? ''))}
+                        onPress={() => setCustomAmount(String(gc.amount))}
                         activeOpacity={0.55}
                       >
                         <AppText semiBold style={{ color: Colors.primary }}>
-                          $ {parseFloat(String(gc.credit_amount)).toLocaleString()}
+                          {gc.currency_code} {parseFloat(String(gc.amount)).toLocaleString()}
                         </AppText>
                       </TouchableOpacity>
                     ))}
@@ -237,10 +247,10 @@ function ActionBtn({ icon, label, onPress }: { icon: any; label: string; onPress
   );
 }
 
-function GiftCardTile({ item }: { item: GiftCard }) {
+function GiftCardTile({ item }: { item: MerchantItem }) {
   const FALLBACK = 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&q=80';
-  const price = item.credit_amount
-    ? `${item.currency_code} ${parseFloat(String(item.credit_amount)).toLocaleString()}`
+  const price = item.price
+    ? `${item.currency_code} ${parseFloat(String(item.price)).toLocaleString()}`
     : `${item.currency_code} —`;
 
   return (
@@ -288,8 +298,9 @@ const styles = StyleSheet.create({
   logoFallback: { backgroundColor: '#FFF0EC', alignItems: 'center', justifyContent: 'center' },
 
   infoSection: { alignItems: 'center', paddingHorizontal: Spacing.md, paddingTop: Spacing.sm, gap: 6 },
-  merchantName: { fontSize: 22, fontFamily: Fonts.bold, textAlign: 'center' },
+  merchantName: { fontSize: 26, fontFamily: Fonts.bold, textAlign: 'center' },
   metaRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' },
+  metaText: { fontSize: 14 },
 
   actionRow: {
     flexDirection: 'row', justifyContent: 'center', gap: Spacing.xl,
@@ -308,7 +319,7 @@ const styles = StyleSheet.create({
 
   tabBar: {
     flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: Colors.border,
-    marginHorizontal: Spacing.md, marginTop: Spacing.lg,
+    marginHorizontal: Spacing.md, marginTop: Spacing.md,
   },
   tab: {
     flex: 1, alignItems: 'center', paddingBottom: 12,
@@ -330,6 +341,7 @@ const styles = StyleSheet.create({
   giftThisBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     backgroundColor: '#FFF0EC', borderRadius: Radius.md, paddingVertical: 8,
+    marginTop: Spacing.xs,
   },
   giftThisText: { fontSize: 13, color: Colors.primary },
 
@@ -361,6 +373,6 @@ const styles = StyleSheet.create({
   giftCreditBtn: {
     backgroundColor: Colors.primary, borderRadius: Radius.md,
     paddingVertical: 14, alignItems: 'center',
-    marginTop: Spacing.md,
+    marginTop: Spacing.sm,
   },
 });
