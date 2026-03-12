@@ -18,15 +18,10 @@ interface MerchantCardProps {
 
 export function MerchantCard({ merchant, onPress }: MerchantCardProps) {
   const image = merchant.banner_image_url ?? FALLBACK_IMAGE;
-  const rating = parseFloat(String(merchant.rating ?? 4.5)) || 4.5;
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={styles.container}>
       <ImageBackground source={{ uri: image }} style={styles.image} imageStyle={styles.imageStyle}>
-        <View style={styles.ratingBadge}>
-          <Ionicons name="star" size={10} color={Colors.star} />
-          <AppText style={styles.ratingText}>{rating.toFixed(1)}</AppText>
-        </View>
         <View style={styles.overlay}>
           <AppText variant="body" color="#fff" bold style={styles.name} numberOfLines={1}>
             {merchant.name}
@@ -55,14 +50,6 @@ const styles = StyleSheet.create({
   container: { width: CARD_WIDTH, borderRadius: Radius.lg, backgroundColor: Colors.card, overflow: 'hidden' },
   image: { width: CARD_WIDTH, height: CARD_HEIGHT },
   imageStyle: { borderRadius: Radius.lg },
-  ratingBadge: {
-    position: 'absolute', top: Spacing.sm, right: Spacing.sm,
-    flexDirection: 'row', alignItems: 'center', gap: 2,
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    paddingHorizontal: 6, paddingVertical: 3,
-    borderRadius: Radius.full,
-  },
-  ratingText: { fontSize: 11, fontWeight: '600', color: Colors.text.primary },
   overlay: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     padding: Spacing.sm,

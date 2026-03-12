@@ -72,7 +72,7 @@ export default function HomeScreen() {
         </View>
 
         {/* Categories */}
-        <View style={[styles.section, styles.sectionHeader, { marginTop: 12 }]}>
+        <View style={[styles.section, styles.sectionHeader, { marginTop: 2 }]}>
           <SectionHeader title="Categories" />
         </View>
         <CategoryRow onSelect={(id) => console.log('category', id)} />
@@ -92,7 +92,7 @@ export default function HomeScreen() {
               contentContainerStyle={styles.horizontalList}
               ItemSeparatorComponent={() => <View style={{ width: Spacing.md }} />}
               renderItem={({ item }: { item: Merchant }) => (
-                <MerchantCard merchant={item} onPress={() => { }} />
+                <MerchantCard merchant={item} onPress={() => router.push({ pathname: '/merchant/[id]', params: { id: item.id } })} />
               )}
             />
           </>
