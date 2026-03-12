@@ -7,7 +7,7 @@ import { AppText } from '../ui/AppText';
 import type { Merchant } from '../../types';
 
 const CARD_WIDTH = 180;
-const CARD_HEIGHT = 160;
+const CARD_HEIGHT = 120;
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?w=400&q=80';
 
@@ -28,9 +28,9 @@ export function MerchantCard({ merchant, onPress }: MerchantCardProps) {
           </AppText>
         </View>
       </ImageBackground>
-      <View style={styles.info}>
+      <View style={[styles.info, { marginTop: 0 }]}>
         <AppText variant="caption" numberOfLines={1}>{merchant.description}</AppText>
-        <View style={styles.meta}>
+        <View style={[styles.meta, { marginTop: Spacing.sm }]}>
           {merchant.city && (
             <View style={styles.row}>
               <Ionicons name="location-outline" size={11} color={Colors.text.tertiary} />
@@ -49,7 +49,7 @@ export function MerchantCard({ merchant, onPress }: MerchantCardProps) {
 const styles = StyleSheet.create({
   container: { width: CARD_WIDTH, borderRadius: Radius.lg, backgroundColor: Colors.card, overflow: 'hidden' },
   image: { width: CARD_WIDTH, height: CARD_HEIGHT },
-  imageStyle: { borderRadius: Radius.lg },
+  imageStyle: {},
   overlay: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     padding: Spacing.sm,

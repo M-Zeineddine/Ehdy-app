@@ -81,7 +81,7 @@ export default function HomeScreen() {
         {merchants.length > 0 && (
           <>
             <View style={[styles.section, styles.sectionHeader, { marginTop: 25 }]}>
-              <SectionHeader title="Featured Merchants" onSeeAll={() => router.push('/browse')} />
+              <SectionHeader title="Featured Spots" onSeeAll={() => router.push('/browse')} />
             </View>
             <FlatList
               data={merchants}
