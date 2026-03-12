@@ -26,8 +26,8 @@ export default function HomeScreen() {
   const { user } = useAuthStore();
 
   const { data: merchants = [], refetch: refetchMerchants } = useQuery({
-    queryKey: ['merchants'],
-    queryFn: () => getMerchants({ limit: 10 }),
+    queryKey: ['merchants', 'featured'],
+    queryFn: () => getMerchants({ featured: true, limit: 10 }),
   });
 
   const { data: giftCards = [], refetch: refetchGiftCards } = useQuery({
