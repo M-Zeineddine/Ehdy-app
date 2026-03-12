@@ -13,6 +13,7 @@ import {
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useAuthStore } from '@/src/store/authStore';
+import { LoadingScreen } from '@/src/components/ui/LoadingScreen';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -51,11 +52,17 @@ export default function RootLayout() {
     PlusJakartaSans_800ExtraBold,
   });
 
-  useEffect(() => {
-    if (fontsLoaded) SplashScreen.hideAsync();
-  }, [fontsLoaded]);
+  const { isLoading: authLoading, loadFromStorage } = useAuthStore();
 
-  if (!fontsLoaded) return null;
+  useEffect(() => {
+    loadFromStorage();
+  }, []);
+
+  useEffect(() => {
+    if (fontsLoaded && !authLoading) SplashScreen.hideAsync();
+  }, [fontsLoaded, authLoading]);
+
+  if (!fontsLoaded || authLoading) return <LoadingScreen />;
 
   return (
     <QueryClientProvider client={queryClient}>

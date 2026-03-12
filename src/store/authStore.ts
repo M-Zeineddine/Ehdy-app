@@ -43,6 +43,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   loadFromStorage: async () => {
     try {
+      await new Promise(r => setTimeout(r, 2000)); // remove after testing
       const token = await SecureStore.getItemAsync(TOKEN_KEY);
       const refreshToken = await SecureStore.getItemAsync(REFRESH_KEY);
       const userJson = await SecureStore.getItemAsync(USER_KEY);
