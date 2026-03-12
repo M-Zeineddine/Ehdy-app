@@ -37,7 +37,7 @@ export function CategoryRow({ onSelect }: CategoryRowProps) {
   }
 
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scroll} style={{ marginTop: 3 }}>
       {CATEGORIES.map((cat) => {
         const isActive = cat.id === active;
         return (

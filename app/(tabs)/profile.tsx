@@ -1,21 +1,106 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/src/components/ui/AppText';
 import { Colors } from '@/src/constants/colors';
+import { Spacing, Radius } from '@/src/constants/layout';
+import { useAuthStore } from '@/src/store/authStore';
 
 export default function ProfileScreen() {
+  const { user, clearAuth } = useAuthStore();
+
+  function handleLogout() {
+    Alert.alert('Sign out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign out', style: 'destructive', onPress: () => clearAuth() },
+    ]);
+  }
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.center}>
-        <AppText variant="heading">Profile</AppText>
-        <AppText variant="caption">Coming soon</AppText>
+      <View style={styles.container}>
+        <AppText variant="heading" style={styles.title}>Profile</AppText>
+
+        {/* Avatar + name */}
+        <View style={styles.avatarSection}>
+          <View style={styles.avatar}>
+            <AppText style={styles.avatarText}>
+              {user?.first_name?.[0]?.toUpperCase()}{user?.last_name?.[0]?.toUpperCase()}
+            </AppText>
+          </View>
+          <AppText variant="subheading">{user?.first_name} {user?.last_name}</AppText>
+          <AppText variant="body" color={Colors.text.secondary}>{user?.email}</AppText>
+        </View>
+
+        {/* Menu items */}
+        <View style={styles.menu}>
+          <MenuItem icon="person-outline" label="Edit Profile" onPress={() => {}} />
+          <MenuItem icon="notifications-outline" label="Notifications" onPress={() => {}} />
+          <MenuItem icon="shield-checkmark-outline" label="Privacy & Security" onPress={() => {}} />
+          <MenuItem icon="help-circle-outline" label="Help & Support" onPress={() => {}} />
+        </View>
+
+        {/* Sign out */}
+        <TouchableOpacity style={styles.signOutBtn} onPress={handleLogout} activeOpacity={0.7}>
+          <Ionicons name="log-out-outline" size={20} color="#E53E3E" />
+          <AppText variant="body" color="#E53E3E" semiBold>Sign out</AppText>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
 
+function MenuItem({ icon, label, onPress }: { icon: any; label: string; onPress: () => void }) {
+  return (
+    <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.7}>
+      <Ionicons name={icon} size={20} color={Colors.text.secondary} />
+      <AppText variant="body" style={styles.menuLabel}>{label}</AppText>
+      <Ionicons name="chevron-forward" size={16} color={Colors.text.tertiary} />
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
+  container: { flex: 1, paddingHorizontal: Spacing.lg },
+  title: { marginTop: Spacing.lg, marginBottom: Spacing.xl },
+  avatarSection: { alignItems: 'center', gap: Spacing.xs, marginBottom: Spacing.xl },
+  avatar: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.sm,
+  },
+  avatarText: { fontSize: 26, color: '#fff', fontFamily: 'PlusJakartaSans_700Bold' },
+  menu: {
+    backgroundColor: Colors.card,
+    borderRadius: Radius.lg,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    gap: Spacing.md,
+  },
+  menuLabel: { flex: 1 },
+  signOutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    marginTop: Spacing.xl,
+    paddingVertical: 14,
+    borderRadius: Radius.lg,
+    borderWidth: 1.5,
+    borderColor: '#E53E3E',
+  },
 });

@@ -1,25 +1,30 @@
 export interface Merchant {
   id: string;
   name: string;
+  slug: string;
   description: string;
-  category: string;
   logo_url: string | null;
-  cover_image_url: string | null;
-  location: string | null;
+  banner_image_url: string | null;
+  category_id: string;
+  category_name: string;
+  category_slug: string;
+  country_code: string;
+  city: string | null;
   rating?: number;
-  min_price?: number;
-  max_price?: number;
-  currency_code: string;
+  review_count?: number;
+  is_verified?: boolean;
 }
 
 export interface GiftCard {
   id: string;
   merchant_id: string;
-  merchant_name: string;
+  merchant_name?: string;
+  merchant_slug?: string;
   name: string;
   description: string;
   type: 'store_credit' | 'gift_item';
-  amount: number | null;
+  is_store_credit: boolean;
+  credit_amount: number | null;
   currency_code: string;
   image_url: string | null;
 }

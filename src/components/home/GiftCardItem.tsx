@@ -15,8 +15,8 @@ interface GiftCardItemProps {
 
 export function GiftCardItem({ item, onPress, onAdd }: GiftCardItemProps) {
   const image = item.image_url ?? FALLBACK;
-  const displayPrice = item.amount
-    ? `${item.currency_code} ${item.amount.toLocaleString()}`
+  const displayPrice = item.credit_amount
+    ? `${item.currency_code} ${item.credit_amount.toLocaleString()}`
     : item.currency_code + ' —';
 
   return (

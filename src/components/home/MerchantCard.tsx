@@ -9,9 +9,7 @@ import type { Merchant } from '../../types';
 const CARD_WIDTH = 180;
 const CARD_HEIGHT = 160;
 
-const FALLBACK_IMAGES: Record<string, string> = {
-  default: 'https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?w=400&q=80',
-};
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?w=400&q=80';
 
 interface MerchantCardProps {
   merchant: Merchant;
@@ -19,9 +17,8 @@ interface MerchantCardProps {
 }
 
 export function MerchantCard({ merchant, onPress }: MerchantCardProps) {
-  const image = merchant.cover_image_url ?? FALLBACK_IMAGES.default;
-  const rating = merchant.rating ?? 4.5;
-  const minPrice = merchant.min_price ?? 50000;
+  const image = merchant.banner_image_url ?? FALLBACK_IMAGE;
+  const rating = parseFloat(String(merchant.rating ?? 4.5)) || 4.5;
 
   return (
     <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={styles.container}>
@@ -39,14 +36,14 @@ export function MerchantCard({ merchant, onPress }: MerchantCardProps) {
       <View style={styles.info}>
         <AppText variant="caption" numberOfLines={1}>{merchant.description}</AppText>
         <View style={styles.meta}>
-          {merchant.location && (
+          {merchant.city && (
             <View style={styles.row}>
               <Ionicons name="location-outline" size={11} color={Colors.text.tertiary} />
-              <AppText variant="caption" color={Colors.text.tertiary}>{merchant.location}</AppText>
+              <AppText variant="caption" color={Colors.text.tertiary}>{merchant.city}</AppText>
             </View>
           )}
           <AppText variant="caption" color={Colors.text.secondary} style={{ fontWeight: '600' }}>
-            {merchant.currency_code} {(minPrice / 1000).toFixed(0)}K+
+            {merchant.category_name}
           </AppText>
         </View>
       </View>

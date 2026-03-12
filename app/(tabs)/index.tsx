@@ -8,7 +8,8 @@ import { router } from 'expo-router';
 
 import { Colors } from '@/src/constants/colors';
 import { Spacing } from '@/src/constants/layout';
-import { getMerchants } from '@/src/services/merchantService';
+import { getMerchants, getGiftCards } from '@/src/services/merchantService';
+import { useAuthStore } from '@/src/store/authStore';
 
 import { HomeHeader } from '@/src/components/home/HomeHeader';
 import { FeaturedBanner } from '@/src/components/home/FeaturedBanner';
@@ -19,51 +20,29 @@ import { SectionHeader } from '@/src/components/home/SectionHeader';
 import { SearchBar } from '@/src/components/ui/SearchBar';
 import type { GiftCard, Merchant } from '@/src/types';
 
-// Placeholder gift card data until purchases/gift cards endpoint is wired
-const MOCK_GIFTS: GiftCard[] = [
-  {
-    id: '1', merchant_id: '', merchant_name: 'Patchi',
-    name: 'Patchi Box', description: '', type: 'gift_item',
-    amount: 2500000, currency_code: 'LBP',
-    image_url: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&q=80',
-  },
-  {
-    id: '2', merchant_id: '', merchant_name: 'Bliss House',
-    name: 'Spa Day', description: '', type: 'gift_item',
-    amount: 4500000, currency_code: 'LBP',
-    image_url: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400&q=80',
-  },
-  {
-    id: '3', merchant_id: '', merchant_name: 'Cafe Younes',
-    name: 'Coffee Bundle', description: '', type: 'store_credit',
-    amount: 150000, currency_code: 'LBP',
-    image_url: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&q=80',
-  },
-  {
-    id: '4', merchant_id: '', merchant_name: 'Em Sherif',
-    name: 'Dinner for Two', description: '', type: 'gift_item',
-    amount: 8000000, currency_code: 'LBP',
-    image_url: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&q=80',
-  },
-];
-
 export default function HomeScreen() {
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+  const { user } = useAuthStore();
 
-  const { data: merchants = [], refetch } = useQuery({
+  const { data: merchants = [], refetch: refetchMerchants } = useQuery({
     queryKey: ['merchants'],
     queryFn: () => getMerchants({ limit: 10 }),
   });
 
+  const { data: giftCards = [], refetch: refetchGiftCards } = useQuery({
+    queryKey: ['gift-cards-popular'],
+    queryFn: () => getGiftCards({ limit: 6 }),
+  });
+
   async function handleRefresh() {
     setRefreshing(true);
-    await refetch();
+    await Promise.all([refetchMerchants(), refetchGiftCards()]);
     setRefreshing(false);
   }
 
-  // Chunk gifts into rows of 2
-  const giftRows = MOCK_GIFTS.reduce<GiftCard[][]>((rows, item, i) => {
+  // Chunk gift cards into rows of 2
+  const giftRows = giftCards.reduce<GiftCard[][]>((rows, item, i) => {
     if (i % 2 === 0) rows.push([item]);
     else rows[rows.length - 1].push(item);
     return rows;
@@ -79,7 +58,7 @@ export default function HomeScreen() {
       >
         {/* Header */}
         <View style={styles.section}>
-          <HomeHeader firstName="Mohammad" onNotificationPress={() => { }} unreadCount={2} />
+          <HomeHeader firstName={user?.first_name ?? ''} onNotificationPress={() => { }} unreadCount={0} />
         </View>
 
         {/* Search */}
@@ -101,16 +80,17 @@ export default function HomeScreen() {
         {/* Featured Merchants */}
         {merchants.length > 0 && (
           <>
-            <View style={[styles.section, styles.sectionHeader]}>
+            <View style={[styles.section, styles.sectionHeader, { marginTop: 25 }]}>
               <SectionHeader title="Featured Merchants" onSeeAll={() => router.push('/browse')} />
             </View>
             <FlatList
               data={merchants}
+              style={{ marginTop: 10 }}
               keyExtractor={(m: Merchant) => m.id}
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.horizontalList}
-              ItemSeparatorComponent={() => <View style={{ width: Spacing.sm }} />}
+              ItemSeparatorComponent={() => <View style={{ width: Spacing.md }} />}
               renderItem={({ item }: { item: Merchant }) => (
                 <MerchantCard merchant={item} onPress={() => { }} />
               )}
@@ -119,24 +99,28 @@ export default function HomeScreen() {
         )}
 
         {/* Popular Gifts */}
-        <View style={[styles.section, styles.sectionHeader, { marginTop: 20 }]}>
-          <SectionHeader title="Popular Gifts" onSeeAll={() => { }} />
-        </View>
-        <View style={[styles.section, { marginTop: 5 }]}>
-          {giftRows.map((row, i) => (
-            <View key={i} style={styles.giftRow}>
-              {row.map((gift) => (
-                <GiftCardItem
-                  key={gift.id}
-                  item={gift}
-                  onPress={() => { }}
-                  onAdd={() => { }}
-                />
-              ))}
-              {row.length === 1 && <View style={{ flex: 1 }} />}
+        {giftCards.length > 0 && (
+          <>
+            <View style={[styles.section, styles.sectionHeader, { marginTop: 25 }]}>
+              <SectionHeader title="Popular Gifts" onSeeAll={() => { }} />
             </View>
-          ))}
-        </View>
+            <View style={[styles.section, { marginTop: 10 }]}>
+              {giftRows.map((row, i) => (
+                <View key={i} style={styles.giftRow}>
+                  {row.map((gift) => (
+                    <GiftCardItem
+                      key={gift.id}
+                      item={gift}
+                      onPress={() => { }}
+                      onAdd={() => { }}
+                    />
+                  ))}
+                  {row.length === 1 && <View style={{ flex: 1 }} />}
+                </View>
+              ))}
+            </View>
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
