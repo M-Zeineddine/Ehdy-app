@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, ScrollView, StyleSheet, Image, TouchableOpacity,
-  ActivityIndicator, Linking, Share, TextInput,
+  ActivityIndicator, Linking, Share, TextInput, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
@@ -15,7 +15,7 @@ import { Spacing, Radius, Fonts } from '@/src/constants/layout';
 import type { GiftCard } from '@/src/types';
 
 const BANNER_HEIGHT = 210;
-const LOGO_SIZE = 80;
+const LOGO_SIZE = 100;
 
 type Tab = 'items' | 'credit';
 
@@ -35,8 +35,7 @@ export default function MerchantScreen() {
   const giftItems = allCards.filter(gc => gc.type === 'gift_item');
   const storeCredits = allCards.filter(gc => gc.type === 'store_credit');
 
-  // Items tab shows gift_item cards; falls back to all cards if none
-  const itemsToShow = giftItems.length > 0 ? giftItems : allCards;
+  const itemsToShow = giftItems;
 
   function toRows(cards: GiftCard[]) {
     return cards.reduce<GiftCard[][]>((rows, item, i) => {
@@ -61,25 +60,23 @@ export default function MerchantScreen() {
   }
 
   return (
-    <View style={styles.root}>
+    <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       {/* Floating back button */}
       <TouchableOpacity
         style={[styles.floatBtn, { top: insets.top + 8, left: Spacing.md }]}
         onPress={() => router.back()}
-        activeOpacity={0.8}
+        activeOpacity={0.55}
       >
-        <Ionicons name="chevron-back" size={22} color={Colors.text.primary} />
+        <Ionicons name="chevron-back" size={22} color="#fff" style={{ marginLeft: -1 }} />
       </TouchableOpacity>
 
-      {/* Floating top-right buttons */}
-      <View style={[styles.topRight, { top: insets.top + 8 }]}>
-        <TouchableOpacity style={styles.floatBtn} activeOpacity={0.8}>
-          <Ionicons name="search-outline" size={20} color={Colors.text.primary} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.floatBtn} activeOpacity={0.8}>
-          <Ionicons name="ellipsis-horizontal" size={20} color={Colors.text.primary} />
-        </TouchableOpacity>
-      </View>
+      {/* Floating top-right button */}
+      <TouchableOpacity
+        style={[styles.floatBtn, { top: insets.top + 8, right: Spacing.md }]}
+        activeOpacity={0.55}
+      >
+        <Ionicons name="ellipsis-horizontal" size={20} color="#fff" />
+      </TouchableOpacity>
 
       {isLoading ? (
         <View style={styles.loader}>
@@ -89,26 +86,28 @@ export default function MerchantScreen() {
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
 
           {/* Banner + overlapping logo */}
-          <View style={{ marginBottom: LOGO_SIZE / 2 }}>
+          <View style={{ marginBottom: (LOGO_SIZE + 20) / 2 }}>
             <Image
               source={{ uri: (merchant as any).banner_image_url ?? undefined }}
               style={styles.banner}
               resizeMode="cover"
             />
             <View style={styles.logoWrap}>
-              {(merchant as any).logo_url ? (
-                <Image
-                  source={{ uri: (merchant as any).logo_url }}
-                  style={styles.logo}
-                  resizeMode="contain"
-                />
-              ) : (
-                <View style={[styles.logo, styles.logoFallback]}>
-                  <AppText variant="heading" color={Colors.primary}>
-                    {merchant.name[0]}
-                  </AppText>
-                </View>
-              )}
+              <View style={styles.logoInner}>
+                {(merchant as any).logo_url ? (
+                  <Image
+                    source={{ uri: (merchant as any).logo_url }}
+                    style={styles.logo}
+                    resizeMode="contain"
+                  />
+                ) : (
+                  <View style={[styles.logo, styles.logoFallback]}>
+                    <AppText variant="heading" color={Colors.primary}>
+                      {merchant.name[0]}
+                    </AppText>
+                  </View>
+                )}
+              </View>
             </View>
           </View>
 
@@ -139,7 +138,7 @@ export default function MerchantScreen() {
             <TouchableOpacity
               style={[styles.tab, tab === 'items' && styles.tabActive]}
               onPress={() => setTab('items')}
-              activeOpacity={0.8}
+              activeOpacity={0.55}
             >
               <AppText style={[styles.tabText, tab === 'items' && styles.tabTextActive]}>
                 Gift Items
@@ -148,7 +147,7 @@ export default function MerchantScreen() {
             <TouchableOpacity
               style={[styles.tab, tab === 'credit' && styles.tabActive]}
               onPress={() => setTab('credit')}
-              activeOpacity={0.8}
+              activeOpacity={0.55}
             >
               <AppText style={[styles.tabText, tab === 'credit' && styles.tabTextActive]}>
                 Store Credit
@@ -181,24 +180,6 @@ export default function MerchantScreen() {
                 Gift store credit that can be used for anything at this store
               </AppText>
 
-              {/* Quick-select predefined amounts */}
-              {storeCredits.length > 0 && (
-                <View style={styles.amountChips}>
-                  {storeCredits.map(gc => (
-                    <TouchableOpacity
-                      key={gc.id}
-                      style={styles.amountChip}
-                      onPress={() => setCustomAmount(String(gc.credit_amount ?? ''))}
-                      activeOpacity={0.8}
-                    >
-                      <AppText semiBold style={{ color: Colors.primary }}>
-                        {gc.currency_code} {gc.credit_amount}
-                      </AppText>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-
               {/* Custom amount box */}
               <View style={styles.customBox}>
                 <AppText semiBold style={styles.customLabel}>Enter custom amount</AppText>
@@ -215,7 +196,25 @@ export default function MerchantScreen() {
                     placeholderTextColor={Colors.text.tertiary}
                   />
                 </View>
-                <TouchableOpacity style={styles.giftCreditBtn} activeOpacity={0.85}>
+
+                {/* Quick-select predefined amounts */}
+                {storeCredits.length > 0 && (
+                  <View style={styles.amountChips}>
+                    {storeCredits.map(gc => (
+                      <TouchableOpacity
+                        key={gc.id}
+                        style={styles.amountChip}
+                        onPress={() => setCustomAmount(String(gc.credit_amount ?? ''))}
+                        activeOpacity={0.55}
+                      >
+                        <AppText semiBold style={{ color: Colors.primary }}>
+                          $ {parseFloat(String(gc.credit_amount)).toLocaleString()}
+                        </AppText>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+                <TouchableOpacity style={styles.giftCreditBtn} activeOpacity={0.6}>
                   <AppText semiBold color="#fff">Gift Custom Amount</AppText>
                 </TouchableOpacity>
               </View>
@@ -223,17 +222,17 @@ export default function MerchantScreen() {
           )}
         </ScrollView>
       )}
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 function ActionBtn({ icon, label, onPress }: { icon: any; label: string; onPress: () => void }) {
   return (
-    <TouchableOpacity style={styles.actionBtn} onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity style={styles.actionBtn} onPress={onPress} activeOpacity={0.55}>
       <View style={styles.actionIconWrap}>
-        <Ionicons name={icon} size={20} color={Colors.primary} />
+        <Ionicons name={icon} size={22} color={Colors.primary} />
+        <AppText variant="caption" style={styles.actionLabel}>{label}</AppText>
       </View>
-      <AppText variant="caption" style={{ marginTop: 4 }}>{label}</AppText>
     </TouchableOpacity>
   );
 }
@@ -250,8 +249,8 @@ function GiftCardTile({ item }: { item: GiftCard }) {
       <View style={styles.giftInfo}>
         <AppText semiBold numberOfLines={2} style={styles.giftName}>{item.name}</AppText>
         <AppText style={styles.giftPrice}>{price}</AppText>
-        <TouchableOpacity style={styles.giftThisBtn} activeOpacity={0.8}>
-          <Ionicons name="gift-outline" size={13} color={Colors.primary} />
+        <TouchableOpacity style={styles.giftThisBtn} activeOpacity={0.55}>
+          <Ionicons name="gift-outline" size={17} color={Colors.primary} />
           <AppText semiBold style={styles.giftThisText}>Gift This</AppText>
         </TouchableOpacity>
       </View>
@@ -267,23 +266,22 @@ const styles = StyleSheet.create({
   floatBtn: {
     position: 'absolute', zIndex: 10,
     width: 38, height: 38, borderRadius: Radius.full,
-    backgroundColor: 'rgba(255,255,255,0.92)',
+    backgroundColor: 'rgba(0,0,0,0.18)',
     alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.12, shadowRadius: 4, elevation: 3,
-  },
-  topRight: {
-    position: 'absolute', right: Spacing.md, zIndex: 10,
-    flexDirection: 'row', gap: Spacing.sm,
+    padding: 0,
   },
 
   banner: { width: '100%', height: BANNER_HEIGHT, backgroundColor: Colors.border },
   logoWrap: {
-    position: 'absolute', bottom: -(LOGO_SIZE / 2), alignSelf: 'center',
-    width: LOGO_SIZE, height: LOGO_SIZE, borderRadius: LOGO_SIZE / 2,
+    position: 'absolute', bottom: -((LOGO_SIZE + 10) / 2), alignSelf: 'center',
+    width: LOGO_SIZE + 10, height: LOGO_SIZE + 10, borderRadius: (LOGO_SIZE + 10) / 2,
     backgroundColor: '#fff',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12, shadowRadius: 8, elevation: 4,
+    alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.18, shadowRadius: 12, elevation: 8,
+  },
+  logoInner: {
+    width: LOGO_SIZE, height: LOGO_SIZE, borderRadius: LOGO_SIZE / 2,
     overflow: 'hidden',
   },
   logo: { width: LOGO_SIZE, height: LOGO_SIZE },
@@ -300,14 +298,17 @@ const styles = StyleSheet.create({
   },
   actionBtn: { alignItems: 'center' },
   actionIconWrap: {
-    width: 52, height: 52, borderRadius: Radius.lg,
-    backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.border,
-    alignItems: 'center', justifyContent: 'center',
+    width: 80, height: 64, borderRadius: Radius.lg,
+    backgroundColor: Colors.card, borderWidth: 1.5, borderColor: Colors.border,
+    alignItems: 'center', justifyContent: 'center', gap: 6,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05, shadowRadius: 3, elevation: 1,
   },
+  actionLabel: { fontSize: 12, fontFamily: Fonts.semiBold, color: Colors.text.secondary },
 
   tabBar: {
     flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: Colors.border,
-    marginHorizontal: Spacing.md, marginTop: Spacing.sm,
+    marginHorizontal: Spacing.md, marginTop: Spacing.lg,
   },
   tab: {
     flex: 1, alignItems: 'center', paddingBottom: 12,
@@ -327,13 +328,13 @@ const styles = StyleSheet.create({
   giftName: { fontSize: 14, lineHeight: 20 },
   giftPrice: { fontSize: 14, fontFamily: Fonts.bold, color: Colors.primary },
   giftThisBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     backgroundColor: '#FFF0EC', borderRadius: Radius.md, paddingVertical: 8,
   },
   giftThisText: { fontSize: 13, color: Colors.primary },
 
   creditDesc: { marginBottom: Spacing.md, lineHeight: 22 },
-  amountChips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginBottom: Spacing.md },
+  amountChips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginTop: Spacing.xs, marginBottom: Spacing.md },
   amountChip: {
     paddingHorizontal: 16, paddingVertical: 8,
     borderRadius: Radius.full, borderWidth: 1.5,
@@ -350,6 +351,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff', borderRadius: Radius.md,
     paddingHorizontal: Spacing.md, paddingVertical: 12,
     borderWidth: 1, borderColor: Colors.border, gap: Spacing.sm,
+    marginTop: Spacing.md
   },
   currencyLabel: { fontSize: 15 },
   amountInput: {
@@ -359,5 +361,6 @@ const styles = StyleSheet.create({
   giftCreditBtn: {
     backgroundColor: Colors.primary, borderRadius: Radius.md,
     paddingVertical: 14, alignItems: 'center',
+    marginTop: Spacing.md,
   },
 });

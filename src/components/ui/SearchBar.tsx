@@ -24,7 +24,7 @@ export function SearchBar({ value, onChangeText, onFilterPress, placeholder = 'F
           style={styles.textInput}
         />
       </View>
-      <TouchableOpacity onPress={onFilterPress} style={styles.filterBtn} activeOpacity={0.7}>
+      <TouchableOpacity onPress={onFilterPress} style={styles.filterBtn} activeOpacity={0.55}>
         <Ionicons name="options-outline" size={20} color={Colors.text.secondary} />
       </TouchableOpacity>
     </View>

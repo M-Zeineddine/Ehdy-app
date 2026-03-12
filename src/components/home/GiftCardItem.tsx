@@ -20,13 +20,13 @@ export function GiftCardItem({ item, onPress, onAdd }: GiftCardItemProps) {
     : item.currency_code + ' —';
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={styles.container}>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.6} style={styles.container}>
       <Image source={{ uri: image }} style={styles.image} resizeMode="cover" />
       <View style={styles.info}>
         <AppText variant="caption" semiBold numberOfLines={2} style={[styles.name, { marginTop: 12 }]}>{item.name}</AppText>
         <View style={styles.row}>
           <AppText variant="price">{displayPrice}</AppText>
-          <TouchableOpacity onPress={onAdd} style={styles.addBtn} activeOpacity={0.7}>
+          <TouchableOpacity onPress={onAdd} style={styles.addBtn} activeOpacity={0.55}>
             <AppText semiBold style={{ fontSize: 20, color: Colors.primary, lineHeight: 20, includeFontPadding: false, textAlignVertical: 'center' }}>+</AppText>
           </TouchableOpacity>
         </View>

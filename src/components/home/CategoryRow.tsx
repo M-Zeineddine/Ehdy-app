@@ -44,7 +44,7 @@ export function CategoryRow({ onSelect }: CategoryRowProps) {
           <TouchableOpacity
             key={cat.id}
             onPress={() => handleSelect(cat.id)}
-            activeOpacity={0.75}
+            activeOpacity={0.6}
             style={[styles.pill, isActive && styles.pillActive]}
           >
             <View style={[styles.iconWrap, { backgroundColor: isActive ? `${cat.color}25` : cat.bgColor }]}>

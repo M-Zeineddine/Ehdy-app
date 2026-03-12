@@ -41,7 +41,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* Sign out */}
-        <TouchableOpacity style={styles.signOutBtn} onPress={handleLogout} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.signOutBtn} onPress={handleLogout} activeOpacity={0.55}>
           <Ionicons name="log-out-outline" size={20} color="#E53E3E" />
           <AppText variant="body" color="#E53E3E" semiBold>Sign out</AppText>
         </TouchableOpacity>
@@ -52,7 +52,7 @@ export default function ProfileScreen() {
 
 function MenuItem({ icon, label, onPress }: { icon: any; label: string; onPress: () => void }) {
   return (
-    <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.55}>
       <Ionicons name={icon} size={20} color={Colors.text.secondary} />
       <AppText variant="body" style={styles.menuLabel}>{label}</AppText>
       <Ionicons name="chevron-forward" size={16} color={Colors.text.tertiary} />

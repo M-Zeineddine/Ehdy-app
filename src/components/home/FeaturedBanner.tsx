@@ -14,7 +14,7 @@ const BANNER_IMAGE = 'https://images.unsplash.com/photo-1559925393-8be0ec4767c8?
 
 export function FeaturedBanner({ onPress }: FeaturedBannerProps) {
   return (
-    <TouchableOpacity activeOpacity={0.95} onPress={onPress} style={styles.container}>
+    <TouchableOpacity activeOpacity={0.75} onPress={onPress} style={styles.container}>
       <ImageBackground source={{ uri: BANNER_IMAGE }} style={styles.image} imageStyle={styles.imageStyle}>
         <LinearGradient
           colors={['transparent', 'rgba(0,0,0,0.75)']}

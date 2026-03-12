@@ -38,7 +38,7 @@ export function HomeHeader({ firstName = 'There', onNotificationPress, unreadCou
       </View>
 
       {/* Bell */}
-      <TouchableOpacity onPress={onNotificationPress} style={styles.bell} activeOpacity={0.7}>
+      <TouchableOpacity onPress={onNotificationPress} style={styles.bell} activeOpacity={0.55}>
         <Ionicons name="notifications-outline" size={24} color={Colors.text.primary} />
         {unreadCount > 0 && <View style={styles.badge} />}
       </TouchableOpacity>

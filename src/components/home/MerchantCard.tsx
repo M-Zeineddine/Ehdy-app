@@ -20,7 +20,7 @@ export function MerchantCard({ merchant, onPress }: MerchantCardProps) {
   const image = merchant.banner_image_url ?? FALLBACK_IMAGE;
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.9} style={styles.container}>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.6} style={styles.container}>
       <ImageBackground source={{ uri: image }} style={styles.image} imageStyle={styles.imageStyle}>
         <View style={styles.overlay}>
           <AppText variant="body" color="#fff" bold style={styles.name} numberOfLines={1}>

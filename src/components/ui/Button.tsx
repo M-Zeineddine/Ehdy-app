@@ -28,7 +28,7 @@ export function Button({
     <TouchableOpacity
       onPress={onPress}
       disabled={isDisabled}
-      activeOpacity={0.8}
+      activeOpacity={0.9}
       style={[
         styles.base,
         styles[`size_${size}`],
