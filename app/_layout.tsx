@@ -59,8 +59,8 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    if (fontsLoaded && !authLoading) SplashScreen.hideAsync();
-  }, [fontsLoaded, authLoading]);
+    if (fontsLoaded) SplashScreen.hideAsync();
+  }, [fontsLoaded]);
 
   if (!fontsLoaded || authLoading) return <LoadingScreen />;
 

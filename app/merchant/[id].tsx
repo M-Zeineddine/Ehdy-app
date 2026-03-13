@@ -165,6 +165,8 @@ export default function MerchantScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* Tab content */}
+          <View>
           {/* Gift Items tab */}
           {tab === 'items' && (
             <View style={styles.tabContent}>
@@ -230,6 +232,7 @@ export default function MerchantScreen() {
               </View>
             </View>
           )}
+          </View>
         </ScrollView>
       )}
     </KeyboardAvoidingView>
