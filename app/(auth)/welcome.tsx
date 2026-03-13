@@ -1,4 +1,4 @@
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppText } from '@/src/components/ui/AppText';
@@ -6,13 +6,15 @@ import { Button } from '@/src/components/ui/Button';
 import { Colors } from '@/src/constants/colors';
 import { Spacing } from '@/src/constants/layout';
 
+const LOGO = require('../../assets/images/kado_logo.png');
+
 export default function WelcomeScreen() {
   const router = useRouter();
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.hero}>
-        <AppText variant="title" style={styles.logo}>kado</AppText>
+        <Image source={LOGO} style={styles.logo} resizeMode="contain" />
         <AppText variant="body" color={Colors.text.secondary} style={styles.tagline}>
           Give gifts they'll actually love
         </AppText>
@@ -44,9 +46,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   logo: {
-    fontSize: 56,
-    color: Colors.primary,
-    letterSpacing: -2,
+    width: 260, height: 180, marginBottom: -50
   },
   tagline: {
     textAlign: 'center',

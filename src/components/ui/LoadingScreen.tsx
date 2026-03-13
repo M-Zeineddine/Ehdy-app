@@ -1,7 +1,9 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Animated, StyleSheet, Easing } from 'react-native';
+import { View, Animated, StyleSheet, Easing, Image } from 'react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/layout';
+
+const LOGO = require('../../../assets/images/kado_logo.png');
 
 export function LoadingScreen() {
   const fadeIn = useRef(new Animated.Value(0)).current;
@@ -46,9 +48,7 @@ export function LoadingScreen() {
   return (
     <Animated.View style={[styles.root, { opacity: fadeIn }]}>
       {/* Logo */}
-      <Animated.Text style={[styles.logo, { transform: [{ scale: pulse }] }]}>
-        kado
-      </Animated.Text>
+      <Animated.Image source={LOGO} style={[styles.logo, { transform: [{ scale: pulse }] }]} resizeMode="contain" />
 
       <Animated.Text style={styles.tagline}>Gift with intention</Animated.Text>
 
@@ -71,10 +71,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   logo: {
-    fontSize: 52,
-    fontFamily: Fonts.extraBold,
-    color: Colors.primary,
-    letterSpacing: -0.5,
+    width: 260, height: 180, marginBottom: -50
   },
   tagline: {
     fontSize: 14,
