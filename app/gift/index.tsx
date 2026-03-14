@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View, ScrollView, StyleSheet, TouchableOpacity, TextInput,
   Animated, Image, KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
@@ -6,7 +6,7 @@ import {
 import * as WebBrowser from 'expo-web-browser';
 import { useLocalSearchParams, router, useNavigation } from 'expo-router';
 import { usePreventRemove } from '@react-navigation/native';
-import { initiateGiftPayment } from '@/src/services/giftService';
+import { initiateGiftPayment, saveRetryDraft, getRetryDraft } from '@/src/services/giftService';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -33,6 +33,8 @@ export default function GiftFlowScreen() {
     merchantName: string;
     merchantLogo: string;
     isCredit: string;
+    draft_id?: string;
+    initial_step?: string;
   }>();
 
   const isCredit = params.isCredit === 'true';
@@ -41,7 +43,7 @@ export default function GiftFlowScreen() {
     : '';
 
   // ── Step & animation ────────────────────────────────────────────────────────
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(params.initial_step ? parseInt(params.initial_step, 10) : 1);
   const slideAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
@@ -78,11 +80,35 @@ export default function GiftFlowScreen() {
   const [contactPickerVisible, setContactPickerVisible] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'whish'>('card');
   const [paying, setPaying] = useState(false);
+  const [paymentNavigating, setPaymentNavigating] = useState(false);
+
+  // Pre-fill form from draft when retrying after a failed payment
+  useEffect(() => {
+    if (!params.draft_id) return;
+    getRetryDraft(params.draft_id).then(draft => {
+      if (draft.sender_name) setFromName(draft.sender_name);
+      if (draft.recipient_name) setToName(draft.recipient_name);
+      if (draft.personal_message) setMessage(draft.personal_message);
+      if (draft.theme) setSelectedTheme(draft.theme);
+      if (draft.recipient_phone) setPhone(draft.recipient_phone);
+    }).catch(() => {/* draft may have expired — silently ignore */});
+  }, [params.draft_id]);
 
   async function handlePay() {
     if (paying) return;
     setPaying(true);
     try {
+      // Save form state so the user can retry with their customization intact
+      const draftId = await saveRetryDraft({
+        merchant_item_id: isCredit ? undefined : params.itemId,
+        store_credit_preset_id: isCredit ? params.itemId : undefined,
+        sender_name: fromName,
+        recipient_name: toName,
+        recipient_phone: phone,
+        personal_message: message,
+        theme: selectedTheme,
+      });
+
       const result = await initiateGiftPayment({
         merchant_item_id: isCredit ? undefined : params.itemId,
         store_credit_preset_id: isCredit ? params.itemId : undefined,
@@ -92,9 +118,11 @@ export default function GiftFlowScreen() {
         personal_message: message,
         theme: selectedTheme,
       });
+
       const browserResult = await WebBrowser.openAuthSessionAsync(result.tap_transaction_url, 'kado://');
       if (browserResult.type === 'success') {
         const urlParams = new URL(browserResult.url).searchParams;
+        setPaymentNavigating(true);
         router.replace({
           pathname: '/payment/callback',
           params: {
@@ -103,6 +131,18 @@ export default function GiftFlowScreen() {
             share_code: result.unique_share_link,
             recipient_name: toName,
             gift_name: params.itemName,
+            draft_id: draftId,
+            // Item params needed to rebuild the gift screen on retry
+            item_id: params.itemId,
+            item_name: params.itemName,
+            item_description: params.itemDescription ?? '',
+            item_price: params.itemPrice ?? '',
+            item_currency: params.itemCurrency ?? '',
+            item_image: params.itemImage ?? '',
+            merchant_id: params.merchantId ?? '',
+            merchant_name: params.merchantName ?? '',
+            merchant_logo: params.merchantLogo ?? '',
+            is_credit: params.isCredit ?? 'false',
           },
         });
       }
@@ -115,7 +155,7 @@ export default function GiftFlowScreen() {
 
   // ── Back navigation guard ────────────────────────────────────────────────────
   const navigation = useNavigation();
-  const isDirty = fromName !== '' || toName !== '' || message !== '' || phone !== '' || selectedTheme !== 'birthday';
+  const isDirty = !paymentNavigating && (fromName !== '' || toName !== '' || message !== '' || phone !== '' || selectedTheme !== 'birthday');
 
   usePreventRemove(isDirty, ({ data }) => {
     Alert.alert(

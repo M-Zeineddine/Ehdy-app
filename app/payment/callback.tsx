@@ -5,6 +5,8 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { api } from '@/src/services/api';
+import { deleteRetryDraft } from '@/src/services/giftService';
 import { AppText } from '@/src/components/ui/AppText';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, FontSize, Fonts } from '@/src/constants/layout';
@@ -15,12 +17,28 @@ const GIFT_BASE_URL = 'https://kado-backend.onrender.com/gift';
 
 export default function PaymentCallbackScreen() {
   const insets = useSafeAreaInsets();
-  const { status, tap_id, share_code, recipient_name, gift_name } = useLocalSearchParams<{
+  const {
+    status, tap_id, share_code, recipient_name, gift_name,
+    draft_id,
+    item_id, item_name, item_description, item_price, item_currency,
+    item_image, merchant_id, merchant_name, merchant_logo, is_credit,
+  } = useLocalSearchParams<{
     status?: string;
     tap_id?: string;
     share_code?: string;
     recipient_name?: string;
     gift_name?: string;
+    draft_id?: string;
+    item_id?: string;
+    item_name?: string;
+    item_description?: string;
+    item_price?: string;
+    item_currency?: string;
+    item_image?: string;
+    merchant_id?: string;
+    merchant_name?: string;
+    merchant_logo?: string;
+    is_credit?: string;
   }>();
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('loading');
   const [copied, setCopied] = useState(false);
@@ -28,14 +46,31 @@ export default function PaymentCallbackScreen() {
   const giftLink = share_code ? `${GIFT_BASE_URL}/${share_code}` : '';
 
   useEffect(() => {
-    if (status === 'CAPTURED') {
-      setPaymentStatus('success');
-    } else if (status === 'FAILED' || status === 'CANCELLED') {
-      setPaymentStatus('failed');
-    } else {
-      setPaymentStatus('success');
+    async function confirm() {
+      if (status === 'FAILED' || status === 'CANCELLED') {
+        setPaymentStatus('failed');
+        return;
+      }
+
+      if (tap_id) {
+        try {
+          await api.post('/gifts/confirm-payment', { tap_id });
+          setPaymentStatus('success');
+          // Clean up draft now that payment succeeded
+          if (draft_id) deleteRetryDraft(draft_id).catch(() => {});
+        } catch {
+          // Backend rejected the charge — treat as failed
+          setPaymentStatus('failed');
+        }
+      } else {
+        // No tap_id (e.g. alternate payment method) — go straight to success
+        setPaymentStatus('success');
+        if (draft_id) deleteRetryDraft(draft_id).catch(() => {});
+      }
     }
-  }, [status]);
+
+    confirm();
+  }, [status, tap_id]);
 
   function handleWhatsApp() {
     const name = recipient_name ? ` for ${recipient_name}` : '';
@@ -58,12 +93,32 @@ export default function PaymentCallbackScreen() {
   }
 
   function handleRetry() {
-    router.back();
+    if (draft_id && item_id) {
+      router.replace({
+        pathname: '/gift',
+        params: {
+          itemId: item_id,
+          itemName: item_name ?? '',
+          itemDescription: item_description ?? '',
+          itemPrice: item_price ?? '',
+          itemCurrency: item_currency ?? '',
+          itemImage: item_image ?? '',
+          merchantId: merchant_id ?? '',
+          merchantName: merchant_name ?? '',
+          merchantLogo: merchant_logo ?? '',
+          isCredit: is_credit ?? 'false',
+          draft_id,
+          initial_step: '3',
+        },
+      });
+    } else {
+      router.back();
+    }
   }
 
   if (paymentStatus === 'loading') {
     return (
-      <View style={[styles.root, { paddingTop: insets.top }]}>
+      <View style={[styles.root, styles.rootCentered, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         <ActivityIndicator size="large" color={Colors.primary} />
         <AppText style={styles.loadingText}>Confirming payment…</AppText>
       </View>
@@ -146,6 +201,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     paddingHorizontal: Spacing.xl,
     justifyContent: 'space-between',
+  },
+  rootCentered: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   content: {
     flex: 1,
