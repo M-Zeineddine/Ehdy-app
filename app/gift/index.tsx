@@ -74,6 +74,7 @@ export default function GiftFlowScreen() {
   const [selectedTheme, setSelectedTheme] = useState('birthday');
   const [phone, setPhone] = useState('');
   const [contactPickerVisible, setContactPickerVisible] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'whish'>('card');
 
   // ── Back navigation guard ────────────────────────────────────────────────────
   const navigation = useNavigation();
@@ -257,13 +258,73 @@ export default function GiftFlowScreen() {
     );
   }
 
-  // ── Step 3: Checkout (design coming soon) ───────────────────────────────────
+  // ── Step 3: Checkout ────────────────────────────────────────────────────────
   function renderCheckout() {
+    const recipientLabel = [toName, phone ? `+961 ${phone}` : null].filter(Boolean).join(' · ');
+
     return (
-      <View style={styles.checkoutPlaceholder}>
-        <Ionicons name="card-outline" size={48} color={Colors.text.tertiary} />
-        <AppText color={Colors.text.tertiary}>Checkout design coming soon</AppText>
-      </View>
+      <ScrollView contentContainerStyle={styles.stepContent} showsVerticalScrollIndicator={false}>
+        <GiftCardPreview
+          themeId={selectedTheme}
+          toName={toName}
+          fromName={fromName}
+          message={message}
+          merchantName={params.merchantName ?? ''}
+          price={price}
+        />
+
+        {/* Payment details */}
+        <AppText style={styles.sectionLabel}>PAYMENT DETAILS</AppText>
+        <View style={styles.detailsCard}>
+          <View style={styles.detailRow}>
+            <AppText color={Colors.text.secondary}>Recipient</AppText>
+            <AppText semiBold style={styles.detailValue}>
+              {recipientLabel || '—'}
+            </AppText>
+          </View>
+          <View style={styles.detailDivider} />
+          <View style={styles.detailRow}>
+            <AppText semiBold>Total</AppText>
+            <AppText semiBold style={styles.detailTotal}>{price}</AppText>
+          </View>
+        </View>
+
+        {/* Payment method */}
+        <AppText style={styles.sectionLabel}>PAYMENT METHOD</AppText>
+        <View style={styles.paymentOptions}>
+          {([
+            { key: 'card', icon: 'card-outline', label: 'Credit / Debit Card' },
+            { key: 'whish', icon: 'wallet-outline', label: 'OMT / Whish Money' },
+          ] as const).map(opt => (
+            <TouchableOpacity
+              key={opt.key}
+              style={[styles.paymentOption, paymentMethod === opt.key && styles.paymentOptionActive]}
+              onPress={() => setPaymentMethod(opt.key)}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name={opt.icon}
+                size={22}
+                color={paymentMethod === opt.key ? Colors.primary : Colors.text.secondary}
+              />
+              <AppText
+                semiBold={paymentMethod === opt.key}
+                style={[styles.paymentLabel, paymentMethod === opt.key && styles.paymentLabelActive]}
+              >
+                {opt.label}
+              </AppText>
+              {paymentMethod === opt.key && (
+                <Ionicons name="checkmark-circle" size={18} color={Colors.primary} style={{ marginLeft: 'auto' }} />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <View style={styles.secureRow}>
+          <Ionicons name="lock-closed-outline" size={12} color={Colors.text.tertiary} />
+          <AppText style={styles.secureText} color={Colors.text.tertiary}>Secure Checkout via SSL</AppText>
+        </View>
+      </ScrollView>
     );
   }
 
@@ -484,10 +545,38 @@ const styles = StyleSheet.create({
   },
   schedulePlaceholderText: { fontSize: FontSize.sm },
 
-  // Checkout placeholder
-  checkoutPlaceholder: {
-    flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.md,
+  // Checkout
+  sectionLabel: {
+    fontSize: FontSize.xs, fontFamily: Fonts.semiBold,
+    color: Colors.text.tertiary, letterSpacing: 0.8,
   },
+  detailsCard: {
+    backgroundColor: Colors.card, borderRadius: Radius.lg,
+    borderWidth: 1, borderColor: Colors.border,
+    paddingHorizontal: Spacing.md,
+  },
+  detailRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingVertical: Spacing.md,
+  },
+  detailValue: { fontSize: FontSize.base, maxWidth: '60%', textAlign: 'right' },
+  detailDivider: { height: 1, backgroundColor: Colors.border },
+  detailTotal: { fontSize: FontSize.lg, color: Colors.primary },
+  paymentOptions: { gap: Spacing.sm },
+  paymentOption: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.md,
+    backgroundColor: Colors.card, borderRadius: Radius.lg,
+    borderWidth: 1.5, borderColor: Colors.border,
+    paddingHorizontal: Spacing.md, paddingVertical: Spacing.md,
+  },
+  paymentOptionActive: { borderColor: Colors.primary },
+  paymentLabel: { fontSize: FontSize.base, color: Colors.text.secondary },
+  paymentLabelActive: { color: Colors.text.primary },
+  secureRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4,
+    paddingBottom: Spacing.sm,
+  },
+  secureText: { fontSize: FontSize.xs },
 
   // Bottom bar
   bottomBar: {
