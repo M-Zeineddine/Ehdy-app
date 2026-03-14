@@ -1,9 +1,8 @@
 import React, { useState, useRef } from 'react';
 import {
   View, ScrollView, StyleSheet, TouchableOpacity, TextInput,
-  Switch, KeyboardAvoidingView, Platform, Animated, Image,
+  KeyboardAvoidingView, Platform, Animated, Image,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,7 +11,7 @@ import { AppText } from '@/src/components/ui/AppText';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, Fonts, FontSize } from '@/src/constants/layout';
 import { GiftCardPreview } from '@/src/components/gift/GiftCardPreview';
-import { GIFT_THEMES, DELIVERY_CHANNELS, type DeliveryChannel } from '@/src/constants/giftThemes';
+import { GIFT_THEMES } from '@/src/constants/giftThemes';
 
 const STEP_TITLES = ['Review Gift', 'Customize Gift', 'Checkout'];
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&q=80';
@@ -67,9 +66,7 @@ export default function GiftFlowScreen() {
   const [toName, setToName] = useState('');
   const [message, setMessage] = useState('');
   const [selectedTheme, setSelectedTheme] = useState('birthday');
-  const [channel, setChannel] = useState<DeliveryChannel>('whatsapp');
   const [phone, setPhone] = useState('');
-  const [scheduleEnabled, setScheduleEnabled] = useState(false);
 
   // ── Step 1: Review ──────────────────────────────────────────────────────────
   function renderReview() {
@@ -183,22 +180,17 @@ export default function GiftFlowScreen() {
                   key={theme.id}
                   onPress={() => setSelectedTheme(theme.id)}
                   activeOpacity={0.8}
-                  style={active ? styles.themeCardActiveShadow : undefined}
+                  style={[styles.themeCard, active && styles.themeCardActive]}
                 >
-                  <LinearGradient
-                    colors={theme.gradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.themeCard}
-                  >
-                    {active && (
-                      <View style={styles.themeCheck}>
-                        <Ionicons name="checkmark-circle" size={16} color="rgba(255,255,255,0.95)" />
-                      </View>
-                    )}
-                    <Ionicons name={theme.icon} size={26} color="rgba(255,255,255,0.92)" />
-                    <AppText style={styles.themeLabel}>{theme.label}</AppText>
-                  </LinearGradient>
+                  {active && (
+                    <View style={styles.themeCheck}>
+                      <Ionicons name="checkmark-circle" size={18} color={Colors.primary} />
+                    </View>
+                  )}
+                  <View style={[styles.themeIconCircle, { backgroundColor: theme.gradient[0] + '22' }]}>
+                    <Ionicons name={theme.icon} size={26} color={theme.gradient[0]} />
+                  </View>
+                  <AppText style={styles.themeLabel}>{theme.label}</AppText>
                 </TouchableOpacity>
               );
             })}
@@ -206,86 +198,28 @@ export default function GiftFlowScreen() {
         </View>
 
         <View style={styles.field}>
-          <AppText style={styles.fieldLabel}>DELIVERY CHANNEL</AppText>
-          <View style={styles.channelRow}>
-            {DELIVERY_CHANNELS.map(opt => {
-              const active = channel === opt.id;
-              return (
-                <TouchableOpacity
-                  key={opt.id}
-                  style={[styles.channelBtn, active && styles.channelBtnActive]}
-                  onPress={() => setChannel(opt.id)}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons name={opt.icon} size={16} color={active ? Colors.primary : Colors.text.secondary} />
-                  <AppText style={[styles.channelText, active && styles.channelTextActive]}>
-                    {opt.label}
-                  </AppText>
-                </TouchableOpacity>
-              );
-            })}
+          <AppText style={styles.fieldLabel}>RECIPIENT'S PHONE</AppText>
+          <View style={styles.phoneRow}>
+            <View style={styles.countryCode}>
+              <AppText style={styles.flag}>🇱🇧</AppText>
+              <AppText semiBold style={styles.countryCodeText}>+961</AppText>
+            </View>
+            <TextInput
+              style={styles.phoneInput}
+              value={phone}
+              onChangeText={setPhone}
+              placeholder="3123 456"
+              placeholderTextColor={Colors.text.tertiary}
+              keyboardType="phone-pad"
+            />
           </View>
-        </View>
-
-        <View style={styles.field}>
-          <AppText style={styles.fieldLabel}>
-            {channel === 'email' ? "RECEIVER'S EMAIL" : "RECEIVER'S NUMBER"}
-          </AppText>
-          {channel === 'email' ? (
-            <View style={styles.inputWrap}>
-              <Ionicons name="mail-outline" size={16} color={Colors.text.tertiary} style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                value={phone}
-                onChangeText={setPhone}
-                placeholder="email@example.com"
-                placeholderTextColor={Colors.text.tertiary}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
-          ) : (
-            <View style={styles.phoneRow}>
-              <View style={styles.countryCode}>
-                <AppText style={styles.flag}>🇱🇧</AppText>
-                <AppText semiBold style={styles.countryCodeText}>+961</AppText>
-              </View>
-              <TextInput
-                style={styles.phoneInput}
-                value={phone}
-                onChangeText={setPhone}
-                placeholder="3123 456"
-                placeholderTextColor={Colors.text.tertiary}
-                keyboardType="phone-pad"
-              />
-            </View>
-          )}
           <View style={styles.hintRow}>
             <Ionicons name="information-circle-outline" size={14} color={Colors.text.tertiary} />
             <AppText style={styles.hintText} color={Colors.text.tertiary}>
-              The recipient will receive a link to redeem their gift.
+              Used to identify your recipient if they sign up.
             </AppText>
           </View>
         </View>
-
-        <View style={styles.scheduleRow}>
-          <AppText style={styles.scheduleLabel}>Schedule Delivery</AppText>
-          <Switch
-            value={scheduleEnabled}
-            onValueChange={setScheduleEnabled}
-            trackColor={{ false: Colors.border, true: Colors.primary }}
-            thumbColor="#fff"
-          />
-        </View>
-
-        {scheduleEnabled && (
-          <View style={styles.schedulePlaceholder}>
-            <Ionicons name="calendar-outline" size={18} color={Colors.text.tertiary} />
-            <AppText style={styles.schedulePlaceholderText} color={Colors.text.tertiary}>
-              Date & time picker coming soon
-            </AppText>
-          </View>
-        )}
       </ScrollView>
     );
   }
@@ -434,17 +368,22 @@ const styles = StyleSheet.create({
   // Theme picker
   themeScroll: { gap: Spacing.sm, paddingVertical: 4 },
   themeCard: {
-    width: 80, height: 88, borderRadius: Radius.lg,
+    width: 84, paddingVertical: 12, borderRadius: Radius.lg,
+    alignItems: 'center', gap: 8,
+    backgroundColor: Colors.card,
+    borderWidth: 1.5, borderColor: Colors.border,
+  },
+  themeCardActive: {
+    borderColor: Colors.primary,
+    shadowColor: Colors.primary, shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.18, shadowRadius: 8, elevation: 4,
+  },
+  themeIconCircle: {
+    width: 48, height: 48, borderRadius: 24,
     alignItems: 'center', justifyContent: 'center',
-    gap: 6, overflow: 'hidden',
   },
-  themeCardActiveShadow: {
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.22, shadowRadius: 8,
-    elevation: 5, borderRadius: Radius.lg,
-  },
-  themeCheck: { position: 'absolute', top: 6, right: 6 },
-  themeLabel: { fontSize: FontSize.xs, fontFamily: Fonts.semiBold, color: 'rgba(255,255,255,0.95)' },
+  themeCheck: { position: 'absolute', top: 5, right: 5 },
+  themeLabel: { fontSize: FontSize.xs, fontFamily: Fonts.semiBold, color: Colors.text.primary },
 
   // Delivery
   channelRow: { flexDirection: 'row', gap: Spacing.sm },
