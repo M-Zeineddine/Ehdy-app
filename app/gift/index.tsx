@@ -94,11 +94,17 @@ export default function GiftFlowScreen() {
       });
       const browserResult = await WebBrowser.openAuthSessionAsync(result.tap_transaction_url, 'kado://');
       if (browserResult.type === 'success') {
-        const url = browserResult.url;
-        const params = new URL(url).searchParams;
-        const status = params.get('status');
-        const tap_id = params.get('tap_id');
-        router.replace(`/payment/callback?status=${status ?? ''}&tap_id=${tap_id ?? ''}`);
+        const urlParams = new URL(browserResult.url).searchParams;
+        router.replace({
+          pathname: '/payment/callback',
+          params: {
+            status: urlParams.get('status') ?? '',
+            tap_id: urlParams.get('tap_id') ?? '',
+            share_code: result.unique_share_link,
+            recipient_name: toName,
+            gift_name: params.itemName,
+          },
+        });
       }
     } catch (err: any) {
       Alert.alert('Payment failed', err.message ?? 'Something went wrong. Please try again.');
@@ -435,6 +441,7 @@ export default function GiftFlowScreen() {
           )}
         </TouchableOpacity>
       </View>
+
     </View>
   );
 }

@@ -13,6 +13,7 @@ export const Colors = {
   },
   border: '#EDE8E3',        // warm light border
   star: '#F0A500',          // warm gold
+  error: '#E53935',
   overlay: 'rgba(28,20,16,0.55)',
   tabBar: {
     active: '#F07856',

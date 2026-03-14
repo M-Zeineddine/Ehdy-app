@@ -13,6 +13,7 @@ export interface InitiateGiftPaymentParams {
 export interface InitiateGiftPaymentResult {
   gift_sent_id: string;
   tap_transaction_url: string;
+  unique_share_link: string;
   amount: number;
   currency: string;
 }
