@@ -1,10 +1,12 @@
 import React, { useState, useRef } from 'react';
 import {
   View, ScrollView, StyleSheet, TouchableOpacity, TextInput,
-  Animated, Image, KeyboardAvoidingView, Platform, Alert,
+  Animated, Image, KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
 } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 import { useLocalSearchParams, router, useNavigation } from 'expo-router';
 import { usePreventRemove } from '@react-navigation/native';
+import { initiateGiftPayment } from '@/src/services/giftService';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -75,6 +77,35 @@ export default function GiftFlowScreen() {
   const [phone, setPhone] = useState('');
   const [contactPickerVisible, setContactPickerVisible] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'whish'>('card');
+  const [paying, setPaying] = useState(false);
+
+  async function handlePay() {
+    if (paying) return;
+    setPaying(true);
+    try {
+      const result = await initiateGiftPayment({
+        merchant_item_id: isCredit ? undefined : params.itemId,
+        store_credit_preset_id: isCredit ? params.itemId : undefined,
+        sender_name: fromName,
+        recipient_name: toName,
+        recipient_phone: phone,
+        personal_message: message,
+        theme: selectedTheme,
+      });
+      const browserResult = await WebBrowser.openAuthSessionAsync(result.tap_transaction_url, 'kado://');
+      if (browserResult.type === 'success') {
+        const url = browserResult.url;
+        const params = new URL(url).searchParams;
+        const status = params.get('status');
+        const tap_id = params.get('tap_id');
+        router.replace(`/payment/callback?status=${status ?? ''}&tap_id=${tap_id ?? ''}`);
+      }
+    } catch (err: any) {
+      Alert.alert('Payment failed', err.message ?? 'Something went wrong. Please try again.');
+    } finally {
+      setPaying(false);
+    }
+  }
 
   // ── Back navigation guard ────────────────────────────────────────────────────
   const navigation = useNavigation();
@@ -390,13 +421,18 @@ export default function GiftFlowScreen() {
           <AppText semiBold style={styles.totalAmount}>{price}</AppText>
         </View>
         <TouchableOpacity
-          style={styles.continueBtn}
-          onPress={() => step < 3 ? goToStep(step + 1) : undefined}
+          style={[styles.continueBtn, paying && styles.continueBtnDisabled]}
+          onPress={() => step < 3 ? goToStep(step + 1) : handlePay()}
           activeOpacity={0.8}
+          disabled={paying}
         >
-          <AppText semiBold style={styles.continueBtnText}>
-            {step === 3 ? 'Confirm & Pay' : 'Continue'}
-          </AppText>
+          {paying ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <AppText semiBold style={styles.continueBtnText}>
+              {step === 3 ? 'Confirm & Pay' : 'Continue'}
+            </AppText>
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -590,4 +626,5 @@ const styles = StyleSheet.create({
     paddingVertical: 16, alignItems: 'center',
   },
   continueBtnText: { color: '#fff', fontSize: FontSize.base },
+  continueBtnDisabled: { opacity: 0.6 },
 });
