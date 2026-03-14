@@ -12,7 +12,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.kadoapp.gifts",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSContactsUsageDescription": "Used to fill in your recipient's phone number from your contacts."
       }
     },
     "android": {
@@ -31,6 +32,9 @@
     },
     "plugins": [
       "expo-router",
+      ["expo-contacts", {
+        "contactsPermission": "Used to fill in your recipient's phone number from your contacts."
+      }],
       [
         "expo-splash-screen",
         {

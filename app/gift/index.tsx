@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
 import {
   View, ScrollView, StyleSheet, TouchableOpacity, TextInput,
-  KeyboardAvoidingView, Platform, Animated, Image,
+  Animated, Image, KeyboardAvoidingView, Platform, Alert,
 } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams, router, useNavigation } from 'expo-router';
+import { usePreventRemove } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -12,6 +13,7 @@ import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, Fonts, FontSize } from '@/src/constants/layout';
 import { GiftCardPreview } from '@/src/components/gift/GiftCardPreview';
 import { GIFT_THEMES } from '@/src/constants/giftThemes';
+import { ContactPickerModal } from '@/src/components/gift/ContactPickerModal';
 
 const STEP_TITLES = ['Review Gift', 'Customize Gift', 'Checkout'];
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&q=80';
@@ -47,12 +49,16 @@ export default function GiftFlowScreen() {
       Animated.timing(slideAnim, { toValue: direction * -60, duration: 160, useNativeDriver: true }),
       Animated.timing(fadeAnim, { toValue: 0, duration: 140, useNativeDriver: true }),
     ]).start(() => {
-      setStep(next);
-      slideAnim.setValue(direction * 60);
-      Animated.parallel([
-        Animated.timing(slideAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
-        Animated.timing(fadeAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
-      ]).start();
+      // requestAnimationFrame lets the native thread commit opacity=0 before
+      // the new step renders, preventing a 1-frame flicker of the old content
+      requestAnimationFrame(() => {
+        setStep(next);
+        slideAnim.setValue(direction * 60);
+        Animated.parallel([
+          Animated.timing(slideAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
+          Animated.timing(fadeAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+        ]).start();
+      });
     });
   }
 
@@ -67,6 +73,22 @@ export default function GiftFlowScreen() {
   const [message, setMessage] = useState('');
   const [selectedTheme, setSelectedTheme] = useState('birthday');
   const [phone, setPhone] = useState('');
+  const [contactPickerVisible, setContactPickerVisible] = useState(false);
+
+  // ── Back navigation guard ────────────────────────────────────────────────────
+  const navigation = useNavigation();
+  const isDirty = fromName !== '' || toName !== '' || message !== '' || phone !== '' || selectedTheme !== 'birthday';
+
+  usePreventRemove(isDirty, ({ data }) => {
+    Alert.alert(
+      'Leave gift?',
+      'Your customization will be lost.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Leave', style: 'destructive', onPress: () => navigation.dispatch(data.action) },
+      ]
+    );
+  });
 
   // ── Step 1: Review ──────────────────────────────────────────────────────────
   function renderReview() {
@@ -120,6 +142,38 @@ export default function GiftFlowScreen() {
         />
 
         <View style={styles.field}>
+          <View style={styles.rowBetween}>
+            <AppText style={styles.fieldLabel}>SELECT THEME</AppText>
+            <TouchableOpacity activeOpacity={0.6}>
+              <AppText style={styles.viewAll}>View all</AppText>
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.themeScroll}>
+            {GIFT_THEMES.map(theme => {
+              const active = selectedTheme === theme.id;
+              return (
+                <TouchableOpacity
+                  key={theme.id}
+                  onPress={() => setSelectedTheme(theme.id)}
+                  activeOpacity={0.8}
+                  style={[styles.themeCard, active && styles.themeCardActive]}
+                >
+                  {active && (
+                    <View style={styles.themeCheck}>
+                      <Ionicons name="checkmark-circle" size={18} color={Colors.primary} />
+                    </View>
+                  )}
+                  <View style={[styles.themeIconCircle, { backgroundColor: theme.gradient[0] + '22' }]}>
+                    <Ionicons name={theme.icon} size={26} color={theme.gradient[0]} />
+                  </View>
+                  <AppText style={styles.themeLabel}>{theme.label}</AppText>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+
+        <View style={styles.field}>
           <AppText style={styles.fieldLabel}>FROM</AppText>
           <View style={styles.inputWrap}>
             <Ionicons name="person-outline" size={16} color={Colors.text.tertiary} style={styles.inputIcon} />
@@ -165,37 +219,7 @@ export default function GiftFlowScreen() {
           </View>
         </View>
 
-        <View style={styles.field}>
-          <View style={styles.rowBetween}>
-            <AppText style={styles.fieldLabel}>SELECT THEME</AppText>
-            <TouchableOpacity activeOpacity={0.6}>
-              <AppText style={styles.viewAll}>View all</AppText>
-            </TouchableOpacity>
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.themeScroll}>
-            {GIFT_THEMES.map(theme => {
-              const active = selectedTheme === theme.id;
-              return (
-                <TouchableOpacity
-                  key={theme.id}
-                  onPress={() => setSelectedTheme(theme.id)}
-                  activeOpacity={0.8}
-                  style={[styles.themeCard, active && styles.themeCardActive]}
-                >
-                  {active && (
-                    <View style={styles.themeCheck}>
-                      <Ionicons name="checkmark-circle" size={18} color={Colors.primary} />
-                    </View>
-                  )}
-                  <View style={[styles.themeIconCircle, { backgroundColor: theme.gradient[0] + '22' }]}>
-                    <Ionicons name={theme.icon} size={26} color={theme.gradient[0]} />
-                  </View>
-                  <AppText style={styles.themeLabel}>{theme.label}</AppText>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
+
 
         <View style={styles.field}>
           <AppText style={styles.fieldLabel}>RECIPIENT'S PHONE</AppText>
@@ -204,14 +228,23 @@ export default function GiftFlowScreen() {
               <AppText style={styles.flag}>🇱🇧</AppText>
               <AppText semiBold style={styles.countryCodeText}>+961</AppText>
             </View>
-            <TextInput
-              style={styles.phoneInput}
-              value={phone}
-              onChangeText={setPhone}
-              placeholder="3123 456"
-              placeholderTextColor={Colors.text.tertiary}
-              keyboardType="phone-pad"
-            />
+            <View style={styles.phoneInputWrap}>
+              <TextInput
+                style={styles.phoneInputInner}
+                value={phone}
+                onChangeText={setPhone}
+                placeholder="3123 456"
+                placeholderTextColor={Colors.text.tertiary}
+                keyboardType="phone-pad"
+              />
+              <TouchableOpacity
+                onPress={() => setContactPickerVisible(true)}
+                activeOpacity={0.7}
+                style={styles.contactIconBtn}
+              >
+                <Ionicons name="people-outline" size={20} color={Colors.primary} />
+              </TouchableOpacity>
+            </View>
           </View>
           <View style={styles.hintRow}>
             <Ionicons name="information-circle-outline" size={14} color={Colors.text.tertiary} />
@@ -235,10 +268,7 @@ export default function GiftFlowScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.root, { paddingTop: insets.top }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    <View style={[styles.root, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack} activeOpacity={0.6} style={styles.headerSide}>
@@ -265,14 +295,25 @@ export default function GiftFlowScreen() {
       </View>
       <AppText style={styles.stepSubLabel}>Step {step} of 3</AppText>
 
-      {/* Animated step content */}
-      <Animated.View
-        style={[styles.animatedContainer, { opacity: fadeAnim, transform: [{ translateX: slideAnim }] }]}
-      >
-        {step === 1 && renderReview()}
-        {step === 2 && renderCustomize()}
-        {step === 3 && renderCheckout()}
-      </Animated.View>
+      {/* Animated step content — KAV wraps only this so bottom bar stays fixed */}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <Animated.View
+          style={[styles.animatedContainer, { opacity: fadeAnim, transform: [{ translateX: slideAnim }] }]}
+        >
+          {step === 1 && renderReview()}
+          {step === 2 && renderCustomize()}
+          {step === 3 && renderCheckout()}
+        </Animated.View>
+      </KeyboardAvoidingView>
+
+      <ContactPickerModal
+        visible={contactPickerVisible}
+        onClose={() => setContactPickerVisible(false)}
+        onSelect={(selectedPhone, name) => {
+          setPhone(selectedPhone);
+          setToName(name);
+        }}
+      />
 
       {/* Bottom bar */}
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + Spacing.md }]}>
@@ -290,7 +331,7 @@ export default function GiftFlowScreen() {
           </AppText>
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -375,8 +416,8 @@ const styles = StyleSheet.create({
   },
   themeCardActive: {
     borderColor: Colors.primary,
-    shadowColor: Colors.primary, shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.18, shadowRadius: 8, elevation: 4,
+    shadowColor: Colors.primary, shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.18, shadowRadius: 20, elevation: 4,
   },
   themeIconCircle: {
     width: 48, height: 48, borderRadius: 24,
@@ -405,11 +446,18 @@ const styles = StyleSheet.create({
   },
   flag: { fontSize: 18 },
   countryCodeText: { fontSize: FontSize.base },
-  phoneInput: {
-    flex: 1, backgroundColor: Colors.card, borderRadius: Radius.md,
-    borderWidth: 1, borderColor: Colors.border,
-    paddingHorizontal: Spacing.md, height: 52,
-    fontSize: FontSize.base, color: Colors.text.primary, fontFamily: Fonts.regular,
+  phoneInputWrap: {
+    flex: 1, flexDirection: 'row', alignItems: 'center',
+    backgroundColor: Colors.card, borderRadius: Radius.md,
+    borderWidth: 1, borderColor: Colors.border, height: 52,
+    paddingLeft: Spacing.md,
+  },
+  phoneInputInner: {
+    flex: 1, fontSize: FontSize.base, color: Colors.text.primary, fontFamily: Fonts.regular,
+  },
+  contactIconBtn: {
+    width: 48, height: 52, alignItems: 'center', justifyContent: 'center',
+    borderLeftWidth: 1, borderLeftColor: Colors.border,
   },
   hintRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   hintText: { fontSize: FontSize.xs, flex: 1 },
