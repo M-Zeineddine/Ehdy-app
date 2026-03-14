@@ -282,11 +282,18 @@ export default function GiftFlowScreen() {
       <View style={styles.stepIndicator}>
         {[1, 2, 3].map((s, i) => (
           <React.Fragment key={s}>
-            <View style={[
-              styles.stepDot,
-              step === s && styles.stepDotActive,
-              step > s && styles.stepDotDone,
-            ]} />
+            <TouchableOpacity
+              onPress={() => s !== step && goToStep(s)}
+              activeOpacity={s !== step ? 0.6 : 1}
+              disabled={s === step}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <View style={[
+                styles.stepDot,
+                step === s && styles.stepDotActive,
+                step > s && styles.stepDotDone,
+              ]} />
+            </TouchableOpacity>
             {i < 2 && (
               <View style={[styles.stepLine, step > s && styles.stepLineDone]} />
             )}
