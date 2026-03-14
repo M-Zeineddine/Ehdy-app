@@ -177,7 +177,7 @@ export default function MerchantScreen() {
               ) : (
                 toRows(itemsToShow).map((row, i) => (
                   <View key={i} style={styles.giftRow}>
-                    {row.map(gift => <GiftCardTile key={gift.id} item={gift} />)}
+                    {row.map(gift => <GiftCardTile key={gift.id} item={gift} merchantId={merchant.id} merchantName={merchant.name} />)}
                     {row.length === 1 && <View style={{ flex: 1 }} />}
                   </View>
                 ))
@@ -226,7 +226,26 @@ export default function MerchantScreen() {
                     ))}
                   </View>
                 )}
-                <TouchableOpacity style={styles.giftCreditBtn} activeOpacity={0.6}>
+                <TouchableOpacity
+                  style={styles.giftCreditBtn}
+                  activeOpacity={0.6}
+                  onPress={() => {
+                    if (!customAmount) return;
+                    router.push({
+                      pathname: '/gift',
+                      params: {
+                        itemName: 'Store Credit',
+                        itemDescription: `${merchant.name} store credit`,
+                        itemPrice: customAmount,
+                        itemCurrency: storeCredits[0]?.currency_code ?? 'USD',
+                        merchantId: merchant.id,
+                        merchantName: merchant.name,
+                        merchantLogo: (merchant as any).logo_url ?? '',
+                        isCredit: 'true',
+                      },
+                    });
+                  }}
+                >
                   <AppText semiBold color="#fff">Gift Custom Amount</AppText>
                 </TouchableOpacity>
               </View>
@@ -250,11 +269,27 @@ function ActionBtn({ icon, label, onPress }: { icon: any; label: string; onPress
   );
 }
 
-function GiftCardTile({ item }: { item: MerchantItem }) {
+function GiftCardTile({ item, merchantId, merchantName }: { item: MerchantItem; merchantId: string; merchantName: string }) {
   const FALLBACK = 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&q=80';
   const price = item.price
     ? `${item.currency_code} ${parseFloat(String(item.price)).toLocaleString()}`
     : `${item.currency_code} —`;
+
+  function handleGiftThis() {
+    router.push({
+      pathname: '/gift',
+      params: {
+        itemId: item.id,
+        itemName: item.name,
+        itemDescription: item.description ?? '',
+        itemPrice: String(item.price ?? ''),
+        itemCurrency: item.currency_code,
+        itemImage: item.image_url ?? FALLBACK,
+        merchantId,
+        merchantName,
+      },
+    });
+  }
 
   return (
     <View style={styles.giftCard}>
@@ -262,7 +297,7 @@ function GiftCardTile({ item }: { item: MerchantItem }) {
       <View style={styles.giftInfo}>
         <AppText semiBold numberOfLines={2} style={styles.giftName}>{item.name}</AppText>
         <AppText style={styles.giftPrice}>{price}</AppText>
-        <TouchableOpacity style={styles.giftThisBtn} activeOpacity={0.55}>
+        <TouchableOpacity style={styles.giftThisBtn} onPress={handleGiftThis} activeOpacity={0.55}>
           <Ionicons name="gift-outline" size={17} color={Colors.primary} />
           <AppText semiBold style={styles.giftThisText}>Gift This</AppText>
         </TouchableOpacity>

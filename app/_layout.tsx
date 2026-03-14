@@ -72,6 +72,7 @@ export default function RootLayout() {
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="merchant/[id]" />
+          <Stack.Screen name="gift" />
         </Stack>
         <StatusBar style="dark" />
       </SafeAreaProvider>
