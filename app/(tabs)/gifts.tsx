@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Image,
@@ -7,10 +7,11 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect, router } from 'expo-router';
+import { router } from 'expo-router';
 
 import { AppText } from '@/src/components/ui/AppText';
 import { Colors } from '@/src/constants/colors';
@@ -44,59 +45,87 @@ function getPriceLabel(gift: GiftSummary) {
   return '';
 }
 
+const GIFT_BASE_URL = 'https://kado-backend.onrender.com/gift';
+
 // ── GiftRow ───────────────────────────────────────────────────────────────────
 
 function GiftRow({ gift, mode }: { gift: GiftSummary; mode: 'sent' | 'received' }) {
   const merchantName = getMerchantName(gift);
   const merchantLogo = getMerchantLogo(gift);
-  const itemLabel    = getItemLabel(gift);
+  const itemLabel = getItemLabel(gift);
+  const priceLabel = getPriceLabel(gift);
 
-  const personLine = mode === 'sent'
-    ? `To: ${gift.recipient_name ?? '—'}`
-    : `From: ${gift.sender_name ?? [gift.sender_first_name, gift.sender_last_name].filter(Boolean).join(' ') ?? '—'}`;
+  const receiptParams = {
+    theme: gift.theme ?? 'birthday',
+    recipient_name: gift.recipient_name ?? '',
+    sender_name: gift.sender_name ?? '',
+    personal_message: gift.personal_message ?? '',
+    sent_at: gift.sent_at,
+    merchant_name: merchantName,
+    merchant_logo: merchantLogo ?? '',
+    item_label: itemLabel,
+    item_image: gift.item_image ?? '',
+    price_label: priceLabel,
+    share_link: gift.unique_share_link ?? '',
+  };
 
-  function onPress() {
-    if (mode !== 'sent') return;
-    router.push({
-      pathname: '/gift/sent-receipt',
-      params: {
-        theme:            gift.theme ?? 'birthday',
-        recipient_name:   gift.recipient_name ?? '',
-        sender_name:      gift.sender_name ?? '',
-        personal_message: gift.personal_message ?? '',
-        sent_at:          gift.sent_at,
-        merchant_name:    merchantName,
-        merchant_logo:    merchantLogo ?? '',
-        item_label:       itemLabel,
-        item_image:       gift.item_image ?? '',
-        price_label:      getPriceLabel(gift),
-        share_link:       gift.unique_share_link ?? '',
-      },
-    });
+  const dateLabel = new Date(gift.sent_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  async function onShareAgain() {
+    const link = gift.unique_share_link;
+    if (!link) return;
+    const url = link.startsWith('http') ? link : `${GIFT_BASE_URL}/${link}`;
+    try {
+      await Share.share({ message: `Open your gift here: ${url}`, url });
+    } catch { }
+  }
+
+  function onReceipt() {
+    router.push({ pathname: '/gift/sent-receipt', params: receiptParams });
   }
 
   return (
-    <TouchableOpacity style={styles.row} onPress={onPress} activeOpacity={mode === 'sent' ? 0.7 : 1}>
-      {/* Merchant logo */}
-      <View style={styles.logoWrap}>
-        {merchantLogo
-          ? <Image source={{ uri: merchantLogo }} style={styles.logoImg} />
-          : <AppText style={styles.logoFallback}>{(merchantName[0] ?? '🎁').toUpperCase()}</AppText>
-        }
+    <View style={styles.card}>
+      {/* Top: logo + info */}
+      <View style={styles.cardTop}>
+        <View style={styles.logoWrap}>
+          {merchantLogo
+            ? <Image source={{ uri: merchantLogo }} style={styles.logoImg} />
+            : <AppText style={styles.logoFallback}>{(merchantName[0] ?? '🎁').toUpperCase()}</AppText>
+          }
+        </View>
+        <View style={styles.cardInfo}>
+          <View style={styles.cardInfoTop}>
+            <AppText style={styles.merchantText} numberOfLines={1}>{merchantName || 'Gift'}</AppText>
+            <AppText style={styles.dateText}>{dateLabel}</AppText>
+          </View>
+          <AppText style={styles.itemText} numberOfLines={1}>{itemLabel}</AppText>
+        </View>
       </View>
 
-      {/* Content */}
-      <View style={styles.rowContent}>
-        <AppText style={styles.merchantText} numberOfLines={1}>{merchantName || 'Gift'}</AppText>
-        <AppText style={styles.itemText} numberOfLines={1}>{itemLabel}</AppText>
-        <AppText style={styles.metaText}>{personLine}</AppText>
+      {/* Meta: "To:" / "From:" */}
+      <View style={styles.cardMeta}>
+        <AppText style={styles.metaText}>
+          {mode === 'sent'
+            ? `To: ${gift.recipient_name ?? '—'}`
+            : `From: ${gift.sender_name ?? [gift.sender_first_name, gift.sender_last_name].filter(Boolean).join(' ') ?? '—'}`}
+        </AppText>
       </View>
 
-      {/* Chevron */}
+      {/* Actions */}
       {mode === 'sent' && (
-        <Ionicons name="chevron-forward" size={16} color={Colors.text.tertiary} />
+        <View style={styles.cardActions}>
+          <TouchableOpacity style={styles.actionBtnShare} onPress={onShareAgain} activeOpacity={0.7}>
+            <Ionicons name="share-outline" size={15} color={Colors.primary} />
+            <AppText style={styles.actionBtnShareText}>Share Again</AppText>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionBtnReceipt} onPress={onReceipt} activeOpacity={0.7}>
+            <Ionicons name="receipt-outline" size={15} color={Colors.text.secondary} />
+            <AppText style={styles.actionBtnReceiptText}>Receipt</AppText>
+          </TouchableOpacity>
+        </View>
       )}
-    </TouchableOpacity>
+    </View>
   );
 }
 
@@ -134,17 +163,15 @@ export default function GiftsScreen() {
       const [sent, received] = await Promise.all([getSentGifts(), getReceivedGifts()]);
       setSentGifts(sent.data);
       setReceivedGifts(received.data);
-    } catch {
-      // silently fail — lists stay as-is
+    } catch (err) {
+      console.warn('[GiftsScreen] fetch failed', err);
     }
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      setLoading(true);
-      fetchAll().finally(() => setLoading(false));
-    }, [fetchAll])
-  );
+  useEffect(() => {
+    setLoading(true);
+    fetchAll().finally(() => setLoading(false));
+  }, [fetchAll]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -246,13 +273,16 @@ const styles = StyleSheet.create({
   loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   separator: { height: Spacing.sm },
 
-  // Row
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  // Card
+  card: {
     backgroundColor: Colors.card,
     borderRadius: Radius.lg,
     padding: Spacing.md,
+    gap: 10,
+  },
+  cardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: Spacing.md,
   },
   logoWrap: {
@@ -265,22 +295,27 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     overflow: 'hidden',
   },
-  logoImg: {
-    width: 48,
-    height: 48,
-  },
+  logoImg: { width: 48, height: 48 },
   logoFallback: {
     fontSize: FontSize.lg,
     fontFamily: Fonts.bold,
     color: Colors.text.secondary,
   },
-  rowContent: {
-    flex: 1,
-    gap: 3,
+  cardInfo: { flex: 1, gap: 2 },
+  cardInfoTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
+  },
+  dateText: {
+    fontSize: FontSize.xs,
+    fontFamily: Fonts.regular,
+    color: Colors.text.tertiary,
+    flexShrink: 0,
   },
   merchantText: {
-    flex: 1,
-    fontSize: FontSize.md,
+    fontSize: FontSize.base,
     fontFamily: Fonts.bold,
     color: Colors.text.primary,
   },
@@ -289,10 +324,46 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.regular,
     color: Colors.text.secondary,
   },
+  cardMeta: { gap: 2 },
   metaText: {
-    fontSize: FontSize.xs,
+    fontSize: FontSize.sm,
     fontFamily: Fonts.regular,
     color: Colors.text.tertiary,
+  },
+  cardActions: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    paddingTop: 2,
+  },
+  actionBtnShare: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: Radius.md,
+    backgroundColor: '#FEF0EB',
+  },
+  actionBtnShareText: {
+    fontSize: FontSize.sm,
+    fontFamily: Fonts.semiBold,
+    color: Colors.primary,
+  },
+  actionBtnReceipt: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.surface,
+  },
+  actionBtnReceiptText: {
+    fontSize: FontSize.sm,
+    fontFamily: Fonts.semiBold,
+    color: Colors.text.secondary,
   },
 
   // Empty

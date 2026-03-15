@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   useWindowDimensions,
-  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -17,8 +16,6 @@ import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, FontSize, Fonts } from '@/src/constants/layout';
 import { GIFT_THEMES } from '@/src/constants/giftThemes';
 import { BaseCard } from '@/src/components/gift/cards/BaseCard';
-
-const GIFT_BASE_URL = 'https://kado-backend.onrender.com/gift';
 
 export default function SentReceiptScreen() {
   const { width } = useWindowDimensions();
@@ -53,23 +50,9 @@ export default function SentReceiptScreen() {
   const cardWidth = width - cardPadding;
   const cardHeight = Math.round(cardWidth * 0.58);
 
-  const giftUrl = share_link
-    ? (share_link.startsWith('http') ? share_link : `${GIFT_BASE_URL}/${share_link}`)
-    : '';
-
   const formattedDate = sent_at
-    ? new Date(sent_at).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+    ? new Date(sent_at).toLocaleString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })
     : '—';
-
-  async function onShareAgain() {
-    if (!giftUrl) return;
-    try {
-      await Share.share({
-        message: `${sender_name ? sender_name + ' sent' : 'Someone sent'} you a gift! Open it here: ${giftUrl}`,
-        url: giftUrl,
-      });
-    } catch {}
-  }
 
   // Items array — when bundles ship, pass a JSON array via params and parse here
   const items = [{
@@ -139,13 +122,6 @@ export default function SentReceiptScreen() {
           <ReceiptRow label="Sent on" value={formattedDate} last />
         </View>
 
-        {/* Share again */}
-        {giftUrl ? (
-          <TouchableOpacity style={styles.shareBtn} onPress={onShareAgain} activeOpacity={0.8}>
-            <Ionicons name="share-outline" size={20} color="#fff" />
-            <AppText style={styles.shareBtnText}>Share Gift Link Again</AppText>
-          </TouchableOpacity>
-        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -280,19 +256,4 @@ const styles = StyleSheet.create({
     color: Colors.text.secondary,
   },
 
-  // Share button
-  shareBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    backgroundColor: Colors.primary,
-    borderRadius: Radius.md,
-    paddingVertical: 15,
-  },
-  shareBtnText: {
-    fontSize: FontSize.base,
-    fontFamily: Fonts.bold,
-    color: '#fff',
-  },
 });
