@@ -68,3 +68,45 @@ export async function getRetryDraft(draftId: string): Promise<RetryDraft> {
 export async function deleteRetryDraft(draftId: string): Promise<void> {
   await api.delete(`/gifts/drafts/${draftId}`);
 }
+
+export interface GiftSummary {
+  id: string;
+  sender_name: string | null;
+  recipient_name: string | null;
+  personal_message: string | null;
+  theme: string | null;
+  payment_status: string;
+  unique_share_link: string | null;
+  is_claimed: boolean;
+  claimed_at: string | null;
+  sent_at: string;
+  merchant_item_id: string | null;
+  store_credit_preset_id: string | null;
+  item_name: string | null;
+  item_image: string | null;
+  item_price: string | null;
+  item_currency: string | null;
+  merchant_name: string | null;
+  merchant_logo: string | null;
+  credit_amount: string | null;
+  credit_currency: string | null;
+  credit_merchant_name: string | null;
+  // received gifts only
+  sender_first_name?: string | null;
+  sender_last_name?: string | null;
+}
+
+export interface GiftListResult {
+  data: GiftSummary[];
+  pagination: { total: number; page: number; limit: number; pages: number };
+}
+
+export async function getSentGifts(page = 1): Promise<GiftListResult> {
+  const res = await api.get('/gifts/sent', { params: { page, limit: 20 } });
+  return { data: res.data.data, pagination: res.data.pagination };
+}
+
+export async function getReceivedGifts(page = 1): Promise<GiftListResult> {
+  const res = await api.get('/gifts/received', { params: { page, limit: 20 } });
+  return { data: res.data.data, pagination: res.data.pagination };
+}
