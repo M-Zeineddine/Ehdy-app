@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { Linking } from 'react-native';
 
 import { AppText } from '@/src/components/ui/AppText';
 import { Colors } from '@/src/constants/colors';
@@ -49,7 +50,7 @@ const GIFT_BASE_URL = 'https://kado-backend.onrender.com/gift';
 
 // ── GiftRow ───────────────────────────────────────────────────────────────────
 
-function GiftRow({ gift, mode }: { gift: GiftSummary; mode: 'sent' | 'received' }) {
+function GiftRow({ gift }: { gift: GiftSummary }) {
   const merchantName = getMerchantName(gift);
   const merchantLogo = getMerchantLogo(gift);
   const itemLabel = getItemLabel(gift);
@@ -103,18 +104,14 @@ function GiftRow({ gift, mode }: { gift: GiftSummary; mode: 'sent' | 'received' 
         </View>
       </View>
 
-      {/* Meta: "To:" / "From:" */}
+      {/* Meta: "To:" + price */}
       <View style={styles.cardMeta}>
-        <AppText style={styles.metaText}>
-          {mode === 'sent'
-            ? `To: ${gift.recipient_name ?? '—'}`
-            : `From: ${gift.sender_name ?? [gift.sender_first_name, gift.sender_last_name].filter(Boolean).join(' ') ?? '—'}`}
-        </AppText>
+        <AppText style={styles.metaText}>To: {gift.recipient_name ?? '—'}</AppText>
+        {priceLabel ? <AppText style={styles.priceText}>{priceLabel}</AppText> : null}
       </View>
 
       {/* Actions */}
-      {mode === 'sent' && (
-        <View style={styles.cardActions}>
+      <View style={styles.cardActions}>
           <TouchableOpacity style={styles.actionBtnShare} onPress={onShareAgain} activeOpacity={0.7}>
             <Ionicons name="share-outline" size={15} color={Colors.primary} />
             <AppText style={styles.actionBtnShareText}>Share Again</AppText>
@@ -124,7 +121,68 @@ function GiftRow({ gift, mode }: { gift: GiftSummary; mode: 'sent' | 'received' 
             <AppText style={styles.actionBtnReceiptText}>Receipt</AppText>
           </TouchableOpacity>
         </View>
-      )}
+    </View>
+  );
+}
+
+// ── ReceivedGiftCard ──────────────────────────────────────────────────────────
+
+const STATUS_CONFIG = {
+  active:             { label: 'Active',             bg: '#E6F4EA', color: '#2E7D32' },
+  partially_redeemed: { label: 'Partially Redeemed', bg: '#FFF3E0', color: '#E65100' },
+  redeemed:           { label: 'Redeemed',           bg: '#F5F5F5', color: '#757575' },
+} as const;
+
+function ReceivedGiftCard({ gift }: { gift: GiftSummary }) {
+  const merchantName = getMerchantName(gift);
+  const merchantLogo = getMerchantLogo(gift);
+  const itemLabel    = getItemLabel(gift);
+  const dateLabel    = new Date(gift.sent_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const senderName   = gift.sender_name ?? [gift.sender_first_name, gift.sender_last_name].filter(Boolean).join(' ') ?? '—';
+  const status       = gift.redemption_status ?? 'active';
+  const statusCfg    = STATUS_CONFIG[status] ?? STATUS_CONFIG.active;
+  const giftUrl      = gift.unique_share_link
+    ? (gift.unique_share_link.startsWith('http') ? gift.unique_share_link : `https://kado-backend.onrender.com/gift/${gift.unique_share_link}`)
+    : null;
+
+  return (
+    <View style={styles.card}>
+      {/* Top: logo + info + status */}
+      <View style={styles.cardTop}>
+        <View style={styles.logoWrap}>
+          {merchantLogo
+            ? <Image source={{ uri: merchantLogo }} style={styles.logoImg} />
+            : <AppText style={styles.logoFallback}>{(merchantName[0] ?? '🎁').toUpperCase()}</AppText>
+          }
+        </View>
+        <View style={styles.cardInfo}>
+          <View style={styles.cardInfoTop}>
+            <AppText style={styles.merchantText} numberOfLines={1}>{merchantName || 'Gift'}</AppText>
+            <View style={[styles.statusBadge, { backgroundColor: statusCfg.bg }]}>
+              <AppText style={[styles.statusText, { color: statusCfg.color }]}>{statusCfg.label}</AppText>
+            </View>
+          </View>
+          <AppText style={styles.itemText} numberOfLines={1}>{itemLabel}</AppText>
+        </View>
+      </View>
+
+      {/* From + date */}
+      <View style={styles.cardMeta}>
+        <AppText style={styles.metaText}>From: {senderName}</AppText>
+        <AppText style={styles.metaText}>{dateLabel}</AppText>
+      </View>
+
+      {/* View Gift button */}
+      {giftUrl ? (
+        <TouchableOpacity
+          style={styles.viewGiftBtn}
+          onPress={() => Linking.openURL(giftUrl)}
+          activeOpacity={0.7}
+        >
+          <AppText style={styles.viewGiftBtnText}>View Gift</AppText>
+          <Ionicons name="arrow-forward" size={15} color={Colors.primary} />
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 }
@@ -216,7 +274,10 @@ export default function GiftsScreen() {
           contentContainerStyle={data.length === 0 ? styles.listEmpty : styles.list}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
           ListEmptyComponent={<EmptyState mode={activeTab} />}
-          renderItem={({ item }) => <GiftRow gift={item} mode={activeTab} />}
+          renderItem={({ item }) => activeTab === 'sent'
+            ? <GiftRow gift={item} />
+            : <ReceivedGiftCard gift={item} />
+          }
           ItemSeparatorComponent={() => <View style={styles.separator} />}
         />
       )}
@@ -377,4 +438,41 @@ const styles = StyleSheet.create({
   emptyIcon: { fontSize: 48, marginBottom: Spacing.sm },
   emptyTitle: { textAlign: 'center', color: Colors.text.primary },
   emptySubtitle: { textAlign: 'center', color: Colors.text.secondary, lineHeight: 20 },
+
+  // Received card
+  receivedMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Radius.sm,
+    flexShrink: 0,
+  },
+  statusText: {
+    fontSize: 10,
+    fontFamily: Fonts.semiBold,
+  },
+  viewGiftBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: Radius.md,
+    backgroundColor: '#FEF0EB',
+  },
+  viewGiftBtnText: {
+    fontSize: FontSize.sm,
+    fontFamily: Fonts.semiBold,
+    color: Colors.primary,
+  },
+  priceText: {
+    fontSize: FontSize.sm,
+    fontFamily: Fonts.bold,
+    color: Colors.text.primary,
+  },
 });

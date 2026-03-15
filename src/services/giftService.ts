@@ -94,6 +94,7 @@ export interface GiftSummary {
   // received gifts only
   sender_first_name?: string | null;
   sender_last_name?: string | null;
+  redemption_status?: 'active' | 'partially_redeemed' | 'redeemed' | null;
 }
 
 export interface GiftListResult {
