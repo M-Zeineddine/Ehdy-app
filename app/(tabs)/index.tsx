@@ -8,7 +8,7 @@ import { router } from 'expo-router';
 
 import { Colors } from '@/src/constants/colors';
 import { Spacing } from '@/src/constants/layout';
-import { getMerchants, getMerchantItems } from '@/src/services/merchantService';
+import { getMerchants, getMerchantItems, getRecentlyViewed } from '@/src/services/merchantService';
 import { useAuthStore } from '@/src/store/authStore';
 
 import { HomeHeader } from '@/src/components/home/HomeHeader';
@@ -35,6 +35,11 @@ export default function HomeScreen() {
     queryFn: () => getMerchantItems({ limit: 6 }),
   });
 
+  const { data: recentlyViewed = [], refetch: refetchRecentlyViewed } = useQuery({
+    queryKey: ['recently-viewed'],
+    queryFn: () => getRecentlyViewed(10),
+  });
+
   const itemRows = popularItems.reduce<MerchantItem[][]>((rows, item, i) => {
     if (i % 2 === 0) rows.push([item]);
     else rows[rows.length - 1].push(item);
@@ -43,7 +48,7 @@ export default function HomeScreen() {
 
   async function handleRefresh() {
     setRefreshing(true);
-    await Promise.all([refetchMerchants(), refetchItems()]);
+    await Promise.all([refetchMerchants(), refetchItems(), refetchRecentlyViewed()]);
     setRefreshing(false);
   }
 
@@ -84,6 +89,27 @@ export default function HomeScreen() {
             </View>
             <FlatList
               data={merchants}
+              style={{ marginTop: 10 }}
+              keyExtractor={(m: Merchant) => m.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalList}
+              ItemSeparatorComponent={() => <View style={{ width: Spacing.md }} />}
+              renderItem={({ item }: { item: Merchant }) => (
+                <MerchantCard merchant={item} onPress={() => router.push({ pathname: '/merchant/[id]', params: { id: item.id } })} />
+              )}
+            />
+          </>
+        )}
+
+        {/* Recently Viewed */}
+        {recentlyViewed.length > 0 && (
+          <>
+            <View style={[styles.section, styles.sectionHeader, { marginTop: 25 }]}>
+              <SectionHeader title="Recently Viewed" />
+            </View>
+            <FlatList
+              data={recentlyViewed}
               style={{ marginTop: 10 }}
               keyExtractor={(m: Merchant) => m.id}
               horizontal

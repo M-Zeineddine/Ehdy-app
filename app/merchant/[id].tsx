@@ -31,6 +31,7 @@ export default function MerchantScreen() {
     enabled: !!id,
   });
 
+
   const itemsToShow: MerchantItem[] = merchant?.items ?? [];
   const storeCredits: StoreCreditPreset[] = merchant?.store_credit_presets ?? [];
 

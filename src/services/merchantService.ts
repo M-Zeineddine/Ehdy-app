@@ -15,3 +15,9 @@ export async function getMerchantItems(params?: { limit?: number }) {
   const res = await api.get<{ data: { items: MerchantItem[] } }>('/merchants/items', { params });
   return res.data.data.items ?? [];
 }
+
+
+export async function getRecentlyViewed(limit = 10): Promise<Merchant[]> {
+  const res = await api.get<{ data: { recently_viewed: Merchant[] } }>('/merchants/recently-viewed', { params: { limit } });
+  return res.data.data.recently_viewed ?? [];
+}
