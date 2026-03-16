@@ -102,12 +102,26 @@ export interface GiftListResult {
   pagination: { total: number; page: number; limit: number; pages: number };
 }
 
-export async function getSentGifts(page = 1): Promise<GiftListResult> {
-  const res = await api.get('/gifts/sent', { params: { page, limit: 20 } });
+export async function getSentGifts(
+  page = 1,
+  sortOrder: 'asc' | 'desc' = 'desc',
+): Promise<GiftListResult> {
+  const res = await api.get('/gifts/sent', { params: { page, limit: 20, sort_order: sortOrder } });
   return { data: res.data.data, pagination: res.data.pagination };
 }
 
-export async function getReceivedGifts(page = 1): Promise<GiftListResult> {
-  const res = await api.get('/gifts/received', { params: { page, limit: 20 } });
+export async function getReceivedGifts(
+  page = 1,
+  sortOrder: 'asc' | 'desc' = 'desc',
+  redemptionStatus?: 'active' | 'partially_redeemed' | 'redeemed',
+): Promise<GiftListResult> {
+  const res = await api.get('/gifts/received', {
+    params: {
+      page,
+      limit: 20,
+      sort_order: sortOrder,
+      ...(redemptionStatus ? { redemption_status: redemptionStatus } : {}),
+    },
+  });
   return { data: res.data.data, pagination: res.data.pagination };
 }

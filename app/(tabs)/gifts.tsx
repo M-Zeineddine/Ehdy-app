@@ -3,6 +3,7 @@ import {
   View,
   Image,
   FlatList,
+  ScrollView,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
@@ -208,6 +209,8 @@ function EmptyState({ mode }: { mode: 'sent' | 'received' }) {
 // ── Screen ────────────────────────────────────────────────────────────────────
 
 type Tab = 'sent' | 'received';
+type SortOrder = 'desc' | 'asc';
+type StatusFilter = 'active' | 'partially_redeemed' | 'redeemed' | null;
 
 export default function GiftsScreen() {
   const [activeTab, setActiveTab] = useState<Tab>('sent');
@@ -215,16 +218,22 @@ export default function GiftsScreen() {
   const [receivedGifts, setReceivedGifts] = useState<GiftSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(null);
 
   const fetchAll = useCallback(async () => {
+    console.log('[GiftsScreen] fetching gifts', { sortOrder, statusFilter });
     try {
-      const [sent, received] = await Promise.all([getSentGifts(), getReceivedGifts()]);
+      const [sent, received] = await Promise.all([
+        getSentGifts(1, sortOrder),
+        getReceivedGifts(1, sortOrder, statusFilter ?? undefined),
+      ]);
       setSentGifts(sent.data);
       setReceivedGifts(received.data);
     } catch (err) {
       console.warn('[GiftsScreen] fetch failed', err);
     }
-  }, []);
+  }, [sortOrder, statusFilter]);
 
   useEffect(() => {
     setLoading(true);
@@ -260,6 +269,45 @@ export default function GiftsScreen() {
             </AppText>
           </TouchableOpacity>
         ))}
+      </View>
+
+      {/* Sort + Filter bar */}
+      <View style={styles.controlBar}>
+        <TouchableOpacity
+          style={styles.sortBtn}
+          onPress={() => setSortOrder(o => o === 'desc' ? 'asc' : 'desc')}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name={sortOrder === 'desc' ? 'arrow-down' : 'arrow-up'}
+            size={13}
+            color={Colors.text.secondary}
+          />
+          <AppText style={styles.sortBtnText}>
+            {sortOrder === 'desc' ? 'Newest' : 'Oldest'}
+          </AppText>
+        </TouchableOpacity>
+
+        {activeTab === 'received' && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterScrollContent}
+          >
+            {([null, 'active', 'partially_redeemed', 'redeemed'] as StatusFilter[]).map(s => (
+              <TouchableOpacity
+                key={s ?? 'all'}
+                style={[styles.filterChip, statusFilter === s && styles.filterChipActive]}
+                onPress={() => setStatusFilter(s)}
+                activeOpacity={0.7}
+              >
+                <AppText style={[styles.filterChipText, statusFilter === s && styles.filterChipTextActive]}>
+                  {s === null ? 'All' : STATUS_CONFIG[s].label}
+                </AppText>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
       </View>
 
       {/* Content */}
@@ -425,6 +473,51 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     fontFamily: Fonts.semiBold,
     color: Colors.text.secondary,
+  },
+
+  // Sort + Filter bar
+  controlBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
+    marginBottom: Spacing.sm,
+    gap: Spacing.sm,
+  },
+  sortBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: Radius.sm,
+    backgroundColor: Colors.surface,
+    flexShrink: 0,
+  },
+  sortBtnText: {
+    fontSize: FontSize.xs,
+    fontFamily: Fonts.semiBold,
+    color: Colors.text.secondary,
+  },
+  filterScrollContent: {
+    alignItems: 'center',
+    gap: 6,
+  },
+  filterChip: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: Radius.sm,
+    backgroundColor: Colors.surface,
+  },
+  filterChipActive: {
+    backgroundColor: Colors.primary,
+  },
+  filterChipText: {
+    fontSize: FontSize.xs,
+    fontFamily: Fonts.semiBold,
+    color: Colors.text.secondary,
+  },
+  filterChipTextActive: {
+    color: '#FFFFFF',
   },
 
   // Empty
