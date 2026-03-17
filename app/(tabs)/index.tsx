@@ -92,11 +92,7 @@ export default function HomeScreen() {
         <CategoryRow
           categories={categories}
           onSelect={(id) => {
-            if (id === 'all') {
-              router.push('/(tabs)/browse');
-            } else {
-              router.push(`/(tabs)/browse?category_id=${id}`);
-            }
+            router.push(`/(tabs)/browse?category_id=${id}`);
           }}
         />
 

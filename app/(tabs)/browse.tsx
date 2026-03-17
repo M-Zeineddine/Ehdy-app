@@ -67,9 +67,11 @@ export default function BrowseScreen() {
   const inputRef = useRef<TextInput>(null);
   const pillScrollRef = useRef<ScrollView>(null);
 
-  // Sync category param when navigating from home while Browse is already mounted
+  // Sync category param when navigating from home while Browse is already mounted.
+  // 'all' is used as a sentinel so the param always changes (Expo Router persists
+  // tab params, so navigating without a param wouldn't trigger this effect).
   useEffect(() => {
-    setActiveCategoryId(category_id ?? null);
+    setActiveCategoryId(!category_id || category_id === 'all' ? null : category_id);
     pillScrollRef.current?.scrollTo({ x: 0, animated: false });
   }, [category_id]);
 
@@ -83,7 +85,7 @@ export default function BrowseScreen() {
 
   // Debounce search input (300 ms)
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    const t = setTimeout(() => setDebouncedSearch(search), 600);
     return () => clearTimeout(t);
   }, [search]);
 
@@ -109,7 +111,7 @@ export default function BrowseScreen() {
   // Float the initially-selected category to the front (from home navigation only).
   // Pills pressed within Browse stay in their original position.
   const sortedCategories = useMemo(() => {
-    if (!category_id) return categories;
+    if (!category_id || category_id === 'all') return categories;
     const active = categories.find(c => c.id === category_id);
     if (!active) return categories;
     return [active, ...categories.filter(c => c.id !== category_id)];
