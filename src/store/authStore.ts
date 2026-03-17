@@ -24,8 +24,7 @@ function registerRefreshHandler(get: () => AuthState) {
     const storedRefresh = get().refreshToken;
     if (!storedRefresh) return null;
     try {
-      const res = await callRefreshToken(storedRefresh);
-      const newToken = res.data.data.access_token;
+      const newToken = await callRefreshToken(storedRefresh);
       setAuthToken(newToken);
       await SecureStore.setItemAsync(TOKEN_KEY, newToken);
       get(); // trigger re-read
