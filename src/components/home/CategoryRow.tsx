@@ -74,7 +74,7 @@ export function CategoryRow({ categories, activeId, onSelect }: CategoryRowProps
         <View style={[styles.iconWrap, { backgroundColor: (!activeId || activeId === 'all') ? `${ALL_STYLE.color}25` : ALL_STYLE.bgColor }]}>
           <MaterialCommunityIcons name={ALL_STYLE.icon} size={18} color={ALL_STYLE.color} />
         </View>
-        <AppText style={[styles.label, (!activeId || activeId === 'all') && { color: Colors.text.primary }]}>
+        <AppText numberOfLines={1} style={[styles.label, (!activeId || activeId === 'all') && { color: Colors.text.primary }]}>
           All
         </AppText>
       </TouchableOpacity>
@@ -92,7 +92,7 @@ export function CategoryRow({ categories, activeId, onSelect }: CategoryRowProps
             <View style={[styles.iconWrap, { backgroundColor: isActive ? `${s.color}25` : s.bgColor }]}>
               <MaterialCommunityIcons name={s.icon} size={18} color={s.color} />
             </View>
-            <AppText style={[styles.label, isActive && { color: Colors.text.primary }]}>
+            <AppText numberOfLines={1} style={[styles.label, isActive && { color: Colors.text.primary }]}>
               {cat.name}
             </AppText>
           </TouchableOpacity>
@@ -112,6 +112,8 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     borderRadius: 999,
     backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: 'transparent',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -120,7 +122,6 @@ const styles = StyleSheet.create({
   },
   pillActive: {
     backgroundColor: '#FFF0EC',
-    borderWidth: 1,
     borderColor: Colors.primary,
   },
   iconWrap: {

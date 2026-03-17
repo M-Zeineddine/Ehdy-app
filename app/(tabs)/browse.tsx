@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   View, StyleSheet, FlatList, TextInput, TouchableOpacity,
   ActivityIndicator, ScrollView,
@@ -65,10 +65,12 @@ export default function BrowseScreen() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(category_id ?? null);
   const inputRef = useRef<TextInput>(null);
+  const pillScrollRef = useRef<ScrollView>(null);
 
   // Sync category param when navigating from home while Browse is already mounted
   useEffect(() => {
     setActiveCategoryId(category_id ?? null);
+    pillScrollRef.current?.scrollTo({ x: 0, animated: false });
   }, [category_id]);
 
   // Auto-focus search when coming from home search bar tap
@@ -103,6 +105,15 @@ export default function BrowseScreen() {
       category_id: activeCategoryId || undefined,
     }),
   });
+
+  // Float the initially-selected category to the front (from home navigation only).
+  // Pills pressed within Browse stay in their original position.
+  const sortedCategories = useMemo(() => {
+    if (!category_id) return categories;
+    const active = categories.find(c => c.id === category_id);
+    if (!active) return categories;
+    return [active, ...categories.filter(c => c.id !== category_id)];
+  }, [categories, category_id]);
 
   // Build 2-column rows for the grid
   const rows = merchants.reduce<Merchant[][]>((acc, m, i) => {
@@ -147,6 +158,7 @@ export default function BrowseScreen() {
 
       {/* Category filter pills */}
       <ScrollView
+        ref={pillScrollRef}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.pillsContent}
@@ -163,12 +175,12 @@ export default function BrowseScreen() {
             size={15}
             color={Colors.primary}
           />
-          <AppText style={[styles.pillLabel, !activeCategoryId && styles.pillLabelActive]}>
+          <AppText numberOfLines={1} style={[styles.pillLabel, !activeCategoryId && styles.pillLabelActive]}>
             All
           </AppText>
         </TouchableOpacity>
 
-        {categories.map((cat) => {
+        {sortedCategories.map((cat) => {
           const isActive = cat.id === activeCategoryId;
           const s = CATEGORY_STYLE_MAP[cat.slug] ?? FALLBACK_STYLE;
           return (
@@ -179,7 +191,7 @@ export default function BrowseScreen() {
               style={[styles.pill, isActive && styles.pillActive]}
             >
               <MaterialCommunityIcons name={s.icon} size={15} color={s.color} />
-              <AppText style={[styles.pillLabel, isActive && styles.pillLabelActive]}>
+              <AppText numberOfLines={1} style={[styles.pillLabel, isActive && styles.pillLabelActive]}>
                 {cat.name}
               </AppText>
             </TouchableOpacity>
@@ -257,11 +269,12 @@ const styles = StyleSheet.create({
     padding: 0,
   },
 
-  pillsScroll: { marginBottom: Spacing.md },
+  pillsScroll: { marginBottom: Spacing.md, flexGrow: 0 },
   pillsContent: {
     paddingHorizontal: Spacing.md,
     gap: Spacing.sm,
     paddingVertical: 2,
+    alignItems: 'center',
   },
   pill: {
     flexDirection: 'row',
