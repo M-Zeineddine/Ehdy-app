@@ -24,6 +24,7 @@ export default function MerchantScreen() {
   const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<Tab>('items');
   const [customAmount, setCustomAmount] = useState('');
+  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
 
   const { data: merchant, isLoading } = useQuery({
     queryKey: ['merchant', id],
@@ -212,7 +213,7 @@ export default function MerchantScreen() {
                   <TextInput
                     style={styles.amountInput}
                     value={customAmount}
-                    onChangeText={setCustomAmount}
+                    onChangeText={v => { setCustomAmount(v); setSelectedPresetId(null); }}
                     keyboardType="numeric"
                     placeholder="0.00"
                     placeholderTextColor={Colors.text.tertiary}
@@ -226,7 +227,10 @@ export default function MerchantScreen() {
                       <TouchableOpacity
                         key={gc.id}
                         style={styles.amountChip}
-                        onPress={() => setCustomAmount(String(gc.amount))}
+                        onPress={() => {
+                          setCustomAmount(String(gc.amount));
+                          setSelectedPresetId(gc.id);
+                        }}
                         activeOpacity={0.55}
                       >
                         <AppText semiBold style={{ color: Colors.primary }}>
@@ -241,9 +245,14 @@ export default function MerchantScreen() {
                   activeOpacity={0.6}
                   onPress={() => {
                     if (!customAmount) return;
+                    const amount = parseFloat(customAmount);
+                    if (isNaN(amount) || amount <= 0) return;
                     router.push({
                       pathname: '/gift',
                       params: {
+                        // Pass preset ID when the user picked a chip (optimises DB lookup).
+                        // Leave itemId out for manually typed amounts (custom credit path).
+                        ...(selectedPresetId ? { itemId: selectedPresetId } : {}),
                         itemName: 'Store Credit',
                         itemDescription: `${merchant.name} store credit`,
                         itemPrice: customAmount,
@@ -256,7 +265,7 @@ export default function MerchantScreen() {
                     });
                   }}
                 >
-                  <AppText semiBold color="#fff">Gift Custom Amount</AppText>
+                  <AppText semiBold color="#fff">Gift Store Credit</AppText>
                 </TouchableOpacity>
               </View>
             </View>

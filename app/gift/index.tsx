@@ -99,9 +99,15 @@ export default function GiftFlowScreen() {
     setPaying(true);
     try {
       // Save form state so the user can retry with their customization intact
+      // Routing: preset item → merchant_item_id; preset credit → store_credit_preset_id;
+      //          custom credit (no itemId) → custom_credit_amount + merchant
+      const isCustomCredit = isCredit && !params.itemId;
       const draftId = await saveRetryDraft({
-        merchant_item_id: isCredit ? undefined : params.itemId,
-        store_credit_preset_id: isCredit ? params.itemId : undefined,
+        merchant_item_id: !isCredit && params.itemId ? params.itemId : undefined,
+        store_credit_preset_id: isCredit && params.itemId ? params.itemId : undefined,
+        custom_credit_amount: isCustomCredit ? parseFloat(params.itemPrice) : undefined,
+        custom_credit_currency: isCustomCredit ? params.itemCurrency : undefined,
+        custom_credit_merchant_id: isCustomCredit ? params.merchantId : undefined,
         sender_name: fromName,
         recipient_name: toName,
         recipient_phone: phone,
@@ -110,8 +116,11 @@ export default function GiftFlowScreen() {
       });
 
       const result = await initiateGiftPayment({
-        merchant_item_id: isCredit ? undefined : params.itemId,
-        store_credit_preset_id: isCredit ? params.itemId : undefined,
+        merchant_item_id: !isCredit && params.itemId ? params.itemId : undefined,
+        store_credit_preset_id: isCredit && params.itemId ? params.itemId : undefined,
+        custom_credit_amount: isCustomCredit ? parseFloat(params.itemPrice) : undefined,
+        custom_credit_currency: isCustomCredit ? params.itemCurrency : undefined,
+        custom_credit_merchant_id: isCustomCredit ? params.merchantId : undefined,
         sender_name: fromName,
         recipient_name: toName,
         recipient_phone: phone,
