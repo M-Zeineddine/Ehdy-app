@@ -16,6 +16,7 @@ import { router } from 'expo-router';
 import { Linking } from 'react-native';
 
 import { AppText } from '@/src/components/ui/AppText';
+import { ErrorState } from '@/src/components/ui/ErrorState';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, FontSize, Fonts } from '@/src/constants/layout';
 import { getSentGifts, getReceivedGifts, type GiftSummary } from '@/src/services/giftService';
@@ -220,9 +221,10 @@ export default function GiftsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const fetchAll = useCallback(async () => {
-    console.log('[GiftsScreen] fetching gifts', { sortOrder, statusFilter });
+    setFetchError(null);
     try {
       const [sent, received] = await Promise.all([
         getSentGifts(1, sortOrder),
@@ -230,8 +232,8 @@ export default function GiftsScreen() {
       ]);
       setSentGifts(sent.data);
       setReceivedGifts(received.data);
-    } catch (err) {
-      console.warn('[GiftsScreen] fetch failed', err);
+    } catch (err: any) {
+      setFetchError(err?.message ?? null);
     }
   }, [sortOrder, statusFilter]);
 
@@ -315,6 +317,8 @@ export default function GiftsScreen() {
         <View style={styles.loader}>
           <ActivityIndicator color={Colors.primary} />
         </View>
+      ) : fetchError ? (
+        <ErrorState message={fetchError} onRetry={() => { setLoading(true); fetchAll().finally(() => setLoading(false)); }} />
       ) : (
         <FlatList
           data={data}

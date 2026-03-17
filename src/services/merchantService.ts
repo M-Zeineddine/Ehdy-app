@@ -1,6 +1,19 @@
 import { api } from './api';
 import type { Merchant, MerchantItem } from '../types';
 
+export interface BackendCategory {
+  id: string;
+  name: string;
+  slug: string;
+  icon_url: string | null;
+  display_order: number;
+}
+
+export async function getCategories(): Promise<BackendCategory[]> {
+  const res = await api.get<{ data: { categories: BackendCategory[] } }>('/merchants/categories');
+  return res.data.data.categories ?? [];
+}
+
 export async function getMerchants(params?: { category_id?: string; search?: string; limit?: number; featured?: boolean }) {
   const res = await api.get<{ data: Merchant[] }>('/merchants', { params });
   return res.data.data ?? [];

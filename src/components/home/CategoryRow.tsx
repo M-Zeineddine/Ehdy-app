@@ -1,57 +1,99 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ScrollView, TouchableOpacity, StyleSheet, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
-import { Radius, Spacing, Fonts } from '../../constants/layout';
+import { Spacing, Fonts } from '../../constants/layout';
 import { AppText } from '../ui/AppText';
+import type { BackendCategory } from '../../services/merchantService';
 
 type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
 
-interface CategoryDef {
-  id: string;
-  label: string;
+interface CategoryStyle {
   icon: IconName;
   color: string;
   bgColor: string;
 }
 
-const CATEGORIES: CategoryDef[] = [
-  { id: 'all', label: 'All', icon: 'star-four-points', color: '#F07856', bgColor: '#FFF0EC' },
-  { id: 'coffee', label: 'Coffee', icon: 'coffee', color: '#F07856', bgColor: '#FFF0EC' },
-  { id: 'dessert', label: 'Dessert', icon: 'cake-variant', color: '#D4709A', bgColor: '#FDF0F6' },
-  { id: 'meals', label: 'Meals', icon: 'silverware-fork-knife', color: '#4CAF7D', bgColor: '#EBF7F1' },
-  { id: 'spa', label: 'Spa', icon: 'spa', color: '#9B7EDE', bgColor: '#F3EEFF' },
-  { id: 'fashion', label: 'Fashion', icon: 'hanger', color: '#5B9BD5', bgColor: '#EBF3FC' },
+const CATEGORY_STYLE_MAP: Record<string, CategoryStyle> = {
+  'coffee':               { icon: 'coffee',               color: '#F07856', bgColor: '#FFF0EC' },
+  'coffee-cafes':         { icon: 'coffee',               color: '#F07856', bgColor: '#FFF0EC' },
+  'dessert':              { icon: 'cake-variant',          color: '#D4709A', bgColor: '#FDF0F6' },
+  'desserts':             { icon: 'cake-variant',          color: '#D4709A', bgColor: '#FDF0F6' },
+  'sweets':               { icon: 'candy',                 color: '#D4709A', bgColor: '#FDF0F6' },
+  'meals':                { icon: 'silverware-fork-knife', color: '#4CAF7D', bgColor: '#EBF7F1' },
+  'restaurants':          { icon: 'silverware-fork-knife', color: '#4CAF7D', bgColor: '#EBF7F1' },
+  'food-drinks':          { icon: 'food-fork-drink',       color: '#4CAF7D', bgColor: '#EBF7F1' },
+  'spa':                  { icon: 'spa',                   color: '#9B7EDE', bgColor: '#F3EEFF' },
+  'wellness':             { icon: 'spa',                   color: '#9B7EDE', bgColor: '#F3EEFF' },
+  'fashion':              { icon: 'hanger',                color: '#5B9BD5', bgColor: '#EBF3FC' },
+  'clothing':             { icon: 'hanger',                color: '#5B9BD5', bgColor: '#EBF3FC' },
+  'shopping':             { icon: 'shopping-outline',      color: '#5B9BD5', bgColor: '#EBF3FC' },
+  'beauty':               { icon: 'face-woman-shimmer',    color: '#D4709A', bgColor: '#FDF0F6' },
+  'entertainment':        { icon: 'music-note',            color: '#E9A84C', bgColor: '#FDF6EC' },
+  'experiences':          { icon: 'ticket-outline',        color: '#E9A84C', bgColor: '#FDF6EC' },
+};
+const FALLBACK_STYLE: CategoryStyle = { icon: 'tag-outline', color: '#F07856', bgColor: '#FFF0EC' };
+const ALL_STYLE: CategoryStyle = { icon: 'star-four-points', color: '#F07856', bgColor: '#FFF0EC' };
+
+// Static fallback shown before API data loads — slugs match the DB seed
+const STATIC_CATEGORIES: BackendCategory[] = [
+  { id: 'coffee-cafes',  name: 'Coffee & Cafes',  slug: 'coffee-cafes',  icon_url: null, display_order: 1 },
+  { id: 'desserts',      name: 'Desserts',         slug: 'desserts',      icon_url: null, display_order: 2 },
+  { id: 'restaurants',   name: 'Restaurants',      slug: 'restaurants',   icon_url: null, display_order: 3 },
+  { id: 'wellness',      name: 'Wellness & Spa',   slug: 'wellness',      icon_url: null, display_order: 4 },
+  { id: 'fashion',       name: 'Fashion',          slug: 'fashion',       icon_url: null, display_order: 5 },
 ];
 
 interface CategoryRowProps {
+  categories?: BackendCategory[];
+  activeId?: string | null;
   onSelect?: (id: string) => void;
 }
 
-export function CategoryRow({ onSelect }: CategoryRowProps) {
-  const [active, setActive] = useState('all');
+export function CategoryRow({ categories, activeId, onSelect }: CategoryRowProps) {
+  const items = categories && categories.length > 0 ? categories : STATIC_CATEGORIES;
 
-  function handleSelect(id: string) {
-    setActive(id);
-    onSelect?.(id);
+  function styleFor(slug: string): CategoryStyle {
+    return CATEGORY_STYLE_MAP[slug] ?? FALLBACK_STYLE;
   }
 
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scroll} style={{ marginTop: 3 }}>
-      {CATEGORIES.map((cat) => {
-        const isActive = cat.id === active;
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.scroll}
+      style={{ marginTop: 3 }}
+    >
+      {/* "All" pill */}
+      <TouchableOpacity
+        key="all"
+        onPress={() => onSelect?.('all')}
+        activeOpacity={0.6}
+        style={[styles.pill, (!activeId || activeId === 'all') && styles.pillActive]}
+      >
+        <View style={[styles.iconWrap, { backgroundColor: (!activeId || activeId === 'all') ? `${ALL_STYLE.color}25` : ALL_STYLE.bgColor }]}>
+          <MaterialCommunityIcons name={ALL_STYLE.icon} size={18} color={ALL_STYLE.color} />
+        </View>
+        <AppText style={[styles.label, (!activeId || activeId === 'all') && { color: Colors.text.primary }]}>
+          All
+        </AppText>
+      </TouchableOpacity>
+
+      {items.map((cat) => {
+        const isActive = cat.id === activeId;
+        const s = styleFor(cat.slug);
         return (
           <TouchableOpacity
             key={cat.id}
-            onPress={() => handleSelect(cat.id)}
+            onPress={() => onSelect?.(cat.id)}
             activeOpacity={0.6}
             style={[styles.pill, isActive && styles.pillActive]}
           >
-            <View style={[styles.iconWrap, { backgroundColor: isActive ? `${cat.color}25` : cat.bgColor }]}>
-              <MaterialCommunityIcons name={cat.icon} size={18} color={cat.color} />
+            <View style={[styles.iconWrap, { backgroundColor: isActive ? `${s.color}25` : s.bgColor }]}>
+              <MaterialCommunityIcons name={s.icon} size={18} color={s.color} />
             </View>
             <AppText style={[styles.label, isActive && { color: Colors.text.primary }]}>
-              {cat.label}
+              {cat.name}
             </AppText>
           </TouchableOpacity>
         );

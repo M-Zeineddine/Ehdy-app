@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getMerchant, recordMerchantVisit } from '@/src/services/merchantService';
 import { AppText } from '@/src/components/ui/AppText';
+import { ErrorState } from '@/src/components/ui/ErrorState';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, Fonts } from '@/src/constants/layout';
 import type { MerchantItem, StoreCreditPreset } from '@/src/types';
@@ -26,7 +27,7 @@ export default function MerchantScreen() {
   const [customAmount, setCustomAmount] = useState('');
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
 
-  const { data: merchant, isLoading } = useQuery({
+  const { data: merchant, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['merchant', id],
     queryFn: () => getMerchant(id),
     enabled: !!id,
@@ -90,6 +91,8 @@ export default function MerchantScreen() {
         <View style={styles.loader}>
           <ActivityIndicator color={Colors.primary} size="large" />
         </View>
+      ) : isError ? (
+        <ErrorState message={(error as any)?.message} onRetry={refetch} />
       ) : !merchant ? null : (
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
 

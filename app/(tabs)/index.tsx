@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  ScrollView, View, StyleSheet, FlatList, RefreshControl,
+  ScrollView, View, StyleSheet, FlatList, RefreshControl, TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
@@ -8,7 +8,7 @@ import { router } from 'expo-router';
 
 import { Colors } from '@/src/constants/colors';
 import { Spacing } from '@/src/constants/layout';
-import { getMerchants, getMerchantItems, getRecentlyViewed } from '@/src/services/merchantService';
+import { getMerchants, getMerchantItems, getRecentlyViewed, getCategories } from '@/src/services/merchantService';
 import { useAuthStore } from '@/src/store/authStore';
 
 import { HomeHeader } from '@/src/components/home/HomeHeader';
@@ -21,9 +21,13 @@ import { SearchBar } from '@/src/components/ui/SearchBar';
 import type { Merchant, MerchantItem } from '@/src/types';
 
 export default function HomeScreen() {
-  const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const { user } = useAuthStore();
+
+  const { data: categories = [], refetch: refetchCategories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: getCategories,
+  });
 
   const { data: merchants = [], refetch: refetchMerchants } = useQuery({
     queryKey: ['merchants', 'featured'],
@@ -48,7 +52,7 @@ export default function HomeScreen() {
 
   async function handleRefresh() {
     setRefreshing(true);
-    await Promise.all([refetchMerchants(), refetchItems(), refetchRecentlyViewed()]);
+    await Promise.all([refetchMerchants(), refetchItems(), refetchRecentlyViewed(), refetchCategories()]);
     setRefreshing(false);
   }
 
@@ -65,10 +69,16 @@ export default function HomeScreen() {
           <HomeHeader firstName={user?.first_name ?? ''} onNotificationPress={() => { }} unreadCount={0} />
         </View>
 
-        {/* Search */}
-        <View style={[styles.section, { marginTop: 6 }]}>
-          <SearchBar value={search} onChangeText={setSearch} />
-        </View>
+        {/* Search — tapping navigates to Browse with keyboard open */}
+        <TouchableOpacity
+          style={[styles.section, { marginTop: 6 }]}
+          onPress={() => router.push('/(tabs)/browse?autofocus=1')}
+          activeOpacity={0.85}
+        >
+          <View pointerEvents="none">
+            <SearchBar placeholder="Find gifts, places, treats..." />
+          </View>
+        </TouchableOpacity>
 
         {/* Featured Banner */}
         <View style={styles.section}>
@@ -79,7 +89,16 @@ export default function HomeScreen() {
         <View style={[styles.section, styles.sectionHeader, { marginTop: 2 }]}>
           <SectionHeader title="Categories" />
         </View>
-        <CategoryRow onSelect={(id) => console.log('category', id)} />
+        <CategoryRow
+          categories={categories}
+          onSelect={(id) => {
+            if (id === 'all') {
+              router.push('/(tabs)/browse');
+            } else {
+              router.push(`/(tabs)/browse?category_id=${id}`);
+            }
+          }}
+        />
 
         {/* Featured Merchants */}
         {merchants.length > 0 && (
