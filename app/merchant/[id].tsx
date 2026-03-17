@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View, ScrollView, StyleSheet, Image, TouchableOpacity,
   ActivityIndicator, Linking, Share, TextInput, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams, router, useFocusEffect } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { getMerchant } from '@/src/services/merchantService';
+import { getMerchant, recordMerchantVisit } from '@/src/services/merchantService';
 import { AppText } from '@/src/components/ui/AppText';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, Fonts } from '@/src/constants/layout';
@@ -30,6 +30,15 @@ export default function MerchantScreen() {
     queryFn: () => getMerchant(id),
     enabled: !!id,
   });
+
+  // Record a visit only if the user stays on the page for 2 seconds.
+  // Accidental taps that are immediately backed out are ignored.
+  // The cleanup returned by useFocusEffect cancels the timer on blur.
+  useFocusEffect(useCallback(() => {
+    if (!id) return;
+    const timer = setTimeout(() => recordMerchantVisit(id), 2000);
+    return () => clearTimeout(timer);
+  }, [id]));
 
 
   const itemsToShow: MerchantItem[] = merchant?.items ?? [];

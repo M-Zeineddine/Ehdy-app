@@ -17,6 +17,14 @@ export async function getMerchantItems(params?: { limit?: number }) {
 }
 
 
+export async function recordMerchantVisit(id: string): Promise<void> {
+  try {
+    await api.post(`/merchants/${id}/visit`);
+  } catch {
+    // fire-and-forget — silently ignore errors
+  }
+}
+
 export async function getRecentlyViewed(limit = 10): Promise<Merchant[]> {
   const res = await api.get<{ data: { recently_viewed: Merchant[] } }>('/merchants/recently-viewed', { params: { limit } });
   return res.data.data.recently_viewed ?? [];
