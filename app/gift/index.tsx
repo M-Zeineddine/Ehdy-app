@@ -16,8 +16,9 @@ import { Spacing, Radius, Fonts, FontSize } from '@/src/constants/layout';
 import { GiftCardPreview } from '@/src/components/gift/GiftCardPreview';
 import { GIFT_THEMES } from '@/src/constants/giftThemes';
 import { ContactPickerModal } from '@/src/components/gift/ContactPickerModal';
+import { i18n } from '@/src/i18n';
 
-const STEP_TITLES = ['Review Gift', 'Customize Gift', 'Checkout'];
+const STEP_TITLES = () => [i18n('giftFlow.stepReview'), i18n('giftFlow.stepCustomize'), i18n('giftFlow.stepCheckout')];
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&q=80';
 
 export default function GiftFlowScreen() {
@@ -156,7 +157,7 @@ export default function GiftFlowScreen() {
         });
       }
     } catch (err: any) {
-      Alert.alert('Payment failed', err.message ?? 'Something went wrong. Please try again.');
+      Alert.alert(i18n('giftFlow.paymentFailedTitle'), err.message ?? i18n('payment.failureMessage'));
     } finally {
       setPaying(false);
     }
@@ -168,11 +169,11 @@ export default function GiftFlowScreen() {
 
   usePreventRemove(isDirty, ({ data }) => {
     Alert.alert(
-      'Leave gift?',
-      'Your customization will be lost.',
+      i18n('giftFlow.leaveAlertTitle'),
+      i18n('giftFlow.leaveAlertMessage'),
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Leave', style: 'destructive', onPress: () => navigation.dispatch(data.action) },
+        { text: i18n('common.cancel'), style: 'cancel' },
+        { text: i18n('giftFlow.leaveButton'), style: 'destructive', onPress: () => navigation.dispatch(data.action) },
       ]
     );
   });
@@ -230,9 +231,9 @@ export default function GiftFlowScreen() {
 
         <View style={styles.field}>
           <View style={styles.rowBetween}>
-            <AppText style={styles.fieldLabel}>SELECT THEME</AppText>
+            <AppText style={styles.fieldLabel}>{i18n('giftFlow.selectTheme')}</AppText>
             <TouchableOpacity activeOpacity={0.6}>
-              <AppText style={styles.viewAll}>View all</AppText>
+              <AppText style={styles.viewAll}>{i18n('giftFlow.viewAll')}</AppText>
             </TouchableOpacity>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.themeScroll}>
@@ -261,47 +262,47 @@ export default function GiftFlowScreen() {
         </View>
 
         <View style={styles.field}>
-          <AppText style={styles.fieldLabel}>FROM</AppText>
+          <AppText style={styles.fieldLabel}>{i18n('giftFlow.fromLabel')}</AppText>
           <View style={styles.inputWrap}>
             <Ionicons name="person-outline" size={16} color={Colors.text.tertiary} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               value={fromName}
               onChangeText={setFromName}
-              placeholder="Your Name"
+              placeholder={i18n('giftFlow.fromPlaceholder')}
               placeholderTextColor={Colors.text.tertiary}
             />
           </View>
         </View>
 
         <View style={styles.field}>
-          <AppText style={styles.fieldLabel}>TO</AppText>
+          <AppText style={styles.fieldLabel}>{i18n('giftFlow.toLabel')}</AppText>
           <View style={styles.inputWrap}>
             <Ionicons name="person-outline" size={16} color={Colors.text.tertiary} style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               value={toName}
               onChangeText={setToName}
-              placeholder="Recipient's Name"
+              placeholder={i18n('giftFlow.toPlaceholder')}
               placeholderTextColor={Colors.text.tertiary}
             />
           </View>
         </View>
 
         <View style={styles.field}>
-          <AppText style={styles.fieldLabel}>MESSAGE</AppText>
+          <AppText style={styles.fieldLabel}>{i18n('giftFlow.messageLabel')}</AppText>
           <View style={styles.messageWrap}>
             <TextInput
               style={styles.messageInput}
               value={message}
               onChangeText={t => t.length <= 200 && setMessage(t)}
-              placeholder="Write a sweet note..."
+              placeholder={i18n('giftFlow.messagePlaceholder')}
               placeholderTextColor={Colors.text.tertiary}
               multiline
               textAlignVertical="top"
             />
             <AppText style={styles.charCount} color={Colors.text.tertiary}>
-              {message.length}/200
+              {i18n('giftFlow.characterCounter', { count: message.length })}
             </AppText>
           </View>
         </View>
@@ -309,7 +310,7 @@ export default function GiftFlowScreen() {
 
 
         <View style={styles.field}>
-          <AppText style={styles.fieldLabel}>RECIPIENT'S PHONE</AppText>
+          <AppText style={styles.fieldLabel}>{i18n('giftFlow.phoneLabel')}</AppText>
           <View style={styles.phoneRow}>
             <View style={styles.countryCode}>
               <AppText style={styles.flag}>🇱🇧</AppText>
@@ -336,7 +337,7 @@ export default function GiftFlowScreen() {
           <View style={styles.hintRow}>
             <Ionicons name="information-circle-outline" size={14} color={Colors.text.tertiary} />
             <AppText style={styles.hintText} color={Colors.text.tertiary}>
-              Used to identify your recipient if they sign up.
+              {i18n('giftFlow.phoneHint')}
             </AppText>
           </View>
         </View>
@@ -360,27 +361,27 @@ export default function GiftFlowScreen() {
         />
 
         {/* Payment details */}
-        <AppText style={styles.sectionLabel}>PAYMENT DETAILS</AppText>
+        <AppText style={styles.sectionLabel}>{i18n('giftFlow.paymentDetails')}</AppText>
         <View style={styles.detailsCard}>
           <View style={styles.detailRow}>
-            <AppText color={Colors.text.secondary}>Recipient</AppText>
+            <AppText color={Colors.text.secondary}>{i18n('giftFlow.paymentRecipient')}</AppText>
             <AppText semiBold style={styles.detailValue}>
               {recipientLabel || '—'}
             </AppText>
           </View>
           <View style={styles.detailDivider} />
           <View style={styles.detailRow}>
-            <AppText semiBold>Total</AppText>
+            <AppText semiBold>{i18n('giftFlow.paymentTotal')}</AppText>
             <AppText semiBold style={styles.detailTotal}>{price}</AppText>
           </View>
         </View>
 
         {/* Payment method */}
-        <AppText style={styles.sectionLabel}>PAYMENT METHOD</AppText>
+        <AppText style={styles.sectionLabel}>{i18n('giftFlow.paymentMethod')}</AppText>
         <View style={styles.paymentOptions}>
           {([
-            { key: 'card', icon: 'card-outline', label: 'Credit / Debit Card' },
-            { key: 'whish', icon: 'wallet-outline', label: 'OMT / Whish Money' },
+            { key: 'card', icon: 'card-outline', label: i18n('giftFlow.paymentMethodCard') },
+            { key: 'whish', icon: 'wallet-outline', label: i18n('giftFlow.paymentMethodOmt') },
           ] as const).map(opt => (
             <TouchableOpacity
               key={opt.key}
@@ -408,7 +409,7 @@ export default function GiftFlowScreen() {
 
         <View style={styles.secureRow}>
           <Ionicons name="lock-closed-outline" size={12} color={Colors.text.tertiary} />
-          <AppText style={styles.secureText} color={Colors.text.tertiary}>Secure Checkout via SSL</AppText>
+          <AppText style={styles.secureText} color={Colors.text.tertiary}>{i18n('giftFlow.paymentSecure')}</AppText>
         </View>
       </ScrollView>
     );
@@ -421,7 +422,7 @@ export default function GiftFlowScreen() {
         <TouchableOpacity onPress={handleBack} activeOpacity={0.6} style={styles.headerSide}>
           <Ionicons name="arrow-back" size={22} color={Colors.text.primary} />
         </TouchableOpacity>
-        <AppText style={styles.headerTitle}>{STEP_TITLES[step - 1]}</AppText>
+        <AppText style={styles.headerTitle}>{STEP_TITLES()[step - 1]}</AppText>
         <View style={styles.headerSide} />
       </View>
 
@@ -447,7 +448,7 @@ export default function GiftFlowScreen() {
           </React.Fragment>
         ))}
       </View>
-      <AppText style={styles.stepSubLabel}>Step {step} of 3</AppText>
+      <AppText style={styles.stepSubLabel}>{i18n('giftFlow.stepIndicator', { n: step })}</AppText>
 
       {/* Animated step content — KAV wraps only this so bottom bar stays fixed */}
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -472,7 +473,7 @@ export default function GiftFlowScreen() {
       {/* Bottom bar */}
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + Spacing.md }]}>
         <View style={styles.totalRow}>
-          <AppText color={Colors.text.secondary}>Total</AppText>
+          <AppText color={Colors.text.secondary}>{i18n('giftFlow.totalLabel')}</AppText>
           <AppText semiBold style={styles.totalAmount}>{price}</AppText>
         </View>
         <TouchableOpacity
@@ -485,7 +486,7 @@ export default function GiftFlowScreen() {
             <ActivityIndicator color="#fff" />
           ) : (
             <AppText semiBold style={styles.continueBtnText}>
-              {step === 3 ? 'Confirm & Pay' : 'Continue'}
+              {step === 3 ? i18n('giftFlow.confirmPayButton') : i18n('giftFlow.continueButton')}
             </AppText>
           )}
         </TouchableOpacity>

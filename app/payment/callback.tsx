@@ -10,6 +10,7 @@ import { deleteRetryDraft } from '@/src/services/giftService';
 import { AppText } from '@/src/components/ui/AppText';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, FontSize, Fonts } from '@/src/constants/layout';
+import { i18n } from '@/src/i18n';
 
 type PaymentStatus = 'loading' | 'success' | 'failed';
 
@@ -120,7 +121,7 @@ export default function PaymentCallbackScreen() {
     return (
       <View style={[styles.root, styles.rootCentered, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         <ActivityIndicator size="large" color={Colors.primary} />
-        <AppText style={styles.loadingText}>Confirming payment…</AppText>
+        <AppText style={styles.loadingText}>{i18n('payment.confirming')}</AppText>
       </View>
     );
   }
@@ -141,12 +142,12 @@ export default function PaymentCallbackScreen() {
         </View>
 
         <AppText semiBold style={styles.title}>
-          {isSuccess ? 'Gift Sent!' : 'Payment failed'}
+          {isSuccess ? i18n('payment.successTitle') : i18n('payment.failureTitle')}
         </AppText>
         <AppText style={styles.subtitle} color={Colors.text.secondary}>
           {isSuccess
             ? `${giftLabel}${recipientLabel} is on its way.`
-            : 'Something went wrong with your payment. Please try again.'}
+            : i18n('payment.failureMessage')}
         </AppText>
 
         {tap_id ? (
@@ -161,32 +162,32 @@ export default function PaymentCallbackScreen() {
           <>
             <TouchableOpacity style={styles.whatsappBtn} onPress={handleWhatsApp} activeOpacity={0.8}>
               <Ionicons name="logo-whatsapp" size={20} color="#fff" />
-              <AppText semiBold style={styles.whatsappBtnText}>Share via WhatsApp</AppText>
+              <AppText semiBold style={styles.whatsappBtnText}>{i18n('payment.shareWhatsApp')}</AppText>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.outlineBtn} onPress={handleShare} activeOpacity={0.8}>
               <Ionicons name="share-outline" size={18} color={Colors.primary} />
-              <AppText semiBold style={[styles.outlineBtnText, { color: Colors.primary }]}>Share Gift Link</AppText>
+              <AppText semiBold style={[styles.outlineBtnText, { color: Colors.primary }]}>{i18n('payment.shareGiftLink')}</AppText>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.copyBtn} onPress={handleCopy} activeOpacity={0.8}>
               <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={16} color={Colors.text.secondary} />
               <AppText style={styles.ghostBtnText} color={Colors.text.secondary}>
-                {copied ? 'Copied!' : 'Copy Link'}
+                {copied ? i18n('payment.copied') : i18n('payment.copyLink')}
               </AppText>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.ghostBtn} onPress={handleDone} activeOpacity={0.8}>
-              <AppText style={[styles.ghostBtnText, styles.underlineText]} color={Colors.text.tertiary}>Back to Home</AppText>
+              <AppText style={[styles.ghostBtnText, styles.underlineText]} color={Colors.text.tertiary}>{i18n('payment.backToHome')}</AppText>
             </TouchableOpacity>
           </>
         ) : (
           <>
             <TouchableOpacity style={styles.primaryBtn} onPress={handleRetry} activeOpacity={0.8}>
-              <AppText semiBold style={styles.primaryBtnText}>Try Again</AppText>
+              <AppText semiBold style={styles.primaryBtnText}>{i18n('payment.tryAgain')}</AppText>
             </TouchableOpacity>
             <TouchableOpacity style={styles.ghostBtn} onPress={handleDone} activeOpacity={0.8}>
-              <AppText style={styles.ghostBtnText} color={Colors.text.secondary}>Cancel</AppText>
+              <AppText style={styles.ghostBtnText} color={Colors.text.secondary}>{i18n('common.cancel')}</AppText>
             </TouchableOpacity>
           </>
         )}

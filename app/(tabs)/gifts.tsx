@@ -20,6 +20,7 @@ import { ErrorState } from '@/src/components/ui/ErrorState';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, FontSize, Fonts } from '@/src/constants/layout';
 import { getSentGifts, getReceivedGifts, type GiftSummary } from '@/src/services/giftService';
+import { i18n } from '@/src/i18n';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -79,7 +80,7 @@ function GiftRow({ gift }: { gift: GiftSummary }) {
     if (!link) return;
     const url = link.startsWith('http') ? link : `${GIFT_BASE_URL}/${link}`;
     try {
-      await Share.share({ message: `Open your gift here: ${url}`, url });
+      await Share.share({ message: i18n('gifts.shareMessage', { url }), url });
     } catch { }
   }
 
@@ -108,7 +109,7 @@ function GiftRow({ gift }: { gift: GiftSummary }) {
 
       {/* Meta: "To:" + price */}
       <View style={styles.cardMeta}>
-        <AppText style={styles.metaText}>To: {gift.recipient_name ?? '—'}</AppText>
+        <AppText style={styles.metaText}>{i18n('gifts.to', { name: gift.recipient_name ?? '—' })}</AppText>
         {priceLabel ? <AppText style={styles.priceText}>{priceLabel}</AppText> : null}
       </View>
 
@@ -116,11 +117,11 @@ function GiftRow({ gift }: { gift: GiftSummary }) {
       <View style={styles.cardActions}>
           <TouchableOpacity style={styles.actionBtnShare} onPress={onShareAgain} activeOpacity={0.7}>
             <Ionicons name="share-outline" size={15} color={Colors.primary} />
-            <AppText style={styles.actionBtnShareText}>Share Again</AppText>
+            <AppText style={styles.actionBtnShareText}>{i18n('gifts.shareAgain')}</AppText>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionBtnReceipt} onPress={onReceipt} activeOpacity={0.7}>
             <Ionicons name="receipt-outline" size={15} color={Colors.text.secondary} />
-            <AppText style={styles.actionBtnReceiptText}>Receipt</AppText>
+            <AppText style={styles.actionBtnReceiptText}>{i18n('gifts.receipt')}</AppText>
           </TouchableOpacity>
         </View>
     </View>
@@ -130,9 +131,9 @@ function GiftRow({ gift }: { gift: GiftSummary }) {
 // ── ReceivedGiftCard ──────────────────────────────────────────────────────────
 
 const STATUS_CONFIG = {
-  active:             { label: 'Active',             bg: '#E6F4EA', color: '#2E7D32' },
-  partially_redeemed: { label: 'Partially Redeemed', bg: '#FFF3E0', color: '#E65100' },
-  redeemed:           { label: 'Redeemed',           bg: '#F5F5F5', color: '#757575' },
+  active:             { labelKey: 'gifts.filterActive',            bg: '#E6F4EA', color: '#2E7D32' },
+  partially_redeemed: { labelKey: 'gifts.filterPartiallyRedeemed', bg: '#FFF3E0', color: '#E65100' },
+  redeemed:           { labelKey: 'gifts.filterRedeemed',          bg: '#F5F5F5', color: '#757575' },
 } as const;
 
 function ReceivedGiftCard({ gift }: { gift: GiftSummary }) {
@@ -161,7 +162,7 @@ function ReceivedGiftCard({ gift }: { gift: GiftSummary }) {
           <View style={styles.cardInfoTop}>
             <AppText style={styles.merchantText} numberOfLines={1}>{merchantName || 'Gift'}</AppText>
             <View style={[styles.statusBadge, { backgroundColor: statusCfg.bg }]}>
-              <AppText style={[styles.statusText, { color: statusCfg.color }]}>{statusCfg.label}</AppText>
+              <AppText style={[styles.statusText, { color: statusCfg.color }]}>{i18n(statusCfg.labelKey)}</AppText>
             </View>
           </View>
           <AppText style={styles.itemText} numberOfLines={1}>{itemLabel}</AppText>
@@ -170,7 +171,7 @@ function ReceivedGiftCard({ gift }: { gift: GiftSummary }) {
 
       {/* From + date */}
       <View style={styles.cardMeta}>
-        <AppText style={styles.metaText}>From: {senderName}</AppText>
+        <AppText style={styles.metaText}>{i18n('gifts.from', { name: senderName })}</AppText>
         <AppText style={styles.metaText}>{dateLabel}</AppText>
       </View>
 
@@ -181,7 +182,7 @@ function ReceivedGiftCard({ gift }: { gift: GiftSummary }) {
           onPress={() => Linking.openURL(giftUrl)}
           activeOpacity={0.7}
         >
-          <AppText style={styles.viewGiftBtnText}>View Gift</AppText>
+          <AppText style={styles.viewGiftBtnText}>{i18n('gifts.viewGift')}</AppText>
           <Ionicons name="arrow-forward" size={15} color={Colors.primary} />
         </TouchableOpacity>
       ) : null}
@@ -196,12 +197,10 @@ function EmptyState({ mode }: { mode: 'sent' | 'received' }) {
     <View style={styles.empty}>
       <AppText style={styles.emptyIcon}>{mode === 'sent' ? '🎁' : '📬'}</AppText>
       <AppText variant="subheading" style={styles.emptyTitle}>
-        {mode === 'sent' ? 'No gifts sent yet' : 'No gifts received yet'}
+        {mode === 'sent' ? i18n('gifts.emptySentTitle') : i18n('gifts.emptyReceivedTitle')}
       </AppText>
       <AppText variant="caption" style={styles.emptySubtitle}>
-        {mode === 'sent'
-          ? 'Send a gift to someone special from the home screen.'
-          : 'Gifts sent to you will appear here once received.'}
+        {mode === 'sent' ? i18n('gifts.emptySentSubtitle') : i18n('gifts.emptyReceivedSubtitle')}
       </AppText>
     </View>
   );
@@ -254,7 +253,7 @@ export default function GiftsScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <AppText variant="title">My Gifts</AppText>
+        <AppText variant="title">{i18n('gifts.title')}</AppText>
       </View>
 
       {/* Tabs */}
@@ -267,7 +266,7 @@ export default function GiftsScreen() {
             activeOpacity={0.7}
           >
             <AppText style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-              {tab === 'sent' ? 'Sent' : 'Received'}
+              {tab === 'sent' ? i18n('gifts.tabSent') : i18n('gifts.tabReceived')}
             </AppText>
           </TouchableOpacity>
         ))}
@@ -286,7 +285,7 @@ export default function GiftsScreen() {
             color={Colors.text.secondary}
           />
           <AppText style={styles.sortBtnText}>
-            {sortOrder === 'desc' ? 'Newest' : 'Oldest'}
+            {sortOrder === 'desc' ? i18n('gifts.sortNewest') : i18n('gifts.sortOldest')}
           </AppText>
         </TouchableOpacity>
 
@@ -304,7 +303,7 @@ export default function GiftsScreen() {
                 activeOpacity={0.7}
               >
                 <AppText style={[styles.filterChipText, statusFilter === s && styles.filterChipTextActive]}>
-                  {s === null ? 'All' : STATUS_CONFIG[s].label}
+                  {s === null ? i18n('gifts.filterAll') : i18n(STATUS_CONFIG[s].labelKey)}
                 </AppText>
               </TouchableOpacity>
             ))}

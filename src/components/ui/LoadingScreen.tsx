@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Animated, StyleSheet, Easing, Image } from 'react-native';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/layout';
+import { i18n } from '../../i18n';
 
 const LOGO = require('../../../assets/images/kado_logo.png');
 
@@ -50,7 +51,7 @@ export function LoadingScreen() {
       {/* Logo */}
       <Animated.Image source={LOGO} style={[styles.logo, { transform: [{ scale: pulse }] }]} resizeMode="contain" />
 
-      <Animated.Text style={styles.tagline}>Gift with intention</Animated.Text>
+      <Animated.Text style={styles.tagline}>{i18n('loading.tagline')}</Animated.Text>
 
       {/* Dots */}
       <View style={styles.dots}>

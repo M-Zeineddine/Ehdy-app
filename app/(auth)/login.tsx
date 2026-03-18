@@ -9,6 +9,7 @@ import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, Fonts } from '@/src/constants/layout';
 import { useAuthStore } from '@/src/store/authStore';
 import { signin } from '@/src/services/authService';
+import { i18n } from '@/src/i18n';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function LoginScreen() {
 
   async function handleLogin() {
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Missing fields', 'Please enter your email and password.');
+      Alert.alert(i18n('auth.login.errorMissingFields'), i18n('auth.login.errorMissingFieldsMessage'));
       return;
     }
     setLoading(true);
@@ -28,7 +29,7 @@ export default function LoginScreen() {
       const { user, access_token, refresh_token } = await signin(email.trim().toLowerCase(), password);
       await setAuth(user, access_token, refresh_token);
     } catch (err: any) {
-      Alert.alert('Sign in failed', err.message ?? 'Please check your credentials and try again.');
+      Alert.alert(i18n('auth.login.errorSignInFailed'), err.message ?? i18n('auth.login.errorSignInFailedMessage'));
     } finally {
       setLoading(false);
     }
@@ -43,16 +44,16 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <View style={styles.header}>
-            <AppText variant="heading">Welcome back</AppText>
-            <AppText variant="body" color={Colors.text.secondary}>Sign in to your Kado account</AppText>
+            <AppText variant="heading">{i18n('auth.login.title')}</AppText>
+            <AppText variant="body" color={Colors.text.secondary}>{i18n('auth.login.subtitle')}</AppText>
           </View>
 
           <View style={styles.form}>
             <View style={styles.field}>
-              <AppText variant="label" color={Colors.text.secondary}>Email</AppText>
+              <AppText variant="label" color={Colors.text.secondary}>{i18n('auth.login.emailLabel')}</AppText>
               <TextInput
                 style={styles.input}
-                placeholder="you@example.com"
+                placeholder={i18n('auth.login.emailPlaceholder')}
                 placeholderTextColor={Colors.text.tertiary}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -63,11 +64,11 @@ export default function LoginScreen() {
             </View>
 
             <View style={styles.field}>
-              <AppText variant="label" color={Colors.text.secondary}>Password</AppText>
+              <AppText variant="label" color={Colors.text.secondary}>{i18n('auth.login.passwordLabel')}</AppText>
               <View style={styles.passwordRow}>
                 <TextInput
                   style={[styles.input, styles.passwordInput]}
-                  placeholder="••••••••"
+                  placeholder={i18n('auth.login.passwordPlaceholder')}
                   placeholderTextColor={Colors.text.tertiary}
                   secureTextEntry={!showPassword}
                   value={password}
@@ -83,13 +84,13 @@ export default function LoginScreen() {
               </View>
             </View>
 
-            <Button label="Sign In" onPress={handleLogin} loading={loading} size="lg" style={styles.submitBtn} />
+            <Button label={i18n('auth.login.signInButton')} onPress={handleLogin} loading={loading} size="lg" style={styles.submitBtn} />
           </View>
 
           <View style={styles.footer}>
-            <AppText variant="body" color={Colors.text.secondary}>Don't have an account? </AppText>
+            <AppText variant="body" color={Colors.text.secondary}>{i18n('auth.login.noAccount')} </AppText>
             <TouchableOpacity onPress={() => router.replace('/(auth)/register')}>
-              <AppText variant="body" color={Colors.primary} semiBold>Create one</AppText>
+              <AppText variant="body" color={Colors.primary} semiBold>{i18n('auth.login.createOne')}</AppText>
             </TouchableOpacity>
           </View>
         </ScrollView>

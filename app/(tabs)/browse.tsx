@@ -14,6 +14,7 @@ import { ErrorState } from '@/src/components/ui/ErrorState';
 import { AppText } from '@/src/components/ui/AppText';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, Fonts, FontSize } from '@/src/constants/layout';
+import { i18n } from '@/src/i18n';
 import type { Merchant } from '@/src/types';
 
 type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -133,7 +134,7 @@ export default function BrowseScreen() {
     <SafeAreaView style={styles.safe} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <AppText variant="title">Browse</AppText>
+        <AppText variant="title">{i18n('browse.title')}</AppText>
       </View>
 
       {/* Search bar */}
@@ -144,7 +145,7 @@ export default function BrowseScreen() {
             ref={inputRef}
             value={search}
             onChangeText={setSearch}
-            placeholder="Search merchants..."
+            placeholder={i18n('browse.searchPlaceholder')}
             placeholderTextColor={Colors.text.tertiary}
             style={styles.searchInput}
             returnKeyType="search"
@@ -211,11 +212,11 @@ export default function BrowseScreen() {
       ) : merchants.length === 0 ? (
         <View style={styles.center}>
           <AppText style={styles.emptyIcon}>🔍</AppText>
-          <AppText variant="subheading" style={styles.emptyTitle}>No results</AppText>
+          <AppText variant="subheading" style={styles.emptyTitle}>{i18n('browse.emptyTitle')}</AppText>
           <AppText variant="caption" style={styles.emptySubtitle}>
             {debouncedSearch
-              ? `No merchants found for "${debouncedSearch}"`
-              : 'No merchants in this category yet.'}
+              ? i18n('browse.emptySearchSubtitle', { query: debouncedSearch })
+              : i18n('browse.emptyCategorySubtitle')}
           </AppText>
         </View>
       ) : (

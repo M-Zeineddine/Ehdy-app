@@ -5,6 +5,7 @@ import { AppText } from '@/src/components/ui/AppText';
 import { Button } from '@/src/components/ui/Button';
 import { Colors } from '@/src/constants/colors';
 import { Spacing } from '@/src/constants/layout';
+import { i18n } from '@/src/i18n';
 
 const LOGO = require('../../assets/images/kado_logo.png');
 
@@ -16,14 +17,14 @@ export default function WelcomeScreen() {
       <View style={styles.hero}>
         <Image source={LOGO} style={styles.logo} resizeMode="contain" />
         <AppText variant="body" color={Colors.text.secondary} style={styles.tagline}>
-          Give gifts they'll actually love
+          {i18n('auth.welcome.tagline')}
         </AppText>
       </View>
 
       <View style={styles.actions}>
-        <Button label="Create Account" onPress={() => router.push('/(auth)/register')} size="lg" />
+        <Button label={i18n('auth.welcome.createAccount')} onPress={() => router.push('/(auth)/register')} size="lg" />
         <Button
-          label="Sign In"
+          label={i18n('auth.welcome.signIn')}
           onPress={() => router.push('/(auth)/login')}
           variant="outline"
           size="lg"

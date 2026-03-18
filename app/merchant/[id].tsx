@@ -13,6 +13,7 @@ import { AppText } from '@/src/components/ui/AppText';
 import { ErrorState } from '@/src/components/ui/ErrorState';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, Fonts } from '@/src/constants/layout';
+import { i18n } from '@/src/i18n';
 import type { MerchantItem, StoreCreditPreset } from '@/src/types';
 
 const BANNER_HEIGHT = 210;
@@ -127,16 +128,16 @@ export default function MerchantScreen() {
             <AppText style={styles.merchantName}>{merchant.name}</AppText>
             <View style={styles.metaRow}>
               {(merchant as any).is_featured ? (
-                <AppText style={styles.metaText} color={Colors.text.secondary}>⭐ Featured</AppText>
+                <AppText style={styles.metaText} color={Colors.text.secondary}>{i18n('merchant.badgeFeatured')}</AppText>
               ) : (merchant as any).is_verified ? (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                   <Ionicons name="checkmark-circle" size={14} color={Colors.primary} />
-                  <AppText style={styles.metaText} color={Colors.text.accent}>Verified</AppText>
+                  <AppText style={styles.metaText} color={Colors.text.accent}>{i18n('merchant.badgeVerified')}</AppText>
                 </View>
               ) : (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                   <Ionicons name="gift-outline" size={14} color={Colors.text.secondary} />
-                  <AppText style={styles.metaText} color={Colors.text.secondary}>Gift-Ready</AppText>
+                  <AppText style={styles.metaText} color={Colors.text.secondary}>{i18n('merchant.badgeGiftReady')}</AppText>
                 </View>
               )}
               <AppText style={styles.metaText} color={Colors.text.tertiary}>{`    •    `}</AppText>
@@ -152,9 +153,9 @@ export default function MerchantScreen() {
 
           {/* Call / Map / Share */}
           <View style={styles.actionRow}>
-            <ActionBtn icon="call-outline" label="Call" onPress={handleCall} />
-            <ActionBtn icon="map-outline" label="Map" onPress={handleMap} />
-            <ActionBtn icon="share-social-outline" label="Share" onPress={handleShare} />
+            <ActionBtn icon="call-outline" label={i18n('merchant.callButton')} onPress={handleCall} />
+            <ActionBtn icon="map-outline" label={i18n('merchant.mapButton')} onPress={handleMap} />
+            <ActionBtn icon="share-social-outline" label={i18n('merchant.shareButton')} onPress={handleShare} />
           </View>
 
           {/* Tab bar */}
@@ -165,7 +166,7 @@ export default function MerchantScreen() {
               activeOpacity={0.55}
             >
               <AppText style={[styles.tabText, tab === 'items' && styles.tabTextActive]}>
-                Gift Items
+                {i18n('merchant.tabGiftItems')}
               </AppText>
             </TouchableOpacity>
             <TouchableOpacity
@@ -174,7 +175,7 @@ export default function MerchantScreen() {
               activeOpacity={0.55}
             >
               <AppText style={[styles.tabText, tab === 'credit' && styles.tabTextActive]}>
-                Store Credit
+                {i18n('merchant.tabStoreCredit')}
               </AppText>
             </TouchableOpacity>
           </View>
@@ -186,7 +187,7 @@ export default function MerchantScreen() {
             <View style={styles.tabContent}>
               {itemsToShow.length === 0 ? (
                 <AppText variant="caption" color={Colors.text.tertiary} style={styles.empty}>
-                  No gift items available yet.
+                  {i18n('merchant.noItemsEmpty')}
                 </AppText>
               ) : (
                 toRows(itemsToShow).map((row, i) => (
@@ -203,22 +204,22 @@ export default function MerchantScreen() {
           {tab === 'credit' && (
             <View style={styles.tabContent}>
               <AppText variant="body" color={Colors.text.secondary} style={styles.creditDesc}>
-                Gift store credit that can be used for anything at this store
+                {i18n('merchant.storeCreditDescription')}
               </AppText>
 
               {/* Custom amount box */}
               <View style={styles.customBox}>
-                <AppText semiBold style={styles.customLabel}>Enter custom amount</AppText>
+                <AppText semiBold style={styles.customLabel}>{i18n('merchant.customAmountLabel')}</AppText>
                 <View style={styles.inputRow}>
                   <AppText semiBold color={Colors.text.secondary} style={styles.currencyLabel}>
-                    USD
+                    {i18n('merchant.currencyLabel')}
                   </AppText>
                   <TextInput
                     style={styles.amountInput}
                     value={customAmount}
                     onChangeText={v => { setCustomAmount(v); setSelectedPresetId(null); }}
                     keyboardType="numeric"
-                    placeholder="0.00"
+                    placeholder={i18n('merchant.currencyPlaceholder')}
                     placeholderTextColor={Colors.text.tertiary}
                   />
                 </View>
@@ -268,7 +269,7 @@ export default function MerchantScreen() {
                     });
                   }}
                 >
-                  <AppText semiBold color="#fff">Gift Store Credit</AppText>
+                  <AppText semiBold color="#fff">{i18n('merchant.giftStoreCreditButton')}</AppText>
                 </TouchableOpacity>
               </View>
             </View>
@@ -321,7 +322,7 @@ function GiftCardTile({ item, merchantId, merchantName }: { item: MerchantItem; 
         <AppText style={styles.giftPrice}>{price}</AppText>
         <TouchableOpacity style={styles.giftThisBtn} onPress={handleGiftThis} activeOpacity={0.55}>
           <Ionicons name="gift-outline" size={17} color={Colors.primary} />
-          <AppText semiBold style={styles.giftThisText}>Gift This</AppText>
+          <AppText semiBold style={styles.giftThisText}>{i18n('merchant.giftThisButton')}</AppText>
         </TouchableOpacity>
       </View>
     </View>

@@ -9,6 +9,7 @@ import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, Fonts } from '@/src/constants/layout';
 import { useAuthStore } from '@/src/store/authStore';
 import { verifyEmail, resendVerification } from '@/src/services/authService';
+import { i18n } from '@/src/i18n';
 
 export default function VerifyEmailScreen() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function VerifyEmailScreen() {
   async function handleVerify() {
     const fullCode = code.join('');
     if (fullCode.length < 6) {
-      Alert.alert('Incomplete code', 'Please enter the 6-digit code from your email.');
+      Alert.alert(i18n('auth.verifyEmail.errorIncompleteCode'), i18n('auth.verifyEmail.errorIncompleteCodeMessage'));
       return;
     }
     setLoading(true);
@@ -39,7 +40,7 @@ export default function VerifyEmailScreen() {
       const { user, access_token, refresh_token } = await verifyEmail(email, fullCode);
       await setAuth(user, access_token, refresh_token);
     } catch (err: any) {
-      Alert.alert('Verification failed', err.message ?? 'Invalid or expired code. Please try again.');
+      Alert.alert(i18n('auth.verifyEmail.errorVerificationFailed'), err.message ?? i18n('auth.verifyEmail.errorVerificationFailedMessage'));
       setCode(['', '', '', '', '', '']);
       inputs.current[0]?.focus();
     } finally {
@@ -51,11 +52,11 @@ export default function VerifyEmailScreen() {
     setResending(true);
     try {
       await resendVerification(email);
-      Alert.alert('Code sent', 'A new verification code has been sent to your email.');
+      Alert.alert(i18n('auth.verifyEmail.successCodeSent'), i18n('auth.verifyEmail.successCodeSentMessage'));
       setCode(['', '', '', '', '', '']);
       inputs.current[0]?.focus();
     } catch (err: any) {
-      Alert.alert('Failed', err.message ?? 'Could not resend code. Please try again.');
+      Alert.alert(i18n('auth.verifyEmail.errorResendFailed'), err.message ?? i18n('auth.verifyEmail.errorResendFailedMessage'));
     } finally {
       setResending(false);
     }
@@ -70,9 +71,9 @@ export default function VerifyEmailScreen() {
           </TouchableOpacity>
 
           <View style={styles.header}>
-            <AppText variant="heading">Check your email</AppText>
+            <AppText variant="heading">{i18n('auth.verifyEmail.title')}</AppText>
             <AppText variant="body" color={Colors.text.secondary}>
-              We sent a 6-digit code to{'\n'}
+              {i18n('auth.verifyEmail.subtitle')}{'\n'}
               <AppText variant="body" semiBold color={Colors.text.primary}>{email}</AppText>
             </AppText>
           </View>
@@ -93,7 +94,7 @@ export default function VerifyEmailScreen() {
           </View>
 
           <Button
-            label="Verify Email"
+            label={i18n('auth.verifyEmail.verifyButton')}
             onPress={handleVerify}
             loading={loading}
             size="lg"
@@ -103,7 +104,7 @@ export default function VerifyEmailScreen() {
 
           <TouchableOpacity onPress={handleResend} disabled={resending} style={styles.resendBtn}>
             <AppText variant="body" color={resending ? Colors.text.tertiary : Colors.primary} semiBold>
-              {resending ? 'Sending...' : 'Resend code'}
+              {resending ? i18n('auth.verifyEmail.sendingButton') : i18n('auth.verifyEmail.resendButton')}
             </AppText>
           </TouchableOpacity>
         </View>

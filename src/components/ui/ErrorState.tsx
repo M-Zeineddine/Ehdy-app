@@ -5,6 +5,7 @@ import { AppText } from './AppText';
 import { Button } from './Button';
 import { Colors } from '../../constants/colors';
 import { Spacing } from '../../constants/layout';
+import { i18n } from '../../i18n';
 
 interface ErrorStateProps {
   title?: string;
@@ -26,10 +27,8 @@ export function ErrorState({
     message?.toLowerCase().includes('connect');
 
   const icon = isNetwork ? 'wifi-outline' : 'alert-circle-outline';
-  const defaultTitle = isNetwork ? 'No connection' : 'Something went wrong';
-  const defaultMessage = isNetwork
-    ? 'Check your internet connection and try again.'
-    : 'We couldn\'t load this content. Please try again.';
+  const defaultTitle = isNetwork ? i18n('error.networkTitle') : i18n('error.genericTitle');
+  const defaultMessage = isNetwork ? i18n('error.networkMessage') : i18n('error.genericMessage');
 
   return (
     <View style={styles.root}>
@@ -44,7 +43,7 @@ export function ErrorState({
       </AppText>
       {onRetry && (
         <Button
-          label="Try again"
+          label={i18n('error.tryAgain')}
           variant="outline"
           size="sm"
           onPress={onRetry}

@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/colors';
 import { AppText } from '../ui/AppText';
 import { Spacing } from '../../constants/layout';
+import { i18n } from '../../i18n';
 
 interface HomeHeaderProps {
   firstName?: string;
@@ -13,9 +14,9 @@ interface HomeHeaderProps {
 
 function getGreeting() {
   const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 17) return 'Good afternoon';
-  return 'Good evening';
+  if (h < 12) return i18n('home.greetingMorning');
+  if (h < 17) return i18n('home.greetingAfternoon');
+  return i18n('home.greetingEvening');
 }
 
 export function HomeHeader({ firstName = 'There', onNotificationPress, unreadCount = 0 }: HomeHeaderProps) {

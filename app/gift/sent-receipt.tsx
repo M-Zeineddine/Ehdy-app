@@ -16,6 +16,7 @@ import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, FontSize, Fonts } from '@/src/constants/layout';
 import { GIFT_THEMES } from '@/src/constants/giftThemes';
 import { BaseCard } from '@/src/components/gift/cards/BaseCard';
+import { i18n } from '@/src/i18n';
 
 export default function SentReceiptScreen() {
   const { width } = useWindowDimensions();
@@ -70,7 +71,7 @@ export default function SentReceiptScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
           <Ionicons name="chevron-back" size={24} color={Colors.text.primary} />
         </TouchableOpacity>
-        <AppText variant="subheading">Receipt</AppText>
+        <AppText variant="subheading">{i18n('receipt.title')}</AppText>
         <View style={styles.backBtn} />
       </View>
 
@@ -89,7 +90,7 @@ export default function SentReceiptScreen() {
 
         {/* What's inside */}
         <View style={styles.card}>
-          <AppText style={styles.sectionTitle}>What's inside</AppText>
+          <AppText style={styles.sectionTitle}>{i18n('receipt.whatsInside')}</AppText>
           {items.map((item, i) => (
             <View key={i} style={[styles.itemRow, i < items.length - 1 && styles.itemRowBorder]}>
               {item.image || item.merchantLogo ? (
@@ -117,9 +118,9 @@ export default function SentReceiptScreen() {
 
         {/* Receipt details */}
         <View style={styles.card}>
-          <ReceiptRow label="To" value={recipient_name || '—'} />
-          {personal_message ? <ReceiptRow label="Message" value={`"${personal_message}"`} italic /> : null}
-          <ReceiptRow label="Sent on" value={formattedDate} last />
+          <ReceiptRow label={i18n('receipt.toLabel')} value={recipient_name || i18n('receipt.emptyFallback')} />
+          {personal_message ? <ReceiptRow label={i18n('receipt.messageLabel')} value={`"${personal_message}"`} italic /> : null}
+          <ReceiptRow label={i18n('receipt.sentOnLabel')} value={formattedDate} last />
         </View>
 
       </ScrollView>

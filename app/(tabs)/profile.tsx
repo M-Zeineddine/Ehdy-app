@@ -5,21 +5,22 @@ import { AppText } from '@/src/components/ui/AppText';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius } from '@/src/constants/layout';
 import { useAuthStore } from '@/src/store/authStore';
+import { i18n } from '@/src/i18n';
 
 export default function ProfileScreen() {
   const { user, clearAuth } = useAuthStore();
 
   function handleLogout() {
-    Alert.alert('Sign out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign out', style: 'destructive', onPress: () => clearAuth() },
+    Alert.alert(i18n('profile.signOutConfirmTitle'), i18n('profile.signOutConfirmMessage'), [
+      { text: i18n('common.cancel'), style: 'cancel' },
+      { text: i18n('profile.signOut'), style: 'destructive', onPress: () => clearAuth() },
     ]);
   }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.container}>
-        <AppText variant="heading" style={styles.title}>Profile</AppText>
+        <AppText variant="heading" style={styles.title}>{i18n('profile.title')}</AppText>
 
         {/* Avatar + name */}
         <View style={styles.avatarSection}>
@@ -34,16 +35,16 @@ export default function ProfileScreen() {
 
         {/* Menu items */}
         <View style={styles.menu}>
-          <MenuItem icon="person-outline" label="Edit Profile" onPress={() => {}} />
-          <MenuItem icon="notifications-outline" label="Notifications" onPress={() => {}} />
-          <MenuItem icon="shield-checkmark-outline" label="Privacy & Security" onPress={() => {}} />
-          <MenuItem icon="help-circle-outline" label="Help & Support" onPress={() => {}} />
+          <MenuItem icon="person-outline" label={i18n('profile.editProfile')} onPress={() => {}} />
+          <MenuItem icon="notifications-outline" label={i18n('profile.notifications')} onPress={() => {}} />
+          <MenuItem icon="shield-checkmark-outline" label={i18n('profile.privacySecurity')} onPress={() => {}} />
+          <MenuItem icon="help-circle-outline" label={i18n('profile.helpSupport')} onPress={() => {}} />
         </View>
 
         {/* Sign out */}
         <TouchableOpacity style={styles.signOutBtn} onPress={handleLogout} activeOpacity={0.55}>
           <Ionicons name="log-out-outline" size={20} color="#E53E3E" />
-          <AppText variant="body" color="#E53E3E" semiBold>Sign out</AppText>
+          <AppText variant="body" color="#E53E3E" semiBold>{i18n('profile.signOut')}</AppText>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

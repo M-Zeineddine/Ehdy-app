@@ -8,6 +8,7 @@ import { Button } from '@/src/components/ui/Button';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, Fonts } from '@/src/constants/layout';
 import { signup } from '@/src/services/authService';
+import { i18n } from '@/src/i18n';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -20,11 +21,11 @@ export default function RegisterScreen() {
 
   async function handleRegister() {
     if (!firstName.trim() || !lastName.trim() || !email.trim() || !password.trim()) {
-      Alert.alert('Missing fields', 'Please fill in all fields.');
+      Alert.alert(i18n('auth.register.errorMissingFields'), i18n('auth.register.errorMissingFieldsMessage'));
       return;
     }
     if (password.length < 8) {
-      Alert.alert('Weak password', 'Password must be at least 8 characters.');
+      Alert.alert(i18n('auth.register.errorWeakPassword'), i18n('auth.register.errorWeakPasswordMessage'));
       return;
     }
     setLoading(true);
@@ -41,7 +42,7 @@ export default function RegisterScreen() {
         router.push({ pathname: '/(auth)/verify-email', params: { email: email.trim().toLowerCase() } });
         return;
       }
-      Alert.alert('Registration failed', err.message ?? 'Please try again.');
+      Alert.alert(i18n('auth.register.errorRegistrationFailed'), err.message ?? i18n('common.tryAgain'));
     } finally {
       setLoading(false);
     }
@@ -56,17 +57,17 @@ export default function RegisterScreen() {
           </TouchableOpacity>
 
           <View style={styles.header}>
-            <AppText variant="heading">Create account</AppText>
-            <AppText variant="body" color={Colors.text.secondary}>Join Kado and start gifting</AppText>
+            <AppText variant="heading">{i18n('auth.register.title')}</AppText>
+            <AppText variant="body" color={Colors.text.secondary}>{i18n('auth.register.subtitle')}</AppText>
           </View>
 
           <View style={styles.form}>
             <View style={styles.row}>
               <View style={[styles.field, { flex: 1 }]}>
-                <AppText variant="label" color={Colors.text.secondary}>First name</AppText>
+                <AppText variant="label" color={Colors.text.secondary}>{i18n('auth.register.firstNameLabel')}</AppText>
                 <TextInput
                   style={styles.input}
-                  placeholder="Sarah"
+                  placeholder={i18n('auth.register.firstNamePlaceholder')}
                   placeholderTextColor={Colors.text.tertiary}
                   autoCapitalize="words"
                   value={firstName}
@@ -74,10 +75,10 @@ export default function RegisterScreen() {
                 />
               </View>
               <View style={[styles.field, { flex: 1 }]}>
-                <AppText variant="label" color={Colors.text.secondary}>Last name</AppText>
+                <AppText variant="label" color={Colors.text.secondary}>{i18n('auth.register.lastNameLabel')}</AppText>
                 <TextInput
                   style={styles.input}
-                  placeholder="Miller"
+                  placeholder={i18n('auth.register.lastNamePlaceholder')}
                   placeholderTextColor={Colors.text.tertiary}
                   autoCapitalize="words"
                   value={lastName}
@@ -87,10 +88,10 @@ export default function RegisterScreen() {
             </View>
 
             <View style={styles.field}>
-              <AppText variant="label" color={Colors.text.secondary}>Email</AppText>
+              <AppText variant="label" color={Colors.text.secondary}>{i18n('auth.register.emailLabel')}</AppText>
               <TextInput
                 style={styles.input}
-                placeholder="you@example.com"
+                placeholder={i18n('auth.register.emailPlaceholder')}
                 placeholderTextColor={Colors.text.tertiary}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -101,11 +102,11 @@ export default function RegisterScreen() {
             </View>
 
             <View style={styles.field}>
-              <AppText variant="label" color={Colors.text.secondary}>Password</AppText>
+              <AppText variant="label" color={Colors.text.secondary}>{i18n('auth.register.passwordLabel')}</AppText>
               <View style={styles.passwordRow}>
                 <TextInput
                   style={[styles.input, styles.passwordInput]}
-                  placeholder="Min. 8 characters"
+                  placeholder={i18n('auth.register.passwordPlaceholder')}
                   placeholderTextColor={Colors.text.tertiary}
                   secureTextEntry={!showPassword}
                   value={password}
@@ -121,13 +122,13 @@ export default function RegisterScreen() {
               </View>
             </View>
 
-            <Button label="Create Account" onPress={handleRegister} loading={loading} size="lg" style={styles.submitBtn} />
+            <Button label={i18n('auth.register.createAccountButton')} onPress={handleRegister} loading={loading} size="lg" style={styles.submitBtn} />
           </View>
 
           <View style={styles.footer}>
-            <AppText variant="body" color={Colors.text.secondary}>Already have an account? </AppText>
+            <AppText variant="body" color={Colors.text.secondary}>{i18n('auth.register.alreadyHaveAccount')} </AppText>
             <TouchableOpacity onPress={() => router.replace('/(auth)/login')}>
-              <AppText variant="body" color={Colors.primary} semiBold>Sign in</AppText>
+              <AppText variant="body" color={Colors.primary} semiBold>{i18n('auth.register.signIn')}</AppText>
             </TouchableOpacity>
           </View>
         </ScrollView>

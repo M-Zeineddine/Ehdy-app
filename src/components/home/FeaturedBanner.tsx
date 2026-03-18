@@ -5,6 +5,7 @@ import { Colors } from '../../constants/colors';
 import { Radius, Spacing } from '../../constants/layout';
 import { AppText } from '../ui/AppText';
 import { Button } from '../ui/Button';
+import { i18n } from '../../i18n';
 
 interface FeaturedBannerProps {
   onPress?: () => void;
@@ -24,15 +25,15 @@ export function FeaturedBanner({ onPress }: FeaturedBannerProps) {
         />
         <View style={styles.content}>
           <View style={styles.badge}>
-            <AppText variant="label" color="#FFFFFF" style={styles.badgeText}>Featured Collection</AppText>
+            <AppText variant="label" color="#FFFFFF" style={styles.badgeText}>{i18n('banner.badgeText')}</AppText>
           </View>
           <AppText variant="heading" color="#FFFFFF" style={styles.title}>
-            Curated local gifts{'\n'}for every occasion
+            {i18n('banner.title')}
           </AppText>
           <AppText variant="caption" color="rgba(255,255,255,0.8)" style={styles.subtitle}>
-            Send instant joy with digital vouchers{'\n'}from Lebanon's best spots.
+            {i18n('banner.subtitle')}
           </AppText>
-          <Button label="Start Gifting" onPress={onPress} style={styles.btn} size="md" rightIcon={
+          <Button label={i18n('banner.button')} onPress={onPress} style={styles.btn} size="md" rightIcon={
             <AppText color="#fff" style={{ fontSize: 18, fontWeight: '600' }}> →</AppText>
           } />
         </View>

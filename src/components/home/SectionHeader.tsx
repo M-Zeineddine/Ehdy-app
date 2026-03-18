@@ -2,6 +2,7 @@ import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Colors } from '../../constants/colors';
 import { AppText } from '../ui/AppText';
+import { i18n } from '../../i18n';
 
 interface SectionHeaderProps {
   title: string;
@@ -15,7 +16,7 @@ export function SectionHeader({ title, onSeeAll }: SectionHeaderProps) {
       {onSeeAll && (
         <TouchableOpacity onPress={onSeeAll} activeOpacity={0.55}>
           <AppText bold color={Colors.primary} style={{ fontSize: 14 }}>
-            See All →
+            {i18n('common.seeAll')}
           </AppText>
         </TouchableOpacity>
       )}

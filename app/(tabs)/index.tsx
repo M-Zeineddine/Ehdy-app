@@ -18,6 +18,7 @@ import { MerchantCard } from '@/src/components/home/MerchantCard';
 import { GiftCardItem } from '@/src/components/home/GiftCardItem';
 import { SectionHeader } from '@/src/components/home/SectionHeader';
 import { SearchBar } from '@/src/components/ui/SearchBar';
+import { i18n } from '@/src/i18n';
 import type { Merchant, MerchantItem } from '@/src/types';
 
 export default function HomeScreen() {
@@ -76,7 +77,7 @@ export default function HomeScreen() {
           activeOpacity={0.85}
         >
           <View pointerEvents="none">
-            <SearchBar placeholder="Find gifts, places, treats..." />
+            <SearchBar placeholder={i18n('home.searchPlaceholder')} />
           </View>
         </TouchableOpacity>
 
@@ -87,7 +88,7 @@ export default function HomeScreen() {
 
         {/* Categories */}
         <View style={[styles.section, styles.sectionHeader, { marginTop: 2 }]}>
-          <SectionHeader title="Categories" />
+          <SectionHeader title={i18n('home.categories')} />
         </View>
         <CategoryRow
           categories={categories}
@@ -100,7 +101,7 @@ export default function HomeScreen() {
         {merchants.length > 0 && (
           <>
             <View style={[styles.section, styles.sectionHeader, { marginTop: 25 }]}>
-              <SectionHeader title="Featured Spots" onSeeAll={() => router.push('/browse')} />
+              <SectionHeader title={i18n('home.featuredSpots')} onSeeAll={() => router.push('/browse')} />
             </View>
             <FlatList
               data={merchants}
@@ -121,7 +122,7 @@ export default function HomeScreen() {
         {recentlyViewed.length > 0 && (
           <>
             <View style={[styles.section, styles.sectionHeader, { marginTop: 25 }]}>
-              <SectionHeader title="Recently Viewed" />
+              <SectionHeader title={i18n('home.recentlyViewed')} />
             </View>
             <FlatList
               data={recentlyViewed}
@@ -142,7 +143,7 @@ export default function HomeScreen() {
         {popularItems.length > 0 && (
           <>
             <View style={[styles.section, styles.sectionHeader, { marginTop: 25 }]}>
-              <SectionHeader title="Popular Gifts" onSeeAll={() => { }} />
+              <SectionHeader title={i18n('home.popularGifts')} onSeeAll={() => { }} />
             </View>
             <View style={[styles.section, { marginTop: 10 }]}>
               {itemRows.map((row, i) => (
