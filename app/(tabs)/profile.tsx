@@ -3,12 +3,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/src/components/ui/AppText';
 import { Colors } from '@/src/constants/colors';
-import { Spacing, Radius } from '@/src/constants/layout';
+import { Spacing, Radius, FontSize, Fonts } from '@/src/constants/layout';
 import { useAuthStore } from '@/src/store/authStore';
+import { useLanguageStore, type AppLanguage } from '@/src/store/languageStore';
 import { i18n } from '@/src/i18n';
 
 export default function ProfileScreen() {
   const { user, clearAuth } = useAuthStore();
+  const { language, setLanguage } = useLanguageStore();
 
   function handleLogout() {
     Alert.alert(i18n('profile.signOutConfirmTitle'), i18n('profile.signOutConfirmMessage'), [
@@ -16,6 +18,28 @@ export default function ProfileScreen() {
       { text: i18n('profile.signOut'), style: 'destructive', onPress: () => clearAuth() },
     ]);
   }
+
+  function handleLanguage() {
+    Alert.alert(
+      i18n('profile.language'),
+      undefined,
+      [
+        {
+          text: i18n('profile.languageEn'),
+          onPress: () => setLanguage('en'),
+          style: language === 'en' ? 'destructive' : 'default', // highlight active
+        },
+        {
+          text: i18n('profile.languageAr'),
+          onPress: () => setLanguage('ar'),
+          style: language === 'ar' ? 'destructive' : 'default',
+        },
+        { text: i18n('common.cancel'), style: 'cancel' },
+      ],
+    );
+  }
+
+  const currentLangLabel = language === 'ar' ? i18n('profile.languageAr') : i18n('profile.languageEn');
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -39,6 +63,7 @@ export default function ProfileScreen() {
           <MenuItem icon="notifications-outline" label={i18n('profile.notifications')} onPress={() => {}} />
           <MenuItem icon="shield-checkmark-outline" label={i18n('profile.privacySecurity')} onPress={() => {}} />
           <MenuItem icon="help-circle-outline" label={i18n('profile.helpSupport')} onPress={() => {}} />
+          <LanguageMenuItem label={i18n('profile.language')} value={currentLangLabel} onPress={handleLanguage} />
         </View>
 
         {/* Sign out */}
@@ -56,6 +81,17 @@ function MenuItem({ icon, label, onPress }: { icon: any; label: string; onPress:
     <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.55}>
       <Ionicons name={icon} size={20} color={Colors.text.secondary} />
       <AppText variant="body" style={styles.menuLabel}>{label}</AppText>
+      <Ionicons name="chevron-forward" size={16} color={Colors.text.tertiary} />
+    </TouchableOpacity>
+  );
+}
+
+function LanguageMenuItem({ label, value, onPress }: { label: string; value: string; onPress: () => void }) {
+  return (
+    <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.55}>
+      <Ionicons name="language-outline" size={20} color={Colors.text.secondary} />
+      <AppText variant="body" style={styles.menuLabel}>{label}</AppText>
+      <AppText style={styles.langValue}>{value}</AppText>
       <Ionicons name="chevron-forward" size={16} color={Colors.text.tertiary} />
     </TouchableOpacity>
   );
@@ -93,6 +129,11 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   menuLabel: { flex: 1 },
+  langValue: {
+    fontSize: FontSize.sm,
+    fontFamily: Fonts.medium,
+    color: Colors.text.tertiary,
+  },
   signOutBtn: {
     flexDirection: 'row',
     alignItems: 'center',

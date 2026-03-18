@@ -109,7 +109,12 @@
     "helpSupport": "Help & Support",
     "signOut": "Sign out",
     "signOutConfirmTitle": "Sign out",
-    "signOutConfirmMessage": "Are you sure you want to sign out?"
+    "signOutConfirmMessage": "Are you sure you want to sign out?",
+    "language": "Language",
+    "languageEn": "English",
+    "languageAr": "العربية",
+    "restartRequired": "Restart required",
+    "restartRequiredMessage": "Close and reopen the app to fully apply the new layout direction."
   },
   "merchant": {
     "tabGiftItems": "Gift Items",
