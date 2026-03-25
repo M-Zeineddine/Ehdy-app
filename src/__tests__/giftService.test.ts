@@ -36,7 +36,7 @@ describe('initiateGiftPayment', () => {
   const mockResult = {
     gift_sent_id: 'gift-1',
     tap_transaction_url: 'https://tap.company/pay/abc',
-    unique_share_link: 'https://kado.app/gift/abc',
+    unique_share_link: 'https://ehdy.app/gift/abc',
     amount: 25,
     currency: 'USD',
   };
