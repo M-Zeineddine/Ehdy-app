@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "Kado",
-    "slug": "Kado",
+    "name": "Ehdy",
+    "slug": "Ehdy",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "kado",
+    "scheme": "ehdy",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.kadoapp.gifts",
+      "bundleIdentifier": "com.ehdyapp.gifts",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSContactsUsageDescription": "Used to fill in your recipient's phone number from your contacts."

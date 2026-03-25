@@ -4,7 +4,7 @@ import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/layout';
 import { i18n } from '../../i18n';
 
-const LOGO = require('../../../assets/images/kado_logo.png');
+const LOGO = require('../../../assets/images/ehdy_logo.png');
 
 export function LoadingScreen() {
   const fadeIn = useRef(new Animated.Value(0)).current;

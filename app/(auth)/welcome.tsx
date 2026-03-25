@@ -7,7 +7,7 @@ import { Colors } from '@/src/constants/colors';
 import { Spacing } from '@/src/constants/layout';
 import { i18n } from '@/src/i18n';
 
-const LOGO = require('../../assets/images/kado_logo.png');
+const LOGO = require('../../assets/images/ehdy_logo.png');
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
 //         </View>
 
 //         {/* Brand */}
-//         <AppText variant="title" style={styles.logo}>kado</AppText>
+//         <AppText variant="title" style={styles.logo}>ehdy</AppText>
 //         <AppText variant="body" color={Colors.text.secondary} style={styles.tagline}>
 //           Give gifts they'll actually love
 //         </AppText>

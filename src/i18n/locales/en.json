@@ -14,7 +14,7 @@
     },
     "login": {
       "title": "Welcome back",
-      "subtitle": "Sign in to your Kado account",
+      "subtitle": "Sign in to your Ehdy account",
       "emailLabel": "Email",
       "emailPlaceholder": "you@example.com",
       "passwordLabel": "Password",
@@ -29,7 +29,7 @@
     },
     "register": {
       "title": "Create account",
-      "subtitle": "Join Kado and start gifting",
+      "subtitle": "Join Ehdy and start gifting",
       "firstNameLabel": "First name",
       "firstNamePlaceholder": "Sarah",
       "lastNameLabel": "Last name",

@@ -66,7 +66,7 @@ export default function MerchantScreen() {
   }
 
   async function handleShare() {
-    await Share.share({ message: `Check out ${merchant?.name} on Kado!` });
+    await Share.share({ message: `Check out ${merchant?.name} on Ehdy!` });
   }
 
   return (

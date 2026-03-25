@@ -5,7 +5,7 @@ import i18next from 'i18next';
 
 export type AppLanguage = 'en' | 'ar';
 
-const LANG_KEY = 'kado_language';
+const LANG_KEY = 'ehdy_language';
 
 interface LanguageState {
   language: AppLanguage;

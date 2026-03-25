@@ -104,14 +104,14 @@ describe('setAuth', () => {
   test('persists token and refresh token to SecureStore', async () => {
     await useAuthStore.getState().setAuth(MOCK_USER, MOCK_TOKEN, MOCK_REFRESH);
 
-    expect(mockSetItem).toHaveBeenCalledWith('kado_access_token', MOCK_TOKEN);
-    expect(mockSetItem).toHaveBeenCalledWith('kado_refresh_token', MOCK_REFRESH);
+    expect(mockSetItem).toHaveBeenCalledWith('ehdy_access_token', MOCK_TOKEN);
+    expect(mockSetItem).toHaveBeenCalledWith('ehdy_refresh_token', MOCK_REFRESH);
   });
 
   test('persists serialized user to SecureStore', async () => {
     await useAuthStore.getState().setAuth(MOCK_USER, MOCK_TOKEN, MOCK_REFRESH);
 
-    expect(mockSetItem).toHaveBeenCalledWith('kado_user', JSON.stringify(MOCK_USER));
+    expect(mockSetItem).toHaveBeenCalledWith('ehdy_user', JSON.stringify(MOCK_USER));
   });
 });
 
@@ -148,9 +148,9 @@ describe('clearAuth', () => {
   test('deletes all SecureStore keys', async () => {
     await useAuthStore.getState().clearAuth();
 
-    expect(mockDeleteItem).toHaveBeenCalledWith('kado_access_token');
-    expect(mockDeleteItem).toHaveBeenCalledWith('kado_refresh_token');
-    expect(mockDeleteItem).toHaveBeenCalledWith('kado_user');
+    expect(mockDeleteItem).toHaveBeenCalledWith('ehdy_access_token');
+    expect(mockDeleteItem).toHaveBeenCalledWith('ehdy_refresh_token');
+    expect(mockDeleteItem).toHaveBeenCalledWith('ehdy_user');
   });
 });
 
@@ -159,9 +159,9 @@ describe('clearAuth', () => {
 describe('loadFromStorage', () => {
   test('restores user and token when SecureStore has data', async () => {
     mockGetItem
-      .mockResolvedValueOnce(MOCK_TOKEN)           // kado_access_token
-      .mockResolvedValueOnce(MOCK_REFRESH)          // kado_refresh_token
-      .mockResolvedValueOnce(JSON.stringify(MOCK_USER)); // kado_user
+      .mockResolvedValueOnce(MOCK_TOKEN)           // ehdy_access_token
+      .mockResolvedValueOnce(MOCK_REFRESH)          // ehdy_refresh_token
+      .mockResolvedValueOnce(JSON.stringify(MOCK_USER)); // ehdy_user
 
     await useAuthStore.getState().loadFromStorage();
 

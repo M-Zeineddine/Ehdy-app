@@ -129,7 +129,7 @@ export default function GiftFlowScreen() {
         theme: selectedTheme,
       });
 
-      const browserResult = await WebBrowser.openAuthSessionAsync(result.tap_transaction_url, 'kado://');
+      const browserResult = await WebBrowser.openAuthSessionAsync(result.tap_transaction_url, 'ehdy://');
       if (browserResult.type === 'success') {
         const urlParams = new URL(browserResult.url).searchParams;
         setPaymentNavigating(true);

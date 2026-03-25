@@ -4,9 +4,9 @@ import type { User } from '../types';
 import { setAuthToken, setTokenExpiredHandler } from '../services/api';
 import { refreshToken as callRefreshToken } from '../services/authService';
 
-const TOKEN_KEY = 'kado_access_token';
-const REFRESH_KEY = 'kado_refresh_token';
-const USER_KEY = 'kado_user';
+const TOKEN_KEY = 'ehdy_access_token';
+const REFRESH_KEY = 'ehdy_refresh_token';
+const USER_KEY = 'ehdy_user';
 
 interface AuthState {
   user: User | null;
