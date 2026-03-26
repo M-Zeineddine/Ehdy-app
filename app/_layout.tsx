@@ -15,6 +15,7 @@ import {
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useAuthStore } from '@/src/store/authStore';
+import { useMerchantAuthStore } from '@/src/store/merchantAuthStore';
 import { useLanguageStore } from '@/src/store/languageStore';
 import { LoadingScreen } from '@/src/components/ui/LoadingScreen';
 
@@ -25,23 +26,35 @@ const queryClient = new QueryClient({
 });
 
 function AuthGate() {
-  const { isAuthenticated, isLoading, loadFromStorage } = useAuthStore();
+  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated: merchantAuth, isLoading: merchantLoading } = useMerchantAuthStore();
   const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
-    loadFromStorage();
-  }, []);
+    if (isLoading || merchantLoading) return;
 
-  useEffect(() => {
-    if (isLoading) return;
     const inAuth = segments[0] === '(auth)';
-    if (!isAuthenticated && !inAuth) {
+    const inMerchantAuth = segments[0] === '(merchant-auth)';
+    const inMerchantTabs = segments[0] === '(merchant-tabs)';
+
+    // Merchant flow: once logged in, stay in merchant tabs
+    if (merchantAuth && inMerchantAuth) {
+      router.replace('/(merchant-tabs)/scan');
+      return;
+    }
+    if (merchantAuth && !inMerchantTabs && !inAuth) {
+      router.replace('/(merchant-tabs)/scan');
+      return;
+    }
+
+    // Customer flow
+    if (!isAuthenticated && !inAuth && !inMerchantAuth && !inMerchantTabs) {
       router.replace('/(auth)/welcome');
     } else if (isAuthenticated && inAuth) {
       router.replace('/(tabs)');
     }
-  }, [isAuthenticated, isLoading, segments]);
+  }, [isAuthenticated, isLoading, merchantAuth, merchantLoading, segments]);
 
   return null;
 }
@@ -56,13 +69,12 @@ export default function RootLayout() {
   });
 
   const { isLoading: authLoading, loadFromStorage } = useAuthStore();
+  const { isLoading: merchantAuthLoading, loadFromStorage: loadMerchantFromStorage } = useMerchantAuthStore();
   const { appKey, isRTL, loadLanguage } = useLanguageStore();
 
   useEffect(() => {
     loadFromStorage();
-  }, []);
-
-  useEffect(() => {
+    loadMerchantFromStorage();
     loadLanguage();
   }, []);
 
@@ -70,7 +82,8 @@ export default function RootLayout() {
     if (fontsLoaded) SplashScreen.hideAsync();
   }, [fontsLoaded]);
 
-  if (!fontsLoaded || authLoading) return <LoadingScreen />;
+
+  if (!fontsLoaded || authLoading || merchantAuthLoading) return <LoadingScreen />;
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -82,6 +95,8 @@ export default function RootLayout() {
           <Stack key={appKey} screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="(merchant-auth)" />
+            <Stack.Screen name="(merchant-tabs)" />
             <Stack.Screen name="merchant/[id]" />
             <Stack.Screen name="gift" />
           </Stack>

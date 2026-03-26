@@ -1,4 +1,4 @@
-import { View, StyleSheet, Image } from 'react-native';
+import { View, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppText } from '@/src/components/ui/AppText';
@@ -29,6 +29,12 @@ export default function WelcomeScreen() {
           variant="outline"
           size="lg"
         />
+        <TouchableOpacity onPress={() => router.push('/(merchant-auth)/login' as any)} style={styles.merchantLink}>
+          <AppText variant="caption" color={Colors.text.tertiary}>
+            Merchant or staff?{' '}
+            <AppText variant="caption" color={Colors.primary}>Sign in here</AppText>
+          </AppText>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -55,6 +61,10 @@ const styles = StyleSheet.create({
   actions: {
     paddingBottom: Spacing.xl,
     gap: Spacing.sm,
+  },
+  merchantLink: {
+    alignItems: 'center',
+    paddingTop: Spacing.xs,
   },
 });
 
