@@ -478,7 +478,24 @@ export default function GiftFlowScreen() {
         </View>
         <TouchableOpacity
           style={[styles.continueBtn, paying && styles.continueBtnDisabled]}
-          onPress={() => step < 3 ? goToStep(step + 1) : handlePay()}
+          onPress={() => {
+            if (step === 2 && phone.trim()) {
+              const displayPhone = `+961 ${phone.trim()}`;
+              const displayName = toName.trim() ? ` (${toName.trim()})` : '';
+              Alert.alert(
+                'Confirm recipient',
+                `You're sending this gift to ${displayPhone}${displayName}.\n\nIs this the right number?`,
+                [
+                  { text: 'Change number', style: 'cancel' },
+                  { text: 'Yes, continue', onPress: () => goToStep(3) },
+                ]
+              );
+            } else if (step < 3) {
+              goToStep(step + 1);
+            } else {
+              handlePay();
+            }
+          }}
           activeOpacity={0.8}
           disabled={paying}
         >

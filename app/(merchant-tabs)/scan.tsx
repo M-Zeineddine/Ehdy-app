@@ -42,7 +42,9 @@ function CameraModal({
   function handleBarcode({ data }: { data: string }) {
     if (scanning || data === lastScannedRef.current) return;
     lastScannedRef.current = data;
-    onScanned(data);
+    // QR may encode a full URL (e.g. https://ehdy.app/redeem/ABCD-1234) — extract just the code
+    const match = data.match(/\/redeem\/([A-Z0-9]{4}-[A-Z0-9]{4})/i);
+    onScanned(match ? match[1].toUpperCase() : data);
   }
 
   return (

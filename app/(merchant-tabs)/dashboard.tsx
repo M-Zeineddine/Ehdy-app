@@ -86,7 +86,7 @@ export default function MerchantDashboardScreen() {
               <StatCard
                 icon="cash"
                 label="Revenue"
-                value={formatAmount(data?.today.revenue ?? 0, 'LBP')}
+                value={formatAmount(data?.today.revenue ?? 0, 'USD')}
               />
             </View>
 
@@ -103,7 +103,7 @@ export default function MerchantDashboardScreen() {
               <StatCard
                 icon="cash"
                 label="Revenue"
-                value={formatAmount(data?.month.revenue ?? 0, 'LBP')}
+                value={formatAmount(data?.month.revenue ?? 0, 'USD')}
               />
             </View>
 
