@@ -19,6 +19,8 @@ import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, Fonts } from '@/src/constants/layout';
 import {
   validateRedemption,
+  sendRedemptionOtp,
+  verifyRedemptionOtp,
   confirmRedemption,
   type GiftValidation,
 } from '@/src/services/merchantPortalService';
@@ -190,6 +192,69 @@ function DetailRow({ label, value, highlight }: { label: string; value: string; 
   );
 }
 
+// ── OTP modal ─────────────────────────────────────────────────────────────────
+
+function OtpModal({
+  visible, code, onVerify, onResend, onCancel, loading, resending,
+}: {
+  visible: boolean;
+  code: string;
+  onVerify: (otp: string) => void;
+  onResend: () => void;
+  onCancel: () => void;
+  loading: boolean;
+  resending: boolean;
+}) {
+  const [otp, setOtp] = useState('');
+
+  function handleVerify() {
+    if (otp.trim().length !== 6) {
+      Alert.alert('Invalid code', 'Enter the 6-digit code sent to the recipient.');
+      return;
+    }
+    onVerify(otp.trim());
+  }
+
+  return (
+    <Modal visible={visible} transparent animationType="slide">
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+        <View style={modal.overlay}>
+          <View style={modal.sheet}>
+            <View style={modal.header}>
+              <View style={[modal.successIcon, { backgroundColor: '#EFF6FF' }]}>
+                <Ionicons name="chatbubble-ellipses-outline" size={32} color="#3B82F6" />
+              </View>
+              <AppText variant="heading" style={{ textAlign: 'center' }}>Recipient Verification</AppText>
+              <AppText variant="body" color={Colors.text.secondary} style={{ textAlign: 'center' }}>
+                A WhatsApp code was sent to the recipient. Ask them to read it to you.
+              </AppText>
+              <AppText variant="caption" color={Colors.text.tertiary} style={{ textAlign: 'center' }}>
+                Code: {code}
+              </AppText>
+            </View>
+
+            <TextInput
+              style={modal.amountInput}
+              placeholder="Enter 6-digit code"
+              placeholderTextColor={Colors.text.tertiary}
+              keyboardType="number-pad"
+              maxLength={6}
+              value={otp}
+              onChangeText={setOtp}
+            />
+
+            <View style={modal.actions}>
+              <Button label="Verify & Redeem" onPress={handleVerify} loading={loading} size="lg" />
+              <Button label={resending ? 'Resending...' : 'Resend Code'} onPress={onResend} variant="outline" size="lg" />
+              <Button label="Cancel" onPress={onCancel} variant="ghost" size="lg" />
+            </View>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
 // ── Success overlay ────────────────────────────────────────────────────────────
 
 function SuccessOverlay({ visible, remainingBalance, currency, onDone }: {
@@ -224,7 +289,7 @@ function SuccessOverlay({ visible, remainingBalance, currency, onDone }: {
 
 // ── Main screen ────────────────────────────────────────────────────────────────
 
-type ScanState = 'idle' | 'validating' | 'confirmed' | 'success';
+type ScanState = 'idle' | 'validating' | 'confirmed' | 'otp' | 'success';
 
 export default function MerchantScanScreen() {
   const [cameraOpen, setCameraOpen] = useState(false);
@@ -232,7 +297,9 @@ export default function MerchantScanScreen() {
   const [scanState, setScanState] = useState<ScanState>('idle');
   const [validatedGift, setValidatedGift] = useState<GiftValidation | null>(null);
   const [activeCode, setActiveCode] = useState('');
-  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [pendingAmount, setPendingAmount] = useState<number | undefined>(undefined);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const [successData, setSuccessData] = useState<{ balance: number | null; currency?: string } | null>(null);
 
   async function handleValidate(code: string) {
@@ -259,15 +326,37 @@ export default function MerchantScanScreen() {
   }
 
   async function handleConfirm(amount?: number) {
-    setConfirmLoading(true);
+    setPendingAmount(amount);
     try {
-      const result = await confirmRedemption(activeCode, amount);
+      await sendRedemptionOtp(activeCode);
+      setScanState('otp');
+    } catch (err: any) {
+      Alert.alert('Failed to send OTP', err.message ?? 'Could not send verification code.');
+    }
+  }
+
+  async function handleResendOtp() {
+    setResending(true);
+    try {
+      await sendRedemptionOtp(activeCode);
+    } catch (err: any) {
+      Alert.alert('Failed to resend', err.message ?? 'Could not resend verification code.');
+    } finally {
+      setResending(false);
+    }
+  }
+
+  async function handleVerifyOtp(otp: string) {
+    setOtpLoading(true);
+    try {
+      await verifyRedemptionOtp(activeCode, otp);
+      const result = await confirmRedemption(activeCode, pendingAmount);
       setSuccessData({ balance: result.remaining_balance, currency: validatedGift?.gift.currency });
       setScanState('success');
     } catch (err: any) {
-      Alert.alert('Redemption failed', err.message ?? 'Could not process redemption.');
+      Alert.alert('Verification failed', err.message ?? 'Could not verify code.');
     } finally {
-      setConfirmLoading(false);
+      setOtpLoading(false);
     }
   }
 
@@ -276,6 +365,7 @@ export default function MerchantScanScreen() {
     setScanState('idle');
     setValidatedGift(null);
     setActiveCode('');
+    setPendingAmount(undefined);
     setSuccessData(null);
   }
 
@@ -338,7 +428,18 @@ export default function MerchantScanScreen() {
         gift={validatedGift?.gift ?? null}
         onConfirm={handleConfirm}
         onCancel={handleReset}
-        loading={confirmLoading}
+        loading={false}
+      />
+
+      {/* OTP verification */}
+      <OtpModal
+        visible={scanState === 'otp'}
+        code={activeCode}
+        onVerify={handleVerifyOtp}
+        onResend={handleResendOtp}
+        onCancel={handleReset}
+        loading={otpLoading}
+        resending={resending}
       />
 
       {/* Success */}

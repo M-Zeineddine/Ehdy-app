@@ -86,6 +86,14 @@ export async function validateRedemption(code: string): Promise<GiftValidation> 
   return res.data.data;
 }
 
+export async function sendRedemptionOtp(code: string): Promise<void> {
+  await merchantApi.post('/merchant/send-redemption-otp', { redemption_code: code.toUpperCase() });
+}
+
+export async function verifyRedemptionOtp(code: string, otp: string): Promise<void> {
+  await merchantApi.post('/merchant/verify-redemption-otp', { redemption_code: code.toUpperCase(), code: otp });
+}
+
 export async function confirmRedemption(
   code: string,
   amountToRedeem?: number
