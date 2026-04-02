@@ -55,5 +55,7 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
+  phone?: string | null;
   is_email_verified: boolean;
+  is_phone_verified?: boolean;
 }

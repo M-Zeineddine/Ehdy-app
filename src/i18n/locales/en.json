@@ -38,6 +38,9 @@
       "emailPlaceholder": "you@example.com",
       "passwordLabel": "Password",
       "passwordPlaceholder": "Min. 8 characters",
+      "phoneLabel": "Phone number",
+      "phonePlaceholder": "3123 456",
+      "phoneHint": "So people can send you gifts by phone number.",
       "createAccountButton": "Create Account",
       "alreadyHaveAccount": "Already have an account?",
       "signIn": "Sign in",
@@ -46,6 +49,20 @@
       "errorWeakPassword": "Weak password",
       "errorWeakPasswordMessage": "Password must be at least 8 characters.",
       "errorRegistrationFailed": "Registration failed"
+    },
+    "verifyPhone": {
+      "title": "Verify your number",
+      "subtitle": "We sent a 6-digit code via WhatsApp to",
+      "verifyButton": "Verify Number",
+      "sendingButton": "Sending...",
+      "resendButton": "Resend code",
+      "errorSendFailed": "Failed to send code",
+      "errorIncompleteCode": "Incomplete code",
+      "errorIncompleteCodeMessage": "Please enter the 6-digit code from WhatsApp.",
+      "errorVerificationFailed": "Verification failed",
+      "errorVerificationFailedMessage": "Invalid or expired code. Please try again.",
+      "successCodeSent": "Code sent",
+      "successCodeSentMessage": "A new verification code has been sent to your WhatsApp."
     },
     "verifyEmail": {
       "title": "Check your email",

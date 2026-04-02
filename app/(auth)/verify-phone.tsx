@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { View, StyleSheet, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,17 +8,35 @@ import { Button } from '@/src/components/ui/Button';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, Fonts } from '@/src/constants/layout';
 import { useAuthStore } from '@/src/store/authStore';
-import { verifyEmail, resendVerification } from '@/src/services/authService';
+import { sendPhoneOtp, verifyPhoneOtp } from '@/src/services/authService';
 import { i18n } from '@/src/i18n';
+import type { User } from '@/src/types';
 
-export default function VerifyEmailScreen() {
+export default function VerifyPhoneScreen() {
   const router = useRouter();
-  const { email } = useLocalSearchParams<{ email: string }>();
+  const { phone, access_token, refresh_token, user: userJson } = useLocalSearchParams<{
+    phone: string;
+    access_token: string;
+    refresh_token: string;
+    user: string;
+  }>();
   const { setAuth } = useAuthStore();
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const inputs = useRef<(TextInput | null)[]>([]);
+
+  useEffect(() => {
+    handleSendOtp();
+  }, []);
+
+  async function handleSendOtp() {
+    try {
+      await sendPhoneOtp(phone);
+    } catch (err: any) {
+      Alert.alert(i18n('auth.verifyPhone.errorSendFailed'), err.message ?? i18n('common.tryAgain'));
+    }
+  }
 
   function handleDigit(text: string, index: number) {
     const digit = text.replace(/[^0-9]/g, '').slice(-1);
@@ -32,22 +50,16 @@ export default function VerifyEmailScreen() {
   async function handleVerify() {
     const fullCode = code.join('');
     if (fullCode.length < 6) {
-      Alert.alert(i18n('auth.verifyEmail.errorIncompleteCode'), i18n('auth.verifyEmail.errorIncompleteCodeMessage'));
+      Alert.alert(i18n('auth.verifyPhone.errorIncompleteCode'), i18n('auth.verifyPhone.errorIncompleteCodeMessage'));
       return;
     }
     setLoading(true);
     try {
-      const { user, access_token, refresh_token } = await verifyEmail(email, fullCode);
-      if (user.phone && !user.is_phone_verified) {
-        router.replace({
-          pathname: '/(auth)/verify-phone',
-          params: { phone: user.phone, access_token, refresh_token, user: JSON.stringify(user) },
-        });
-      } else {
-        await setAuth(user, access_token, refresh_token);
-      }
+      await verifyPhoneOtp(phone, fullCode);
+      const user: User = JSON.parse(userJson);
+      await setAuth({ ...user, is_phone_verified: true }, access_token, refresh_token);
     } catch (err: any) {
-      Alert.alert(i18n('auth.verifyEmail.errorVerificationFailed'), err.message ?? i18n('auth.verifyEmail.errorVerificationFailedMessage'));
+      Alert.alert(i18n('auth.verifyPhone.errorVerificationFailed'), err.message ?? i18n('auth.verifyPhone.errorVerificationFailedMessage'));
       setCode(['', '', '', '', '', '']);
       inputs.current[0]?.focus();
     } finally {
@@ -58,16 +70,16 @@ export default function VerifyEmailScreen() {
   async function handleResend() {
     setResending(true);
     try {
-      await resendVerification(email);
-      Alert.alert(i18n('auth.verifyEmail.successCodeSent'), i18n('auth.verifyEmail.successCodeSentMessage'));
+      await handleSendOtp();
+      Alert.alert(i18n('auth.verifyPhone.successCodeSent'), i18n('auth.verifyPhone.successCodeSentMessage'));
       setCode(['', '', '', '', '', '']);
       inputs.current[0]?.focus();
-    } catch (err: any) {
-      Alert.alert(i18n('auth.verifyEmail.errorResendFailed'), err.message ?? i18n('auth.verifyEmail.errorResendFailedMessage'));
     } finally {
       setResending(false);
     }
   }
+
+  const maskedPhone = phone ? `${phone.slice(0, 4)}****${phone.slice(-3)}` : '';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -78,10 +90,10 @@ export default function VerifyEmailScreen() {
           </TouchableOpacity>
 
           <View style={styles.header}>
-            <AppText variant="heading">{i18n('auth.verifyEmail.title')}</AppText>
+            <AppText variant="heading">{i18n('auth.verifyPhone.title')}</AppText>
             <AppText variant="body" color={Colors.text.secondary}>
-              {i18n('auth.verifyEmail.subtitle')}{'\n'}
-              <AppText variant="body" semiBold color={Colors.text.primary}>{email}</AppText>
+              {i18n('auth.verifyPhone.subtitle')}{'\n'}
+              <AppText variant="body" semiBold color={Colors.text.primary}>{maskedPhone}</AppText>
             </AppText>
           </View>
 
@@ -101,7 +113,7 @@ export default function VerifyEmailScreen() {
           </View>
 
           <Button
-            label={i18n('auth.verifyEmail.verifyButton')}
+            label={i18n('auth.verifyPhone.verifyButton')}
             onPress={handleVerify}
             loading={loading}
             size="lg"
@@ -111,7 +123,7 @@ export default function VerifyEmailScreen() {
 
           <TouchableOpacity onPress={handleResend} disabled={resending} style={styles.resendBtn}>
             <AppText variant="body" color={resending ? Colors.text.tertiary : Colors.primary} semiBold>
-              {resending ? i18n('auth.verifyEmail.sendingButton') : i18n('auth.verifyEmail.resendButton')}
+              {resending ? i18n('auth.verifyPhone.sendingButton') : i18n('auth.verifyPhone.resendButton')}
             </AppText>
           </TouchableOpacity>
         </View>

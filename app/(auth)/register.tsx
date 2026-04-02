@@ -15,12 +15,13 @@ export default function RegisterScreen() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleRegister() {
-    if (!firstName.trim() || !lastName.trim() || !email.trim() || !password.trim()) {
+    if (!firstName.trim() || !lastName.trim() || !email.trim() || !password.trim() || !phone.trim()) {
       Alert.alert(i18n('auth.register.errorMissingFields'), i18n('auth.register.errorMissingFieldsMessage'));
       return;
     }
@@ -35,6 +36,7 @@ export default function RegisterScreen() {
         last_name: lastName.trim(),
         email: email.trim().toLowerCase(),
         password,
+        phone: `+961${phone.trim().replace(/\s/g, '')}`,
       });
       router.push({ pathname: '/(auth)/verify-email', params: { email: email.trim().toLowerCase() } });
     } catch (err: any) {
@@ -122,6 +124,25 @@ export default function RegisterScreen() {
               </View>
             </View>
 
+            <View style={styles.field}>
+              <AppText variant="label" color={Colors.text.secondary}>{i18n('auth.register.phoneLabel')}</AppText>
+              <View style={styles.phoneRow}>
+                <View style={styles.countryCode}>
+                  <AppText style={styles.flag}>🇱🇧</AppText>
+                  <AppText style={styles.countryCodeText} semiBold>+961</AppText>
+                </View>
+                <TextInput
+                  style={[styles.input, { flex: 1 }]}
+                  placeholder={i18n('auth.register.phonePlaceholder')}
+                  placeholderTextColor={Colors.text.tertiary}
+                  keyboardType="phone-pad"
+                  value={phone}
+                  onChangeText={setPhone}
+                />
+              </View>
+              <AppText style={styles.hint} color={Colors.text.tertiary}>{i18n('auth.register.phoneHint')}</AppText>
+            </View>
+
             <Button label={i18n('auth.register.createAccountButton')} onPress={handleRegister} loading={loading} size="lg" style={styles.submitBtn} />
           </View>
 
@@ -166,6 +187,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   submitBtn: { marginTop: Spacing.sm },
+  phoneRow: { flexDirection: 'row', gap: Spacing.sm, alignItems: 'center' },
+  countryCode: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: Colors.surface, borderRadius: Radius.md,
+    borderWidth: 1, borderColor: Colors.border,
+    paddingHorizontal: Spacing.md, paddingVertical: 14,
+  },
+  flag: { fontSize: 18 },
+  countryCodeText: { fontSize: 15 },
+  hint: { fontSize: 12, marginTop: 2 },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
