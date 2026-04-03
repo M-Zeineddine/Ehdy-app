@@ -49,7 +49,7 @@ function getPriceLabel(gift: GiftSummary) {
   return '';
 }
 
-const GIFT_BASE_URL = 'https://kado-backend.onrender.com/gift';
+const GIFT_BASE_URL = 'https://ehdy.app/gift';
 
 // ── GiftRow ───────────────────────────────────────────────────────────────────
 
@@ -145,7 +145,7 @@ function ReceivedGiftCard({ gift }: { gift: GiftSummary }) {
   const status       = gift.redemption_status ?? 'active';
   const statusCfg    = STATUS_CONFIG[status] ?? STATUS_CONFIG.active;
   const giftUrl      = gift.unique_share_link
-    ? (gift.unique_share_link.startsWith('http') ? gift.unique_share_link : `https://kado-backend.onrender.com/gift/${gift.unique_share_link}`)
+    ? (gift.unique_share_link.startsWith('http') ? gift.unique_share_link : `https://ehdy.app/gift/${gift.unique_share_link}`)
     : null;
 
   return (

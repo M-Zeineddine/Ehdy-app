@@ -14,7 +14,7 @@ import { i18n } from '@/src/i18n';
 
 type PaymentStatus = 'loading' | 'success' | 'failed';
 
-const GIFT_BASE_URL = 'https://kado-backend.onrender.com/gift';
+const GIFT_BASE_URL = 'https://ehdy.app/gift';
 
 export default function PaymentCallbackScreen() {
   const insets = useSafeAreaInsets();
