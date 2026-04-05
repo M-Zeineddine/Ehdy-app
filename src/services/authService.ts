@@ -37,6 +37,14 @@ export async function refreshToken(refresh_token: string) {
   return res.data.data.access_token;
 }
 
+export async function forgotPassword(email: string) {
+  await api.post('/auth/forgot-password', { email });
+}
+
+export async function resetPassword(email: string, code: string, password: string) {
+  await api.post('/auth/reset-password', { email, code, password });
+}
+
 export async function sendPhoneOtp(phone: string) {
   await api.post('/auth/send-phone-otp', { phone });
 }

@@ -93,6 +93,10 @@ export default function LoginScreen() {
               </View>
             </View>
 
+            <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password' as any)} style={styles.forgotBtn}>
+              <AppText variant="body" color={Colors.primary}>{i18n('auth.login.forgotPassword')}</AppText>
+            </TouchableOpacity>
+
             <Button label={i18n('auth.login.signInButton')} onPress={handleLogin} loading={loading} size="lg" style={styles.submitBtn} />
           </View>
 
@@ -135,6 +139,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
   },
+  forgotBtn: { alignSelf: 'flex-end', marginTop: Spacing.xs },
   submitBtn: { marginTop: Spacing.sm },
   footer: {
     flexDirection: 'row',

@@ -24,8 +24,32 @@
       "createOne": "Create one",
       "errorMissingFields": "Missing fields",
       "errorMissingFieldsMessage": "Please enter your email and password.",
+      "forgotPassword": "Forgot password?",
       "errorSignInFailed": "Sign in failed",
       "errorSignInFailedMessage": "Please check your credentials and try again."
+    },
+    "forgotPassword": {
+      "title": "Forgot password?",
+      "subtitle": "Enter your email and we'll send you a reset code.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "sendButton": "Send reset code",
+      "sendingButton": "Sending...",
+      "errorFailed": "Failed",
+      "errorFailedMessage": "Could not send reset code. Please try again."
+    },
+    "resetPassword": {
+      "title": "Reset password",
+      "subtitle": "Enter the 6-digit code sent to",
+      "newPasswordLabel": "New password",
+      "newPasswordPlaceholder": "Min. 8 characters",
+      "resetButton": "Reset password",
+      "errorIncompleteCode": "Incomplete code",
+      "errorIncompleteCodeMessage": "Please enter the 6-digit code from your email.",
+      "errorFailed": "Reset failed",
+      "errorFailedMessage": "Invalid or expired code. Please try again.",
+      "successTitle": "Password reset",
+      "successMessage": "Your password has been reset. Please sign in."
     },
     "register": {
       "title": "Create account",
