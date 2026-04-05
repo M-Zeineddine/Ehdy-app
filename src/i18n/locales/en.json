@@ -76,6 +76,7 @@
       "errorVerificationFailedMessage": "Invalid or expired code. Please try again.",
       "successCodeSent": "Code sent",
       "successCodeSentMessage": "A new verification code has been sent to your email.",
+      "editEmail": "Wrong email?",
       "errorResendFailed": "Failed",
       "errorResendFailedMessage": "Could not resend code. Please try again."
     }

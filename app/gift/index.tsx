@@ -81,6 +81,7 @@ export default function GiftFlowScreen() {
   const [contactPickerVisible, setContactPickerVisible] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'whish'>('card');
   const [paying, setPaying] = useState(false);
+  const payingRef = useRef(false); // synchronous guard — useState updates are async and miss same-frame double-taps
   const [paymentNavigating, setPaymentNavigating] = useState(false);
 
   // Pre-fill form from draft when retrying after a failed payment
@@ -96,7 +97,8 @@ export default function GiftFlowScreen() {
   }, [params.draft_id]);
 
   async function handlePay() {
-    if (paying) return;
+    if (payingRef.current) return;
+    payingRef.current = true;
     setPaying(true);
     try {
       // Save form state so the user can retry with their customization intact
@@ -159,6 +161,7 @@ export default function GiftFlowScreen() {
     } catch (err: any) {
       Alert.alert(i18n('giftFlow.paymentFailedTitle'), err.message ?? i18n('payment.failureMessage'));
     } finally {
+      payingRef.current = false;
       setPaying(false);
     }
   }

@@ -27,7 +27,16 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       const { user, access_token, refresh_token } = await signin(email.trim().toLowerCase(), password);
-      await setAuth(user, access_token, refresh_token);
+      if (!user.is_email_verified) {
+        router.replace({ pathname: '/(auth)/verify-email', params: { email: user.email } });
+      } else if (user.phone && !user.is_phone_verified) {
+        router.replace({
+          pathname: '/(auth)/verify-phone',
+          params: { phone: user.phone, access_token, refresh_token, user: JSON.stringify(user) },
+        });
+      } else {
+        await setAuth(user, access_token, refresh_token);
+      }
     } catch (err: any) {
       Alert.alert(i18n('auth.login.errorSignInFailed'), err.message ?? i18n('auth.login.errorSignInFailedMessage'));
     } finally {

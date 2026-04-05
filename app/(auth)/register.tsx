@@ -44,6 +44,10 @@ export default function RegisterScreen() {
         router.push({ pathname: '/(auth)/verify-email', params: { email: email.trim().toLowerCase() } });
         return;
       }
+      if (err.message?.includes('Phone verification pending')) {
+        router.replace('/(auth)/login');
+        return;
+      }
       Alert.alert(i18n('auth.register.errorRegistrationFailed'), err.message ?? i18n('common.tryAgain'));
     } finally {
       setLoading(false);

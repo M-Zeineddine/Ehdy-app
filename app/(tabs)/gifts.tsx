@@ -36,7 +36,7 @@ function getMerchantName(gift: GiftSummary) {
 }
 
 function getMerchantLogo(gift: GiftSummary) {
-  return (gift.store_credit_preset_id ? gift.merchant_logo : gift.merchant_logo) ?? null;
+  return gift.merchant_logo ?? null;
 }
 
 function getPriceLabel(gift: GiftSummary) {

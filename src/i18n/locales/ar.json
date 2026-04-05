@@ -59,6 +59,7 @@
       "errorVerificationFailedMessage": "رمز غير صالح أو منتهي الصلاحية. حاول مجدداً.",
       "successCodeSent": "تم إرسال الرمز",
       "successCodeSentMessage": "تم إرسال رمز تحقق جديد إلى بريدك الإلكتروني.",
+      "editEmail": "بريد خاطئ؟",
       "errorResendFailed": "فشل الإرسال",
       "errorResendFailedMessage": "تعذّر إعادة الإرسال. حاول مجدداً."
     }

@@ -82,6 +82,10 @@ export default function VerifyEmailScreen() {
             <AppText variant="body" color={Colors.text.secondary}>
               {i18n('auth.verifyEmail.subtitle')}{'\n'}
               <AppText variant="body" semiBold color={Colors.text.primary}>{email}</AppText>
+              {'  '}
+              <AppText variant="body" color={Colors.primary} onPress={() => router.back()}>
+                {i18n('auth.verifyEmail.editEmail')}
+              </AppText>
             </AppText>
           </View>
 
