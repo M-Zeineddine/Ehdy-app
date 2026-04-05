@@ -2,13 +2,12 @@ import { api } from './api';
 
 export interface InitiateGiftPaymentParams {
   merchant_item_id?: string;
-  store_credit_preset_id?: string;
   custom_credit_amount?: number;
   custom_credit_currency?: string;
   custom_credit_merchant_id?: string;
   sender_name: string;
   recipient_name: string;
-  recipient_phone: string;
+  recipient_phone: string | undefined;
   personal_message: string;
   theme: string;
 }
@@ -30,13 +29,12 @@ export async function initiateGiftPayment(
 
 export interface RetryDraftParams {
   merchant_item_id?: string;
-  store_credit_preset_id?: string;
   custom_credit_amount?: number;
   custom_credit_currency?: string;
   custom_credit_merchant_id?: string;
   sender_name: string;
   recipient_name: string;
-  recipient_phone: string;
+  recipient_phone: string | undefined;
   personal_message: string;
   theme: string;
 }
@@ -44,7 +42,6 @@ export interface RetryDraftParams {
 export interface RetryDraft {
   id: string;
   merchant_item_id: string | null;
-  store_credit_preset_id: string | null;
   custom_credit_amount: number | null;
   custom_credit_currency: string | null;
   custom_credit_merchant_id: string | null;
@@ -90,7 +87,6 @@ export interface GiftSummary {
   claimed_at: string | null;
   sent_at: string;
   merchant_item_id: string | null;
-  store_credit_preset_id: string | null;
   item_name: string | null;
   item_image: string | null;
   item_price: string | null;

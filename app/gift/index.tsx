@@ -102,31 +102,30 @@ export default function GiftFlowScreen() {
     setPaying(true);
     try {
       // Save form state so the user can retry with their customization intact
-      // Routing: preset item → merchant_item_id; preset credit → store_credit_preset_id;
-      //          custom credit (no itemId) → custom_credit_amount + merchant
-      const isCustomCredit = isCredit && !params.itemId;
+      const normalizedPhone = phone
+        ? phone.startsWith('+') ? phone.trim() : `+961${phone.trim().replace(/\s/g, '')}`
+        : undefined;
+
       const draftId = await saveRetryDraft({
-        merchant_item_id: !isCredit && params.itemId ? params.itemId : undefined,
-        store_credit_preset_id: isCredit && params.itemId ? params.itemId : undefined,
-        custom_credit_amount: isCustomCredit ? parseFloat(params.itemPrice) : undefined,
-        custom_credit_currency: isCustomCredit ? params.itemCurrency : undefined,
-        custom_credit_merchant_id: isCustomCredit ? params.merchantId : undefined,
+        merchant_item_id: !isCredit ? params.itemId : undefined,
+        custom_credit_amount: isCredit ? parseFloat(params.itemPrice) : undefined,
+        custom_credit_currency: isCredit ? params.itemCurrency : undefined,
+        custom_credit_merchant_id: isCredit ? params.merchantId : undefined,
         sender_name: fromName,
         recipient_name: toName,
-        recipient_phone: phone,
+        recipient_phone: normalizedPhone,
         personal_message: message,
         theme: selectedTheme,
       });
 
       const result = await initiateGiftPayment({
-        merchant_item_id: !isCredit && params.itemId ? params.itemId : undefined,
-        store_credit_preset_id: isCredit && params.itemId ? params.itemId : undefined,
-        custom_credit_amount: isCustomCredit ? parseFloat(params.itemPrice) : undefined,
-        custom_credit_currency: isCustomCredit ? params.itemCurrency : undefined,
-        custom_credit_merchant_id: isCustomCredit ? params.merchantId : undefined,
+        merchant_item_id: !isCredit ? params.itemId : undefined,
+        custom_credit_amount: isCredit ? parseFloat(params.itemPrice) : undefined,
+        custom_credit_currency: isCredit ? params.itemCurrency : undefined,
+        custom_credit_merchant_id: isCredit ? params.merchantId : undefined,
         sender_name: fromName,
         recipient_name: toName,
-        recipient_phone: phone,
+        recipient_phone: normalizedPhone,
         personal_message: message,
         theme: selectedTheme,
       });

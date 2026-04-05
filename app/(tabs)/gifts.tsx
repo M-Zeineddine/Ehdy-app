@@ -25,14 +25,14 @@ import { i18n } from '@/src/i18n';
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 function getItemLabel(gift: GiftSummary) {
-  if (gift.store_credit_preset_id) {
-    return `${gift.credit_currency ?? ''} ${gift.credit_amount ?? ''} Store Credit`.trim();
+  if (gift.credit_amount) {
+    return `${gift.credit_currency ?? ''} ${gift.credit_amount} Store Credit`.trim();
   }
   return gift.item_name ?? 'Gift';
 }
 
 function getMerchantName(gift: GiftSummary) {
-  return (gift.store_credit_preset_id ? gift.credit_merchant_name : gift.merchant_name) ?? '';
+  return (gift.merchant_name ?? gift.credit_merchant_name) ?? '';
 }
 
 function getMerchantLogo(gift: GiftSummary) {
@@ -40,8 +40,8 @@ function getMerchantLogo(gift: GiftSummary) {
 }
 
 function getPriceLabel(gift: GiftSummary) {
-  if (gift.store_credit_preset_id) {
-    return `${gift.credit_currency ?? ''} ${gift.credit_amount ?? ''}`.trim();
+  if (gift.credit_amount) {
+    return `${gift.credit_currency ?? ''} ${gift.credit_amount}`.trim();
   }
   if (gift.item_price && gift.item_currency) {
     return `${gift.item_currency} ${gift.item_price}`;
