@@ -83,8 +83,6 @@ export interface GiftSummary {
   theme: string | null;
   payment_status: string;
   unique_share_link: string | null;
-  is_claimed: boolean;
-  claimed_at: string | null;
   sent_at: string;
   merchant_item_id: string | null;
   item_name: string | null;
