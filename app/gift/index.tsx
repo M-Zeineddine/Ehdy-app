@@ -6,7 +6,7 @@ import {
 import * as WebBrowser from 'expo-web-browser';
 import { useLocalSearchParams, router, useNavigation } from 'expo-router';
 import { usePreventRemove } from '@react-navigation/native';
-import { initiateGiftPayment, saveRetryDraft, getRetryDraft } from '@/src/services/giftService';
+import { initiateGiftPayment, saveRetryDraft, getRetryDraft, markChargeUnresolved, isChargeUnresolved } from '@/src/services/giftService';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -98,6 +98,10 @@ export default function GiftFlowScreen() {
 
   async function handlePay() {
     if (payingRef.current) return;
+    if (params.draft_id && isChargeUnresolved(params.draft_id)) {
+      Alert.alert(i18n('payment.unknownTitle'), i18n('payment.unknownMessage'));
+      return;
+    }
     payingRef.current = true;
     setPaying(true);
     try {
@@ -128,6 +132,7 @@ export default function GiftFlowScreen() {
         recipient_phone: normalizedPhone,
         personal_message: message,
         theme: selectedTheme,
+        gift_draft_id: draftId,
       });
 
       const browserResult = await WebBrowser.openAuthSessionAsync(result.tap_transaction_url, 'ehdy://');
@@ -154,6 +159,20 @@ export default function GiftFlowScreen() {
             merchant_name: params.merchantName ?? '',
             merchant_logo: params.merchantLogo ?? '',
             is_credit: params.isCredit ?? 'false',
+          },
+        });
+      } else if (browserResult.type === 'cancel' || browserResult.type === 'dismiss') {
+        // Browser closed before Tap redirected back — the charge may still have
+        // gone through, so the outcome is unknown until the backend's 30-minute
+        // stale-pending sweep resolves it. Block retries for this draft meanwhile.
+        markChargeUnresolved(draftId);
+        setPaymentNavigating(true);
+        router.replace({
+          pathname: '/payment/callback',
+          params: {
+            status: 'UNKNOWN',
+            gift_sent_id: result.gift_sent_id,
+            draft_id: draftId,
           },
         });
       }

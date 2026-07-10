@@ -10,6 +10,28 @@ export interface InitiateGiftPaymentParams {
   recipient_phone: string | undefined;
   personal_message: string;
   theme: string;
+  gift_draft_id?: string;
+}
+
+// Drafts whose payment browser was closed before the Tap redirect: the charge
+// may or may not have gone through, so re-initiating could double-charge.
+// Entries expire after the backend's 30-minute stale-pending sweep has
+// resolved the charge server-side, at which point retrying is safe.
+const UNRESOLVED_CHARGE_TTL_MS = 30 * 60 * 1000;
+const unresolvedChargeDrafts = new Map<string, number>();
+
+export function markChargeUnresolved(draftId: string): void {
+  unresolvedChargeDrafts.set(draftId, Date.now());
+}
+
+export function isChargeUnresolved(draftId: string): boolean {
+  const markedAt = unresolvedChargeDrafts.get(draftId);
+  if (markedAt === undefined) return false;
+  if (Date.now() - markedAt > UNRESOLVED_CHARGE_TTL_MS) {
+    unresolvedChargeDrafts.delete(draftId);
+    return false;
+  }
+  return true;
 }
 
 export interface InitiateGiftPaymentResult {

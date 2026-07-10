@@ -12,20 +12,22 @@ import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, FontSize, Fonts } from '@/src/constants/layout';
 import { i18n } from '@/src/i18n';
 
-type PaymentStatus = 'loading' | 'success' | 'failed';
+type PaymentStatus = 'loading' | 'success' | 'failed' | 'unknown';
 
 const GIFT_BASE_URL = 'https://ehdy.app/gift';
+const UNKNOWN_COLOR = '#D97706';
 
 export default function PaymentCallbackScreen() {
   const insets = useSafeAreaInsets();
   const {
-    status, tap_id, share_code, recipient_name, gift_name,
+    status, tap_id, gift_sent_id, share_code, recipient_name, gift_name,
     draft_id,
     item_id, item_name, item_description, item_price, item_currency,
     item_image, merchant_id, merchant_name, merchant_logo, is_credit,
   } = useLocalSearchParams<{
     status?: string;
     tap_id?: string;
+    gift_sent_id?: string;
     share_code?: string;
     recipient_name?: string;
     gift_name?: string;
@@ -48,6 +50,13 @@ export default function PaymentCallbackScreen() {
 
   useEffect(() => {
     async function confirm() {
+      if (status === 'UNKNOWN') {
+        // Payment browser closed before the Tap redirect — the outcome can't be
+        // verified client-side yet (payment-status endpoint is pending, backend
+        // C1). Keep the retry draft; the charge may still have gone through.
+        setPaymentStatus('unknown');
+        return;
+      }
       if (status === 'FAILED' || status === 'CANCELLED') {
         setPaymentStatus('failed');
         return;
@@ -127,32 +136,42 @@ export default function PaymentCallbackScreen() {
   }
 
   const isSuccess = paymentStatus === 'success';
+  const isUnknown = paymentStatus === 'unknown';
   const giftLabel = gift_name ? `Your gift of ${gift_name}` : 'Your gift';
   const recipientLabel = recipient_name ? ` to ${recipient_name}` : '';
 
   return (
     <View style={[styles.root, { paddingTop: insets.top, paddingBottom: insets.bottom + Spacing.xl * 1.5 }]}>
       <View style={styles.content}>
-        <View style={[styles.iconCircle, isSuccess ? styles.iconCircleSuccess : styles.iconCircleFailed]}>
+        <View style={[
+          styles.iconCircle,
+          isSuccess ? styles.iconCircleSuccess : isUnknown ? styles.iconCircleUnknown : styles.iconCircleFailed,
+        ]}>
           <Ionicons
-            name={isSuccess ? 'checkmark' : 'close'}
+            name={isSuccess ? 'checkmark' : isUnknown ? 'help' : 'close'}
             size={44}
-            color={isSuccess ? Colors.primary : Colors.error}
+            color={isSuccess ? Colors.primary : isUnknown ? UNKNOWN_COLOR : Colors.error}
           />
         </View>
 
         <AppText semiBold style={styles.title}>
-          {isSuccess ? i18n('payment.successTitle') : i18n('payment.failureTitle')}
+          {isSuccess
+            ? i18n('payment.successTitle')
+            : isUnknown ? i18n('payment.unknownTitle') : i18n('payment.failureTitle')}
         </AppText>
         <AppText style={styles.subtitle} color={Colors.text.secondary}>
           {isSuccess
             ? `${giftLabel}${recipientLabel} is on its way.`
-            : i18n('payment.failureMessage')}
+            : isUnknown ? i18n('payment.unknownMessage') : i18n('payment.failureMessage')}
         </AppText>
 
         {tap_id ? (
           <AppText style={styles.refText} color={Colors.text.tertiary}>
             Ref: {tap_id}
+          </AppText>
+        ) : isUnknown && gift_sent_id ? (
+          <AppText style={styles.refText} color={Colors.text.tertiary}>
+            Ref: {gift_sent_id}
           </AppText>
         ) : null}
       </View>
@@ -179,6 +198,16 @@ export default function PaymentCallbackScreen() {
 
             <TouchableOpacity style={styles.ghostBtn} onPress={handleDone} activeOpacity={0.8}>
               <AppText style={[styles.ghostBtnText, styles.underlineText]} color={Colors.text.tertiary}>{i18n('payment.backToHome')}</AppText>
+            </TouchableOpacity>
+          </>
+        ) : isUnknown ? (
+          <>
+            {/* Deliberately no "Try Again" — the charge may have succeeded; retrying could double-charge */}
+            <TouchableOpacity style={styles.primaryBtn} onPress={() => router.replace('/(tabs)/gifts')} activeOpacity={0.8}>
+              <AppText semiBold style={styles.primaryBtnText}>{i18n('payment.checkMyGifts')}</AppText>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.ghostBtn} onPress={handleDone} activeOpacity={0.8}>
+              <AppText style={styles.ghostBtnText} color={Colors.text.secondary}>{i18n('payment.backToHome')}</AppText>
             </TouchableOpacity>
           </>
         ) : (
@@ -220,6 +249,7 @@ const styles = StyleSheet.create({
   },
   iconCircleSuccess: { backgroundColor: Colors.primary + '18' },
   iconCircleFailed: { backgroundColor: '#E5393518' },
+  iconCircleUnknown: { backgroundColor: UNKNOWN_COLOR + '18' },
   title: { fontSize: FontSize.xl, fontFamily: Fonts.semiBold, textAlign: 'center' },
   subtitle: { fontSize: FontSize.base, textAlign: 'center', lineHeight: 22 },
   refText: { fontSize: FontSize.xs, marginBottom: 0 },
