@@ -56,17 +56,20 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
+      let newToken: string | null = null;
       try {
-        const newToken = await onTokenExpired();
-        if (newToken) {
-          processQueue(newToken);
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          return api(originalRequest);
-        }
+        newToken = await onTokenExpired();
       } catch {
-        processQueue(null);
+        newToken = null;
       } finally {
+        // Must flush exactly once per refresh cycle — a null token rejects the
+        // queued requests; skipping this leaves them as promises that never settle.
+        processQueue(newToken);
         isRefreshing = false;
+      }
+      if (newToken) {
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return api(originalRequest);
       }
     }
 
