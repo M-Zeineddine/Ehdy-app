@@ -1,6 +1,6 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
-import type { MerchantUser } from '../store/merchantAuthStore';
+import { useMerchantAuthStore, type MerchantUser } from '../store/merchantAuthStore';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://192.168.1.100:3000/v1';
 
@@ -19,7 +19,13 @@ merchantApi.interceptors.request.use(async (config) => {
 
 merchantApi.interceptors.response.use(
   (res) => res,
-  (err) => {
+  async (err) => {
+    if (err.response?.status === 401) {
+      // No merchant refresh flow exists — an expired/invalid token can only be
+      // resolved by signing in again. Clearing auth flips the store so
+      // AuthGate redirects to merchant login.
+      await useMerchantAuthStore.getState().clearAuth();
+    }
     const message = err.response?.data?.error?.message ?? err.message;
     return Promise.reject(new Error(message));
   }
