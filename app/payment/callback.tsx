@@ -5,7 +5,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { deleteRetryDraft, confirmGiftPayment, getGiftPaymentStatus, type GiftPaymentState } from '@/src/services/giftService';
+import { deleteRetryDraft, confirmGiftPayment, getGiftPaymentStatus, clearUnresolvedCharge, type GiftPaymentState } from '@/src/services/giftService';
 import { AppText } from '@/src/components/ui/AppText';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, FontSize, Fonts } from '@/src/constants/layout';
@@ -49,13 +49,6 @@ export default function PaymentCallbackScreen() {
 
   useEffect(() => {
     async function confirm() {
-      if (status === 'UNKNOWN') {
-        // Payment browser closed before the Tap redirect — the outcome can't be
-        // verified client-side yet (payment-status endpoint is pending, backend
-        // C1). Keep the retry draft; the charge may still have gone through.
-        setPaymentStatus('unknown');
-        return;
-      }
       if (status === 'FAILED' || status === 'CANCELLED') {
         setPaymentStatus('failed');
         return;
@@ -66,8 +59,9 @@ export default function PaymentCallbackScreen() {
         if (tap_id) {
           state = await confirmGiftPayment(tap_id);
         } else if (gift_sent_id) {
-          // Redirect arrived without a tap_id — read the authoritative state
-          // instead of assuming an outcome in either direction.
+          // No tap_id: either the payment browser was closed before the Tap
+          // redirect (status UNKNOWN) or the redirect dropped the param — read
+          // the authoritative state instead of assuming an outcome either way.
           state = await getGiftPaymentStatus(gift_sent_id);
         }
 
@@ -77,17 +71,27 @@ export default function PaymentCallbackScreen() {
           setGiftLink(constructed);
           setPaymentStatus('success');
           // Draft is only cleaned up on a server-verified paid state
-          if (draft_id) deleteRetryDraft(draft_id).catch(() => {});
+          if (draft_id) {
+            clearUnresolvedCharge(draft_id);
+            deleteRetryDraft(draft_id).catch(() => {});
+          }
         } else if (state?.payment_status === 'pending') {
-          // Charge may still complete via the Tap webhook — keep the draft
+          // Charge may still complete via the Tap webhook — keep the draft and
+          // keep it blocked from re-initiation
           setPaymentStatus('unknown');
-        } else {
-          // 'failed', or no charge reference at all — keep the draft for retry
+        } else if (state?.payment_status === 'failed') {
+          // Definitive answer — the charge is resolved, so retrying is safe
+          if (draft_id) clearUnresolvedCharge(draft_id);
           setPaymentStatus('failed');
+        } else {
+          // No charge reference at all — keep the draft for retry
+          setPaymentStatus(status === 'UNKNOWN' ? 'unknown' : 'failed');
         }
       } catch {
-        // Backend rejected the charge or the check failed — keep the draft
-        setPaymentStatus('failed');
+        // Verification failed — a browser-closed arrival stays unknown (nothing
+        // was confirmed either way, re-initiation stays blocked); a redirect
+        // arrival reads as failed. Draft kept in both cases.
+        setPaymentStatus(status === 'UNKNOWN' ? 'unknown' : 'failed');
       }
     }
 

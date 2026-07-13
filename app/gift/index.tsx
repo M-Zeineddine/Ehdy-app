@@ -173,6 +173,20 @@ export default function GiftFlowScreen() {
             status: 'UNKNOWN',
             gift_sent_id: result.gift_sent_id,
             draft_id: draftId,
+            recipient_name: toName,
+            gift_name: params.itemName,
+            // Item params so "Try Again" can rebuild the gift screen if the
+            // server resolves the charge as failed
+            item_id: params.itemId,
+            item_name: params.itemName,
+            item_description: params.itemDescription ?? '',
+            item_price: params.itemPrice ?? '',
+            item_currency: params.itemCurrency ?? '',
+            item_image: params.itemImage ?? '',
+            merchant_id: params.merchantId ?? '',
+            merchant_name: params.merchantName ?? '',
+            merchant_logo: params.merchantLogo ?? '',
+            is_credit: params.isCredit ?? 'false',
           },
         });
       }

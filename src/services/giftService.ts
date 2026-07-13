@@ -24,6 +24,10 @@ export function markChargeUnresolved(draftId: string): void {
   unresolvedChargeDrafts.set(draftId, Date.now());
 }
 
+export function clearUnresolvedCharge(draftId: string): void {
+  unresolvedChargeDrafts.delete(draftId);
+}
+
 export function isChargeUnresolved(draftId: string): boolean {
   const markedAt = unresolvedChargeDrafts.get(draftId);
   if (markedAt === undefined) return false;
