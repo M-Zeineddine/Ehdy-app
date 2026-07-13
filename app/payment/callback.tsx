@@ -5,28 +5,23 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { api } from '@/src/services/api';
-import { deleteRetryDraft } from '@/src/services/giftService';
+import { deleteRetryDraft, confirmGiftPayment, getGiftPaymentStatus, clearUnresolvedCharge, type GiftPaymentState } from '@/src/services/giftService';
 import { AppText } from '@/src/components/ui/AppText';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, FontSize, Fonts } from '@/src/constants/layout';
 import { i18n } from '@/src/i18n';
 
-type PaymentStatus = 'loading' | 'success' | 'failed';
+type PaymentStatus = 'loading' | 'success' | 'failed' | 'unknown';
 
 const GIFT_BASE_URL = 'https://ehdy.app/gift';
+const UNKNOWN_COLOR = '#D97706';
 
 export default function PaymentCallbackScreen() {
   const insets = useSafeAreaInsets();
-  const {
-    status, tap_id, share_code, recipient_name, gift_name,
-    draft_id,
-    item_id, item_name, item_description, item_price, item_currency,
-    item_image, merchant_id, merchant_name, merchant_logo, is_credit,
-  } = useLocalSearchParams<{
+  const params = useLocalSearchParams<{
     status?: string;
     tap_id?: string;
-    share_code?: string;
+    gift_sent_id?: string;
     recipient_name?: string;
     gift_name?: string;
     draft_id?: string;
@@ -41,10 +36,16 @@ export default function PaymentCallbackScreen() {
     merchant_logo?: string;
     is_credit?: string;
   }>();
+  const {
+    status, tap_id, gift_sent_id, recipient_name, gift_name,
+    draft_id,
+    item_id, item_name, item_description, item_price, item_currency,
+    item_image, merchant_id, merchant_name, merchant_logo, is_credit,
+  } = params;
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('loading');
   const [copied, setCopied] = useState(false);
-
-  const giftLink = share_code ? `${GIFT_BASE_URL}/${share_code}` : '';
+  // Set only from the server's verified payment state — never from route params
+  const [giftLink, setGiftLink] = useState('');
 
   useEffect(() => {
     async function confirm() {
@@ -53,25 +54,49 @@ export default function PaymentCallbackScreen() {
         return;
       }
 
-      if (tap_id) {
-        try {
-          await api.post('/gifts/confirm-payment', { tap_id });
-          setPaymentStatus('success');
-          // Clean up draft now that payment succeeded
-          if (draft_id) deleteRetryDraft(draft_id).catch(() => {});
-        } catch {
-          // Backend rejected the charge — treat as failed
-          setPaymentStatus('failed');
+      try {
+        let state: GiftPaymentState | null = null;
+        if (tap_id) {
+          state = await confirmGiftPayment(tap_id);
+        } else if (gift_sent_id) {
+          // No tap_id: either the payment browser was closed before the Tap
+          // redirect (status UNKNOWN) or the redirect dropped the param — read
+          // the authoritative state instead of assuming an outcome either way.
+          state = await getGiftPaymentStatus(gift_sent_id);
         }
-      } else {
-        // No tap_id (e.g. alternate payment method) — go straight to success
-        setPaymentStatus('success');
-        if (draft_id) deleteRetryDraft(draft_id).catch(() => {});
+
+        if (state?.payment_status === 'paid') {
+          const link = state.unique_share_link;
+          const constructed = link ? (link.startsWith('http') ? link : `${GIFT_BASE_URL}/${link}`) : '';
+          setGiftLink(constructed);
+          setPaymentStatus('success');
+          // Draft is only cleaned up on a server-verified paid state
+          if (draft_id) {
+            clearUnresolvedCharge(draft_id);
+            deleteRetryDraft(draft_id).catch(() => {});
+          }
+        } else if (state?.payment_status === 'pending') {
+          // Charge may still complete via the Tap webhook — keep the draft and
+          // keep it blocked from re-initiation
+          setPaymentStatus('unknown');
+        } else if (state?.payment_status === 'failed') {
+          // Definitive answer — the charge is resolved, so retrying is safe
+          if (draft_id) clearUnresolvedCharge(draft_id);
+          setPaymentStatus('failed');
+        } else {
+          // No charge reference at all — keep the draft for retry
+          setPaymentStatus(status === 'UNKNOWN' ? 'unknown' : 'failed');
+        }
+      } catch {
+        // Verification failed — a browser-closed arrival stays unknown (nothing
+        // was confirmed either way, re-initiation stays blocked); a redirect
+        // arrival reads as failed. Draft kept in both cases.
+        setPaymentStatus(status === 'UNKNOWN' ? 'unknown' : 'failed');
       }
     }
 
     confirm();
-  }, [status, tap_id]);
+  }, [status, tap_id, gift_sent_id]);
 
   function handleWhatsApp() {
     const name = recipient_name ? ` for ${recipient_name}` : '';
@@ -127,32 +152,42 @@ export default function PaymentCallbackScreen() {
   }
 
   const isSuccess = paymentStatus === 'success';
+  const isUnknown = paymentStatus === 'unknown';
   const giftLabel = gift_name ? `Your gift of ${gift_name}` : 'Your gift';
   const recipientLabel = recipient_name ? ` to ${recipient_name}` : '';
 
   return (
     <View style={[styles.root, { paddingTop: insets.top, paddingBottom: insets.bottom + Spacing.xl * 1.5 }]}>
       <View style={styles.content}>
-        <View style={[styles.iconCircle, isSuccess ? styles.iconCircleSuccess : styles.iconCircleFailed]}>
+        <View style={[
+          styles.iconCircle,
+          isSuccess ? styles.iconCircleSuccess : isUnknown ? styles.iconCircleUnknown : styles.iconCircleFailed,
+        ]}>
           <Ionicons
-            name={isSuccess ? 'checkmark' : 'close'}
+            name={isSuccess ? 'checkmark' : isUnknown ? 'help' : 'close'}
             size={44}
-            color={isSuccess ? Colors.primary : Colors.error}
+            color={isSuccess ? Colors.primary : isUnknown ? UNKNOWN_COLOR : Colors.error}
           />
         </View>
 
         <AppText semiBold style={styles.title}>
-          {isSuccess ? i18n('payment.successTitle') : i18n('payment.failureTitle')}
+          {isSuccess
+            ? i18n('payment.successTitle')
+            : isUnknown ? i18n('payment.unknownTitle') : i18n('payment.failureTitle')}
         </AppText>
         <AppText style={styles.subtitle} color={Colors.text.secondary}>
           {isSuccess
             ? `${giftLabel}${recipientLabel} is on its way.`
-            : i18n('payment.failureMessage')}
+            : isUnknown ? i18n('payment.unknownMessage') : i18n('payment.failureMessage')}
         </AppText>
 
         {tap_id ? (
           <AppText style={styles.refText} color={Colors.text.tertiary}>
             Ref: {tap_id}
+          </AppText>
+        ) : isUnknown && gift_sent_id ? (
+          <AppText style={styles.refText} color={Colors.text.tertiary}>
+            Ref: {gift_sent_id}
           </AppText>
         ) : null}
       </View>
@@ -179,6 +214,16 @@ export default function PaymentCallbackScreen() {
 
             <TouchableOpacity style={styles.ghostBtn} onPress={handleDone} activeOpacity={0.8}>
               <AppText style={[styles.ghostBtnText, styles.underlineText]} color={Colors.text.tertiary}>{i18n('payment.backToHome')}</AppText>
+            </TouchableOpacity>
+          </>
+        ) : isUnknown ? (
+          <>
+            {/* Deliberately no "Try Again" — the charge may have succeeded; retrying could double-charge */}
+            <TouchableOpacity style={styles.primaryBtn} onPress={() => router.replace('/(tabs)/gifts')} activeOpacity={0.8}>
+              <AppText semiBold style={styles.primaryBtnText}>{i18n('payment.checkMyGifts')}</AppText>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.ghostBtn} onPress={handleDone} activeOpacity={0.8}>
+              <AppText style={styles.ghostBtnText} color={Colors.text.secondary}>{i18n('payment.backToHome')}</AppText>
             </TouchableOpacity>
           </>
         ) : (
@@ -220,6 +265,7 @@ const styles = StyleSheet.create({
   },
   iconCircleSuccess: { backgroundColor: Colors.primary + '18' },
   iconCircleFailed: { backgroundColor: '#E5393518' },
+  iconCircleUnknown: { backgroundColor: UNKNOWN_COLOR + '18' },
   title: { fontSize: FontSize.xl, fontFamily: Fonts.semiBold, textAlign: 'center' },
   subtitle: { fontSize: FontSize.base, textAlign: 'center', lineHeight: 22 },
   refText: { fontSize: FontSize.xs, marginBottom: 0 },

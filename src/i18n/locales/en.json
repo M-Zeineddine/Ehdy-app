@@ -224,7 +224,10 @@
     "copyLink": "Copy Link",
     "copied": "Copied!",
     "backToHome": "Back to Home",
-    "tryAgain": "Try Again"
+    "tryAgain": "Try Again",
+    "unknownTitle": "Payment status unknown",
+    "unknownMessage": "We couldn't confirm whether your payment went through. Check your gifts before trying again.",
+    "checkMyGifts": "Check My Gifts"
   },
   "error": {
     "networkTitle": "No connection",

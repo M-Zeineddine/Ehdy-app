@@ -22,7 +22,10 @@ interface AuthState {
 function registerRefreshHandler(get: () => AuthState) {
   setTokenExpiredHandler(async () => {
     const storedRefresh = get().refreshToken;
-    if (!storedRefresh) return null;
+    if (!storedRefresh) {
+      await get().clearAuth();
+      return null;
+    }
     try {
       const newToken = await callRefreshToken(storedRefresh);
       setAuthToken(newToken);

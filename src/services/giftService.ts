@@ -10,6 +10,32 @@ export interface InitiateGiftPaymentParams {
   recipient_phone: string | undefined;
   personal_message: string;
   theme: string;
+  gift_draft_id?: string;
+}
+
+// Drafts whose payment browser was closed before the Tap redirect: the charge
+// may or may not have gone through, so re-initiating could double-charge.
+// Entries expire after the backend's 30-minute stale-pending sweep has
+// resolved the charge server-side, at which point retrying is safe.
+const UNRESOLVED_CHARGE_TTL_MS = 30 * 60 * 1000;
+const unresolvedChargeDrafts = new Map<string, number>();
+
+export function markChargeUnresolved(draftId: string): void {
+  unresolvedChargeDrafts.set(draftId, Date.now());
+}
+
+export function clearUnresolvedCharge(draftId: string): void {
+  unresolvedChargeDrafts.delete(draftId);
+}
+
+export function isChargeUnresolved(draftId: string): boolean {
+  const markedAt = unresolvedChargeDrafts.get(draftId);
+  if (markedAt === undefined) return false;
+  if (Date.now() - markedAt > UNRESOLVED_CHARGE_TTL_MS) {
+    unresolvedChargeDrafts.delete(draftId);
+    return false;
+  }
+  return true;
 }
 
 export interface InitiateGiftPaymentResult {
@@ -59,6 +85,23 @@ export interface RetryDraft {
   merchant_name: string;
   merchant_logo: string | null;
   is_credit: boolean;
+}
+
+export interface GiftPaymentState {
+  payment_status: string;
+  // Only present when payment_status === 'paid' — the server never exposes a
+  // share link for an unpaid row.
+  unique_share_link: string | null;
+}
+
+export async function confirmGiftPayment(tapId: string): Promise<GiftPaymentState> {
+  const res = await api.post('/gifts/confirm-payment', { tap_id: tapId });
+  return res.data.data;
+}
+
+export async function getGiftPaymentStatus(giftSentId: string): Promise<GiftPaymentState> {
+  const res = await api.get(`/gifts/${giftSentId}/payment-status`);
+  return res.data.data;
 }
 
 export async function saveRetryDraft(params: RetryDraftParams): Promise<string> {
