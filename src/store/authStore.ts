@@ -3,6 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import type { User } from '../types';
 import { setAuthToken, setTokenExpiredHandler } from '../services/api';
 import { refreshToken as callRefreshToken } from '../services/authService';
+import { queryClient } from '../lib/queryClient';
 
 const TOKEN_KEY = 'ehdy_access_token';
 const REFRESH_KEY = 'ehdy_refresh_token';
@@ -63,6 +64,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await SecureStore.deleteItemAsync(REFRESH_KEY);
     await SecureStore.deleteItemAsync(USER_KEY);
     set({ user: null, token: null, refreshToken: null, isAuthenticated: false });
+    // Wipe cached server data so the next account isn't served this one's
+    queryClient.clear();
   },
 
   loadFromStorage: async () => {

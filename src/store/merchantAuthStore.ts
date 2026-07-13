@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
+import { queryClient } from '../lib/queryClient';
 
 const TOKEN_KEY = 'ehdy_merchant_token';
 const USER_KEY = 'ehdy_merchant_user';
@@ -41,6 +42,9 @@ export const useMerchantAuthStore = create<MerchantAuthState>((set) => ({
     await SecureStore.deleteItemAsync(TOKEN_KEY);
     await SecureStore.deleteItemAsync(USER_KEY);
     set({ merchantUser: null, token: null, isAuthenticated: false });
+    // Wipe cached server data (dashboard revenue, redemption history) so the
+    // next staff account on a shared device isn't served this one's
+    queryClient.clear();
   },
 
   loadFromStorage: async () => {

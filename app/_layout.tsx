@@ -1,5 +1,5 @@
 import '@/src/i18n';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
@@ -18,12 +18,9 @@ import { useAuthStore } from '@/src/store/authStore';
 import { useMerchantAuthStore } from '@/src/store/merchantAuthStore';
 import { useLanguageStore } from '@/src/store/languageStore';
 import { LoadingScreen } from '@/src/components/ui/LoadingScreen';
+import { queryClient } from '@/src/lib/queryClient';
 
 SplashScreen.preventAutoHideAsync();
-
-const queryClient = new QueryClient({
-  defaultOptions: { queries: { staleTime: 1000 * 60 * 5, retry: 1 } },
-});
 
 function AuthGate() {
   const { isAuthenticated, isLoading } = useAuthStore();
