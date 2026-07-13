@@ -47,6 +47,11 @@ function AuthGate() {
       router.replace('/(merchant-tabs)/scan');
       return;
     }
+    // Expired/cleared merchant session while still on merchant screens
+    if (!merchantAuth && inMerchantTabs) {
+      router.replace('/(merchant-auth)/login');
+      return;
+    }
 
     // Customer flow
     if (!isAuthenticated && !inAuth && !inMerchantAuth && !inMerchantTabs) {
