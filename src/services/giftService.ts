@@ -83,6 +83,23 @@ export interface RetryDraft {
   is_credit: boolean;
 }
 
+export interface GiftPaymentState {
+  payment_status: string;
+  // Only present when payment_status === 'paid' — the server never exposes a
+  // share link for an unpaid row.
+  unique_share_link: string | null;
+}
+
+export async function confirmGiftPayment(tapId: string): Promise<GiftPaymentState> {
+  const res = await api.post('/gifts/confirm-payment', { tap_id: tapId });
+  return res.data.data;
+}
+
+export async function getGiftPaymentStatus(giftSentId: string): Promise<GiftPaymentState> {
+  const res = await api.get(`/gifts/${giftSentId}/payment-status`);
+  return res.data.data;
+}
+
 export async function saveRetryDraft(params: RetryDraftParams): Promise<string> {
   const res = await api.post('/gifts/drafts', params);
   return res.data.data.draft_id;

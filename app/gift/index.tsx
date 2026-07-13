@@ -144,7 +144,7 @@ export default function GiftFlowScreen() {
           params: {
             status: urlParams.get('status') ?? '',
             tap_id: urlParams.get('tap_id') ?? '',
-            share_code: result.unique_share_link,
+            gift_sent_id: result.gift_sent_id,
             recipient_name: toName,
             gift_name: params.itemName,
             draft_id: draftId,

@@ -5,8 +5,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { api } from '@/src/services/api';
-import { deleteRetryDraft } from '@/src/services/giftService';
+import { deleteRetryDraft, confirmGiftPayment, getGiftPaymentStatus, type GiftPaymentState } from '@/src/services/giftService';
 import { AppText } from '@/src/components/ui/AppText';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, FontSize, Fonts } from '@/src/constants/layout';
@@ -19,16 +18,10 @@ const UNKNOWN_COLOR = '#D97706';
 
 export default function PaymentCallbackScreen() {
   const insets = useSafeAreaInsets();
-  const {
-    status, tap_id, gift_sent_id, share_code, recipient_name, gift_name,
-    draft_id,
-    item_id, item_name, item_description, item_price, item_currency,
-    item_image, merchant_id, merchant_name, merchant_logo, is_credit,
-  } = useLocalSearchParams<{
+  const params = useLocalSearchParams<{
     status?: string;
     tap_id?: string;
     gift_sent_id?: string;
-    share_code?: string;
     recipient_name?: string;
     gift_name?: string;
     draft_id?: string;
@@ -43,10 +36,16 @@ export default function PaymentCallbackScreen() {
     merchant_logo?: string;
     is_credit?: string;
   }>();
+  const {
+    status, tap_id, gift_sent_id, recipient_name, gift_name,
+    draft_id,
+    item_id, item_name, item_description, item_price, item_currency,
+    item_image, merchant_id, merchant_name, merchant_logo, is_credit,
+  } = params;
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('loading');
   const [copied, setCopied] = useState(false);
-
-  const giftLink = share_code ? `${GIFT_BASE_URL}/${share_code}` : '';
+  // Set only from the server's verified payment state — never from route params
+  const [giftLink, setGiftLink] = useState('');
 
   useEffect(() => {
     async function confirm() {
@@ -62,25 +61,38 @@ export default function PaymentCallbackScreen() {
         return;
       }
 
-      if (tap_id) {
-        try {
-          await api.post('/gifts/confirm-payment', { tap_id });
+      try {
+        let state: GiftPaymentState | null = null;
+        if (tap_id) {
+          state = await confirmGiftPayment(tap_id);
+        } else if (gift_sent_id) {
+          // Redirect arrived without a tap_id — read the authoritative state
+          // instead of assuming an outcome in either direction.
+          state = await getGiftPaymentStatus(gift_sent_id);
+        }
+
+        if (state?.payment_status === 'paid') {
+          const link = state.unique_share_link;
+          const constructed = link ? (link.startsWith('http') ? link : `${GIFT_BASE_URL}/${link}`) : '';
+          setGiftLink(constructed);
           setPaymentStatus('success');
-          // Clean up draft now that payment succeeded
+          // Draft is only cleaned up on a server-verified paid state
           if (draft_id) deleteRetryDraft(draft_id).catch(() => {});
-        } catch {
-          // Backend rejected the charge — treat as failed
+        } else if (state?.payment_status === 'pending') {
+          // Charge may still complete via the Tap webhook — keep the draft
+          setPaymentStatus('unknown');
+        } else {
+          // 'failed', or no charge reference at all — keep the draft for retry
           setPaymentStatus('failed');
         }
-      } else {
-        // No tap_id (e.g. alternate payment method) — go straight to success
-        setPaymentStatus('success');
-        if (draft_id) deleteRetryDraft(draft_id).catch(() => {});
+      } catch {
+        // Backend rejected the charge or the check failed — keep the draft
+        setPaymentStatus('failed');
       }
     }
 
     confirm();
-  }, [status, tap_id]);
+  }, [status, tap_id, gift_sent_id]);
 
   function handleWhatsApp() {
     const name = recipient_name ? ` for ${recipient_name}` : '';
