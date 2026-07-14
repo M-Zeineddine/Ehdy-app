@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -41,6 +42,13 @@ function CameraModal({
   const [permission, requestPermission] = useCameraPermissions();
   const lastScannedRef = useRef('');
 
+  // Fresh session on close so the same code can be legitimately re-scanned
+  // later (e.g. a second partial redemption); within one open session the ref
+  // still suppresses the scanner's repeated fires for the same code.
+  useEffect(() => {
+    if (!visible) lastScannedRef.current = '';
+  }, [visible]);
+
   function handleBarcode({ data }: { data: string }) {
     if (scanning || data === lastScannedRef.current) return;
     lastScannedRef.current = data;
@@ -61,7 +69,12 @@ function CameraModal({
             <AppText variant="body" style={{ color: 'rgba(255,255,255,0.7)', textAlign: 'center' }}>
               Allow camera access to scan gift QR codes.
             </AppText>
-            <Button label="Allow camera" onPress={requestPermission} size="lg" style={{ marginTop: Spacing.lg }} />
+            {permission && !permission.canAskAgain ? (
+              // OS won't show the prompt again — settings is the only way back
+              <Button label="Open Settings" onPress={() => Linking.openSettings()} size="lg" style={{ marginTop: Spacing.lg }} />
+            ) : (
+              <Button label="Allow camera" onPress={requestPermission} size="lg" style={{ marginTop: Spacing.lg }} />
+            )}
           </SafeAreaView>
         ) : (
           <>
@@ -112,6 +125,12 @@ function RedemptionModal({
 }) {
   const [partialAmount, setPartialAmount] = useState('');
   const isStoreCredit = gift?.type === 'store_credit';
+
+  // Component stays mounted across redemptions — start each gift with a
+  // clean amount instead of the previous gift's
+  useEffect(() => {
+    if (visible) setPartialAmount('');
+  }, [visible]);
 
   function handleConfirm() {
     if (isStoreCredit && partialAmount) {
@@ -207,6 +226,11 @@ function OtpModal({
 }) {
   const [otp, setOtp] = useState('');
 
+  // Component stays mounted across redemptions — never pre-fill a stale OTP
+  useEffect(() => {
+    if (visible) setOtp('');
+  }, [visible]);
+
   function handleVerify() {
     if (otp.trim().length !== 6) {
       Alert.alert('Invalid code', 'Enter the 6-digit code sent to the recipient.');
@@ -298,6 +322,8 @@ export default function MerchantScanScreen() {
   const [validatedGift, setValidatedGift] = useState<GiftValidation | null>(null);
   const [activeCode, setActiveCode] = useState('');
   const [pendingAmount, setPendingAmount] = useState<number | undefined>(undefined);
+  const [otpSending, setOtpSending] = useState(false);
+  const otpSendingRef = useRef(false); // synchronous guard — useState updates are async and miss same-frame double-taps
   const [otpLoading, setOtpLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [successData, setSuccessData] = useState<{ balance: number | null; currency?: string } | null>(null);
@@ -326,12 +352,18 @@ export default function MerchantScanScreen() {
   }
 
   async function handleConfirm(amount?: number) {
+    if (otpSendingRef.current) return;
+    otpSendingRef.current = true;
+    setOtpSending(true);
     setPendingAmount(amount);
     try {
       await sendRedemptionOtp(activeCode);
       setScanState('otp');
     } catch (err: any) {
       Alert.alert('Failed to send OTP', err.message ?? 'Could not send verification code.');
+    } finally {
+      otpSendingRef.current = false;
+      setOtpSending(false);
     }
   }
 
@@ -428,7 +460,7 @@ export default function MerchantScanScreen() {
         gift={validatedGift?.gift ?? null}
         onConfirm={handleConfirm}
         onCancel={handleReset}
-        loading={false}
+        loading={otpSending}
       />
 
       {/* OTP verification */}
