@@ -8,6 +8,7 @@ import { Button } from '@/src/components/ui/Button';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, Fonts } from '@/src/constants/layout';
 import { signup } from '@/src/services/authService';
+import { getErrorCode, getErrorMessage } from '@/src/services/errors';
 import { i18n } from '@/src/i18n';
 
 export default function RegisterScreen() {
@@ -39,16 +40,17 @@ export default function RegisterScreen() {
         phone: `+961${phone.trim().replace(/\s/g, '')}`,
       });
       router.push({ pathname: '/(auth)/verify-email', params: { email: email.trim().toLowerCase() } });
-    } catch (err: any) {
-      if (err.message?.includes('pending verification')) {
+    } catch (err: unknown) {
+      const code = getErrorCode(err);
+      if (code === 'EMAIL_VERIFICATION_PENDING') {
         router.push({ pathname: '/(auth)/verify-email', params: { email: email.trim().toLowerCase() } });
         return;
       }
-      if (err.message?.includes('Phone verification pending')) {
+      if (code === 'PHONE_VERIFICATION_PENDING') {
         router.replace('/(auth)/login');
         return;
       }
-      Alert.alert(i18n('auth.register.errorRegistrationFailed'), err.message ?? i18n('common.tryAgain'));
+      Alert.alert(i18n('auth.register.errorRegistrationFailed'), getErrorMessage(err, i18n('common.tryAgain')));
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import type { ApiError } from './errors';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://192.168.1.100:3000/v1';
 
@@ -74,6 +75,9 @@ api.interceptors.response.use(
     }
 
     const message = err.response?.data?.error?.message ?? err.message;
-    return Promise.reject(new Error(message));
+    const wrapped: ApiError = new Error(message);
+    // Preserve the backend's stable error code for callers that branch on it
+    wrapped.code = err.response?.data?.error?.code;
+    return Promise.reject(wrapped);
   }
 );
