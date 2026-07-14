@@ -64,6 +64,9 @@
       "emailPlaceholder": "you@example.com",
       "passwordLabel": "كلمة المرور",
       "passwordPlaceholder": "٨ أحرف كحد أدنى",
+      "phoneLabel": "رقم الهاتف",
+      "phonePlaceholder": "3123 456",
+      "phoneHint": "ليتمكن الآخرون من إرسال الهدايا إليك عبر رقم هاتفك.",
       "createAccountButton": "إنشاء حساب",
       "alreadyHaveAccount": "لديك حساب بالفعل؟",
       "signIn": "تسجيل الدخول",
@@ -72,6 +75,20 @@
       "errorWeakPassword": "كلمة مرور ضعيفة",
       "errorWeakPasswordMessage": "يجب أن تتكون كلمة المرور من ٨ أحرف على الأقل.",
       "errorRegistrationFailed": "فشل التسجيل"
+    },
+    "verifyPhone": {
+      "title": "تحقق من رقمك",
+      "subtitle": "أرسلنا رمزاً من ٦ أرقام عبر واتساب إلى",
+      "verifyButton": "تحقق من الرقم",
+      "sendingButton": "جارٍ الإرسال...",
+      "resendButton": "إعادة إرسال الرمز",
+      "errorSendFailed": "فشل إرسال الرمز",
+      "errorIncompleteCode": "رمز غير مكتمل",
+      "errorIncompleteCodeMessage": "يرجى إدخال الرمز المكوّن من ٦ أرقام من واتساب.",
+      "errorVerificationFailed": "فشل التحقق",
+      "errorVerificationFailedMessage": "رمز غير صالح أو منتهي الصلاحية. يرجى المحاولة مجدداً.",
+      "successCodeSent": "تم إرسال الرمز",
+      "successCodeSentMessage": "تم إرسال رمز تحقق جديد إلى واتساب الخاص بك."
     },
     "verifyEmail": {
       "title": "تحقق من بريدك",
