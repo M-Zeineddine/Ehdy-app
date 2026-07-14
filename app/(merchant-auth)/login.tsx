@@ -105,7 +105,7 @@ export default function MerchantLoginScreen() {
               This portal is for merchant staff only.{'\n'}
               Looking to shop?{' '}
             </AppText>
-            <TouchableOpacity onPress={() => router.replace('/(auth)/welcome' as any)}>
+            <TouchableOpacity onPress={() => router.replace('/(auth)/welcome')}>
               <AppText variant="caption" color={Colors.primary}>Go to customer app</AppText>
             </TouchableOpacity>
           </View>

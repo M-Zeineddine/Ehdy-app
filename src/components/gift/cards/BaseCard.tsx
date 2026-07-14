@@ -47,7 +47,7 @@ export function BaseCard({ theme, cardWidth, cardHeight, toName, fromName, messa
           </AppText>
           {message ? (
             <AppText style={[styles.message, { color: theme.subtextColor }]} numberOfLines={2}>
-              "{message}"
+              &ldquo;{message}&rdquo;
             </AppText>
           ) : null}
         </View>

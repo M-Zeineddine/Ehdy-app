@@ -29,7 +29,7 @@ export default function WelcomeScreen() {
           variant="outline"
           size="lg"
         />
-        <TouchableOpacity onPress={() => router.push('/(merchant-auth)/login' as any)} style={styles.merchantLink}>
+        <TouchableOpacity onPress={() => router.push('/(merchant-auth)/login')} style={styles.merchantLink}>
           <AppText variant="caption" color={Colors.text.tertiary}>
             Merchant or staff?{' '}
             <AppText variant="caption" color={Colors.primary}>Sign in here</AppText>

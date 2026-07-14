@@ -9,6 +9,7 @@ import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, Fonts } from '@/src/constants/layout';
 import { signup } from '@/src/services/authService';
 import { getErrorCode, getErrorMessage } from '@/src/services/errors';
+import { normalizeLebanesePhone } from '@/src/utils/phone';
 import { i18n } from '@/src/i18n';
 
 export default function RegisterScreen() {
@@ -30,6 +31,11 @@ export default function RegisterScreen() {
       Alert.alert(i18n('auth.register.errorWeakPassword'), i18n('auth.register.errorWeakPasswordMessage'));
       return;
     }
+    const normalizedPhone = normalizeLebanesePhone(phone);
+    if (!normalizedPhone) {
+      Alert.alert(i18n('common.invalidPhoneTitle'), i18n('common.invalidPhoneMessage'));
+      return;
+    }
     setLoading(true);
     try {
       await signup({
@@ -37,7 +43,7 @@ export default function RegisterScreen() {
         last_name: lastName.trim(),
         email: email.trim().toLowerCase(),
         password,
-        phone: `+961${phone.trim().replace(/\s/g, '')}`,
+        phone: normalizedPhone,
       });
       router.push({ pathname: '/(auth)/verify-email', params: { email: email.trim().toLowerCase() } });
     } catch (err: unknown) {

@@ -10,9 +10,11 @@ export interface Merchant {
   category_slug: string;
   country_code: string;
   city: string | null;
+  contact_phone?: string | null;
   rating?: number;
   review_count?: number;
   is_verified?: boolean;
+  is_featured?: boolean;
   items?: MerchantItem[];
   store_credit_presets?: StoreCreditPreset[];
 }

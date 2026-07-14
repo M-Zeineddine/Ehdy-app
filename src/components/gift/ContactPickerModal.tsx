@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/src/components/ui/AppText';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, FontSize, Fonts } from '@/src/constants/layout';
+import { normalizeLebanesePhone } from '@/src/utils/phone';
 
 interface Props {
   visible: boolean;
@@ -71,9 +72,15 @@ export function ContactPickerModal({ visible, onClose, onSelect }: Props) {
   }
 
   function handleSelect(item: ContactItem) {
-    // Strip +961 country prefix and formatting characters, keep local digits
-    const local = item.phone.replace(/^\+961\s?/, '').replace(/[\s\-().]/g, '');
-    onSelect(local, item.name);
+    const normalized = normalizeLebanesePhone(item.phone);
+    // Lebanese numbers go into the field in local form (the UI already shows
+    // the +961 prefix); foreign numbers keep their + prefix; numbers the
+    // normalizer rejects fall back to cleaned digits and get caught by the
+    // pre-payment validation.
+    const value = normalized
+      ? normalized.startsWith('+961') ? normalized.slice(4) : normalized
+      : item.phone.replace(/[\s\-().]/g, '');
+    onSelect(value, item.name);
     onClose();
   }
 
