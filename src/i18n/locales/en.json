@@ -4,7 +4,9 @@
     "all": "All",
     "seeAll": "See All →",
     "tryAgain": "Try again",
-    "ok": "OK"
+    "ok": "OK",
+    "invalidPhoneTitle": "Invalid phone number",
+    "invalidPhoneMessage": "Enter a valid Lebanese number, e.g. 03 123 456 or 70 123 456."
   },
   "auth": {
     "welcome": {

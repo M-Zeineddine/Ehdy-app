@@ -7,6 +7,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useLocalSearchParams, router, useNavigation } from 'expo-router';
 import { usePreventRemove } from '@react-navigation/native';
 import { initiateGiftPayment, saveRetryDraft, getRetryDraft, markChargeUnresolved, isChargeUnresolved } from '@/src/services/giftService';
+import { normalizeLebanesePhone } from '@/src/utils/phone';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -102,14 +103,16 @@ export default function GiftFlowScreen() {
       Alert.alert(i18n('payment.unknownTitle'), i18n('payment.unknownMessage'));
       return;
     }
+    // Reject a malformed recipient number before any money movement
+    const normalizedPhone = phone ? normalizeLebanesePhone(phone) ?? undefined : undefined;
+    if (phone && !normalizedPhone) {
+      Alert.alert(i18n('common.invalidPhoneTitle'), i18n('common.invalidPhoneMessage'));
+      return;
+    }
     payingRef.current = true;
     setPaying(true);
     try {
       // Save form state so the user can retry with their customization intact
-      const normalizedPhone = phone
-        ? phone.startsWith('+') ? phone.trim() : `+961${phone.trim().replace(/\s/g, '')}`
-        : undefined;
-
       const draftId = await saveRetryDraft({
         merchant_item_id: !isCredit ? params.itemId : undefined,
         custom_credit_amount: isCredit ? parseFloat(params.itemPrice) : undefined,

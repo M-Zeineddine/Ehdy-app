@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { I18nManager } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+import * as Localization from 'expo-localization';
 import i18next from 'i18next';
 
 export type AppLanguage = 'en' | 'ar';
@@ -24,13 +25,18 @@ export const useLanguageStore = create<LanguageState>((set, get) => ({
   loadLanguage: async () => {
     try {
       const saved = (await SecureStore.getItemAsync(LANG_KEY)) as AppLanguage | null;
-      if (saved && saved !== get().language) {
-        const isRTL = saved === 'ar';
-        I18nManager.allowRTL(true);
-        I18nManager.forceRTL(isRTL);
-        await i18next.changeLanguage(saved);
-        set({ language: saved, isRTL });
-      }
+      // Always reconcile store + i18next + RTL to one effective language.
+      // i18next boots from the device locale while this store defaults to
+      // 'en', so skipping the saved === store case leaves them disagreeing
+      // (e.g. saved 'en' on an Arabic device kept rendering Arabic).
+      const deviceLang: AppLanguage =
+        Localization.getLocales?.()?.[0]?.languageCode === 'ar' ? 'ar' : 'en';
+      const effective = saved ?? deviceLang;
+      const isRTL = effective === 'ar';
+      I18nManager.allowRTL(true);
+      I18nManager.forceRTL(isRTL);
+      if (i18next.language !== effective) await i18next.changeLanguage(effective);
+      set({ language: effective, isRTL });
     } catch {
       // Corrupted storage — leave default
     }

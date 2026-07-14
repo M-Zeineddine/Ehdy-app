@@ -23,6 +23,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      # No npm audit gate yet: the expo CLI/dev chain would fail it.
+      # As of 2026-07-14 (--omit=dev): 26 advisories (1 critical, 7 high) —
+      # all in the expo build chain except form-data <4.0.6 (lockfile bump).
+      - name: Lint
+        run: npm run lint
+
       - name: Run tests
         run: npm test -- --no-coverage
         env:

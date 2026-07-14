@@ -19,7 +19,7 @@ export default function MerchantAccountScreen() {
         style: 'destructive',
         onPress: async () => {
           await clearAuth();
-          router.replace('/(merchant-auth)/login' as any);
+          router.replace('/(merchant-auth)/login');
         },
       },
     ]);

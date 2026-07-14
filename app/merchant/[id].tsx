@@ -56,7 +56,7 @@ export default function MerchantScreen() {
   }
 
   function handleCall() {
-    const phone = (merchant as any)?.contact_phone;
+    const phone = merchant?.contact_phone;
     if (phone) Linking.openURL(`tel:${phone}`);
   }
 
@@ -100,15 +100,15 @@ export default function MerchantScreen() {
           {/* Banner + overlapping logo */}
           <View style={{ marginBottom: (LOGO_SIZE + 20) / 2 }}>
             <Image
-              source={{ uri: (merchant as any).banner_image_url ?? undefined }}
+              source={{ uri: merchant.banner_image_url ?? undefined }}
               style={styles.banner}
               resizeMode="cover"
             />
             <View style={styles.logoWrap}>
               <View style={styles.logoInner}>
-                {(merchant as any).logo_url ? (
+                {merchant.logo_url ? (
                   <Image
-                    source={{ uri: (merchant as any).logo_url }}
+                    source={{ uri: merchant.logo_url }}
                     style={styles.logo}
                     resizeMode="contain"
                   />
@@ -127,9 +127,9 @@ export default function MerchantScreen() {
           <View style={styles.infoSection}>
             <AppText style={styles.merchantName}>{merchant.name}</AppText>
             <View style={styles.metaRow}>
-              {(merchant as any).is_featured ? (
+              {merchant.is_featured ? (
                 <AppText style={styles.metaText} color={Colors.text.secondary}>{i18n('merchant.badgeFeatured')}</AppText>
-              ) : (merchant as any).is_verified ? (
+              ) : merchant.is_verified ? (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                   <Ionicons name="checkmark-circle" size={14} color={Colors.primary} />
                   <AppText style={styles.metaText} color={Colors.text.accent}>{i18n('merchant.badgeVerified')}</AppText>
@@ -263,7 +263,7 @@ export default function MerchantScreen() {
                         itemCurrency: storeCredits[0]?.currency_code ?? 'USD',
                         merchantId: merchant.id,
                         merchantName: merchant.name,
-                        merchantLogo: (merchant as any).logo_url ?? '',
+                        merchantLogo: merchant.logo_url ?? '',
                         isCredit: 'true',
                       },
                     });
