@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Image,
@@ -12,8 +12,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Linking } from 'react-native';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { AppText } from '@/src/components/ui/AppText';
 import { ErrorState } from '@/src/components/ui/ErrorState';
@@ -214,40 +215,37 @@ type StatusFilter = 'active' | 'partially_redeemed' | 'redeemed' | null;
 
 export default function GiftsScreen() {
   const [activeTab, setActiveTab] = useState<Tab>('sent');
-  const [sentGifts, setSentGifts] = useState<GiftSummary[]>([]);
-  const [receivedGifts, setReceivedGifts] = useState<GiftSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(null);
-  const [fetchError, setFetchError] = useState<string | null>(null);
 
-  const fetchAll = useCallback(async () => {
-    setFetchError(null);
-    try {
-      const [sent, received] = await Promise.all([
-        getSentGifts(1, sortOrder),
-        getReceivedGifts(1, sortOrder, statusFilter ?? undefined),
-      ]);
-      setSentGifts(sent.data);
-      setReceivedGifts(received.data);
-    } catch (err: any) {
-      setFetchError(err?.message ?? null);
-    }
-  }, [sortOrder, statusFilter]);
+  // One cache entry per sort/filter combination — a slow response for an old
+  // combination can never overwrite a newer one (the old hand-rolled fetch raced)
+  const sentQuery = useInfiniteQuery({
+    queryKey: ['gifts', 'sent', sortOrder],
+    queryFn: ({ pageParam }) => getSentGifts(pageParam, sortOrder),
+    initialPageParam: 1,
+    getNextPageParam: (last) =>
+      last.pagination.page < last.pagination.pages ? last.pagination.page + 1 : undefined,
+  });
+  const receivedQuery = useInfiniteQuery({
+    queryKey: ['gifts', 'received', sortOrder, statusFilter],
+    queryFn: ({ pageParam }) => getReceivedGifts(pageParam, sortOrder, statusFilter ?? undefined),
+    initialPageParam: 1,
+    getNextPageParam: (last) =>
+      last.pagination.page < last.pagination.pages ? last.pagination.page + 1 : undefined,
+  });
 
-  useEffect(() => {
-    setLoading(true);
-    fetchAll().finally(() => setLoading(false));
-  }, [fetchAll]);
+  const activeQuery = activeTab === 'sent' ? sentQuery : receivedQuery;
+  const data = activeQuery.data?.pages.flatMap(p => p.data) ?? [];
 
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await fetchAll();
-    setRefreshing(false);
-  }, [fetchAll]);
-
-  const data = activeTab === 'sent' ? sentGifts : receivedGifts;
+  // Refresh on focus so a gift sent moments ago appears without pull-to-refresh.
+  // refetch goes through a ref because its identity isn't guaranteed stable —
+  // putting it in the deps could re-run the effect every render while focused.
+  const refetchRef = useRef(activeQuery.refetch);
+  refetchRef.current = activeQuery.refetch;
+  useFocusEffect(useCallback(() => {
+    refetchRef.current();
+  }, []));
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -312,24 +310,39 @@ export default function GiftsScreen() {
       </View>
 
       {/* Content */}
-      {loading ? (
+      {activeQuery.isLoading ? (
         <View style={styles.loader}>
           <ActivityIndicator color={Colors.primary} />
         </View>
-      ) : fetchError ? (
-        <ErrorState message={fetchError} onRetry={() => { setLoading(true); fetchAll().finally(() => setLoading(false)); }} />
+      ) : activeQuery.isError ? (
+        <ErrorState message={activeQuery.error?.message} onRetry={() => activeQuery.refetch()} />
       ) : (
         <FlatList
           data={data}
           keyExtractor={item => item.id}
           contentContainerStyle={data.length === 0 ? styles.listEmpty : styles.list}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={activeQuery.isRefetching && !activeQuery.isFetchingNextPage}
+              onRefresh={() => activeQuery.refetch()}
+              tintColor={Colors.primary}
+            />
+          }
           ListEmptyComponent={<EmptyState mode={activeTab} />}
           renderItem={({ item }) => activeTab === 'sent'
             ? <GiftRow gift={item} />
             : <ReceivedGiftCard gift={item} />
           }
           ItemSeparatorComponent={() => <View style={styles.separator} />}
+          onEndReached={() => {
+            if (activeQuery.hasNextPage && !activeQuery.isFetchingNextPage) activeQuery.fetchNextPage();
+          }}
+          onEndReachedThreshold={0.4}
+          ListFooterComponent={
+            activeQuery.isFetchingNextPage
+              ? <ActivityIndicator color={Colors.primary} style={styles.footerLoader} />
+              : null
+          }
         />
       )}
     </SafeAreaView>
@@ -383,6 +396,7 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: Spacing.md, paddingBottom: Spacing.xl },
   listEmpty: { flex: 1 },
   loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  footerLoader: { paddingVertical: Spacing.md },
   separator: { height: Spacing.sm },
 
   // Card
