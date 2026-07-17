@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Share, Linking, TouchableOpacity } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -47,13 +47,12 @@ export default function PaymentCallbackScreen() {
   // Set only from the server's verified payment state — never from route params
   const [giftLink, setGiftLink] = useState('');
 
+  // At most one verification per mount — a re-render or param-identity change
+  // must never re-POST confirm-payment for the same arrival
+  const verifiedRef = useRef(false);
+
   useEffect(() => {
     async function confirm() {
-      if (status === 'FAILED' || status === 'CANCELLED') {
-        setPaymentStatus('failed');
-        return;
-      }
-
       try {
         let state: GiftPaymentState | null = null;
         if (tap_id) {
@@ -95,6 +94,8 @@ export default function PaymentCallbackScreen() {
       }
     }
 
+    if (verifiedRef.current) return;
+    verifiedRef.current = true;
     confirm();
   }, [status, tap_id, gift_sent_id]);
 
