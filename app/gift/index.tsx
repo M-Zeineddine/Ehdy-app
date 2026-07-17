@@ -418,14 +418,21 @@ export default function GiftFlowScreen() {
         <AppText style={styles.sectionLabel}>{i18n('giftFlow.paymentMethod')}</AppText>
         <View style={styles.paymentOptions}>
           {([
-            { key: 'card', icon: 'card-outline', label: i18n('giftFlow.paymentMethodCard') },
-            { key: 'whish', icon: 'wallet-outline', label: i18n('giftFlow.paymentMethodOmt') },
+            // whish is scaffolding: the backend has no whish/OMT flow yet, and a
+            // selectable option that silently charges the card is a correctness bug
+            { key: 'card', icon: 'card-outline', label: i18n('giftFlow.paymentMethodCard'), disabled: false },
+            { key: 'whish', icon: 'wallet-outline', label: i18n('giftFlow.paymentMethodOmt'), disabled: true },
           ] as const).map(opt => (
             <TouchableOpacity
               key={opt.key}
-              style={[styles.paymentOption, paymentMethod === opt.key && styles.paymentOptionActive]}
+              style={[
+                styles.paymentOption,
+                paymentMethod === opt.key && styles.paymentOptionActive,
+                opt.disabled && styles.paymentOptionDisabled,
+              ]}
               onPress={() => setPaymentMethod(opt.key)}
               activeOpacity={0.7}
+              disabled={opt.disabled}
             >
               <Ionicons
                 name={opt.icon}
@@ -438,9 +445,13 @@ export default function GiftFlowScreen() {
               >
                 {opt.label}
               </AppText>
-              {paymentMethod === opt.key && (
+              {opt.disabled ? (
+                <View style={styles.comingSoonBadge}>
+                  <AppText style={styles.comingSoonText}>{i18n('giftFlow.comingSoon')}</AppText>
+                </View>
+              ) : paymentMethod === opt.key ? (
                 <Ionicons name="checkmark-circle" size={18} color={Colors.primary} style={{ marginLeft: 'auto' }} />
-              )}
+              ) : null}
             </TouchableOpacity>
           ))}
         </View>
@@ -718,6 +729,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md, paddingVertical: Spacing.md,
   },
   paymentOptionActive: { borderColor: Colors.primary },
+  paymentOptionDisabled: { opacity: 0.55 },
+  comingSoonBadge: {
+    marginLeft: 'auto', backgroundColor: Colors.surface,
+    borderRadius: Radius.full, paddingHorizontal: 10, paddingVertical: 4,
+  },
+  comingSoonText: { fontSize: FontSize.xs, fontFamily: Fonts.semiBold, color: Colors.text.tertiary },
   paymentLabel: { fontSize: FontSize.base, color: Colors.text.secondary },
   paymentLabelActive: { color: Colors.text.primary },
   secureRow: {

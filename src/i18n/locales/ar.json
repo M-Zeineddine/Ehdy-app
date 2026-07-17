@@ -198,6 +198,7 @@
     "paymentMethod": "طريقة الدفع",
     "paymentMethodCard": "بطاقة ائتمان / سحب",
     "paymentMethodOmt": "OMT / ويش موني",
+    "comingSoon": "قريباً",
     "paymentSecure": "دفع آمن عبر SSL",
     "stepIndicator": "الخطوة {{n}} من 3",
     "totalLabel": "الإجمالي",

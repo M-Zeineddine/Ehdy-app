@@ -198,6 +198,7 @@
     "paymentMethod": "PAYMENT METHOD",
     "paymentMethodCard": "Credit / Debit Card",
     "paymentMethodOmt": "OMT / Whish Money",
+    "comingSoon": "Coming soon",
     "paymentSecure": "Secure Checkout via SSL",
     "stepIndicator": "Step {{n}} of 3",
     "totalLabel": "Total",
