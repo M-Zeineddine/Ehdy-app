@@ -21,6 +21,7 @@ import { ErrorState } from '@/src/components/ui/ErrorState';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, FontSize, Fonts } from '@/src/constants/layout';
 import { getSentGifts, getReceivedGifts, type GiftSummary } from '@/src/services/giftService';
+import { GIFT_BASE_URL } from '@/src/services/api';
 import { i18n } from '@/src/i18n';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -49,8 +50,6 @@ function getPriceLabel(gift: GiftSummary) {
   }
   return '';
 }
-
-const GIFT_BASE_URL = 'https://ehdy.app/gift';
 
 // ── GiftRow ───────────────────────────────────────────────────────────────────
 
@@ -146,7 +145,7 @@ function ReceivedGiftCard({ gift }: { gift: GiftSummary }) {
   const status       = gift.redemption_status ?? 'active';
   const statusCfg    = STATUS_CONFIG[status] ?? STATUS_CONFIG.active;
   const giftUrl      = gift.unique_share_link
-    ? (gift.unique_share_link.startsWith('http') ? gift.unique_share_link : `https://ehdy.app/gift/${gift.unique_share_link}`)
+    ? (gift.unique_share_link.startsWith('http') ? gift.unique_share_link : `${GIFT_BASE_URL}/${gift.unique_share_link}`)
     : null;
 
   return (

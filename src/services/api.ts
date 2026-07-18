@@ -3,6 +3,11 @@ import type { ApiError } from './errors';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://192.168.1.100:3000/v1';
 
+// Public gift pages are served by the same backend at /gift/:shareCode —
+// derive the base from the API URL so dev/testing builds link to their own
+// backend instead of production.
+export const GIFT_BASE_URL = `${BASE_URL.replace(/\/v1\/?$/, '')}/gift`;
+
 export const api = axios.create({
   baseURL: BASE_URL,
   timeout: 10000,

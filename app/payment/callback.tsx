@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { deleteRetryDraft, confirmGiftPayment, getGiftPaymentStatus, clearUnresolvedCharge, type GiftPaymentState } from '@/src/services/giftService';
+import { GIFT_BASE_URL } from '@/src/services/api';
 import { AppText } from '@/src/components/ui/AppText';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, FontSize, Fonts } from '@/src/constants/layout';
@@ -13,7 +14,6 @@ import { i18n } from '@/src/i18n';
 
 type PaymentStatus = 'loading' | 'success' | 'failed' | 'unknown';
 
-const GIFT_BASE_URL = 'https://ehdy.app/gift';
 const UNKNOWN_COLOR = '#D97706';
 
 export default function PaymentCallbackScreen() {

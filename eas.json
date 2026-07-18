@@ -11,13 +11,13 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://kado-backend.onrender.com/v1"
+        "EXPO_PUBLIC_API_URL": "https://ehdy.app/v1"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://kado-backend.onrender.com/v1"
+        "EXPO_PUBLIC_API_URL": "https://ehdy.app/v1"
       }
     }
   },
