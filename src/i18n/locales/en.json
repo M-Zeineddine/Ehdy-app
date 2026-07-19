@@ -175,7 +175,8 @@
     "currencyLabel": "USD",
     "currencyPlaceholder": "0.00",
     "giftStoreCreditButton": "Gift Store Credit",
-    "giftThisButton": "Gift This"
+    "giftThisButton": "Gift This",
+    "branchAvailability": "Only at {{branches}}"
   },
   "giftFlow": {
     "stepReview": "Review Gift",

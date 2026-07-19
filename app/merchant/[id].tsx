@@ -314,12 +314,24 @@ function GiftCardTile({ item, merchantId, merchantName }: { item: MerchantItem; 
     });
   }
 
+  const branchScoped = (item.available_branches?.length ?? 0) > 0;
+
   return (
     <View style={styles.giftCard}>
       <Image source={{ uri: item.image_url ?? FALLBACK }} style={styles.giftImage} resizeMode="cover" />
       <View style={styles.giftInfo}>
         <AppText semiBold numberOfLines={2} style={styles.giftName}>{item.name}</AppText>
         <AppText style={styles.giftPrice}>{price}</AppText>
+        {branchScoped && (
+          <View style={styles.branchChip}>
+            <Ionicons name="location" size={11} color={Colors.primary} />
+            <AppText variant="caption" numberOfLines={1} style={styles.branchChipText}>
+              {i18n('merchant.branchAvailability', {
+                branches: item.available_branches!.map((b) => b.name).join(', '),
+              })}
+            </AppText>
+          </View>
+        )}
         <TouchableOpacity style={styles.giftThisBtn} onPress={handleGiftThis} activeOpacity={0.55}>
           <Ionicons name="gift-outline" size={17} color={Colors.primary} />
           <AppText semiBold style={styles.giftThisText}>{i18n('merchant.giftThisButton')}</AppText>
@@ -399,6 +411,13 @@ const styles = StyleSheet.create({
   giftInfo: { padding: Spacing.sm, gap: 6 },
   giftName: { fontSize: 14, lineHeight: 20 },
   giftPrice: { fontSize: 14, fontFamily: Fonts.bold, color: Colors.primary },
+  branchChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+    alignSelf: 'flex-start',
+    backgroundColor: '#FFF0EC', borderRadius: Radius.full,
+    paddingHorizontal: 8, paddingVertical: 3,
+  },
+  branchChipText: { fontSize: 10, color: Colors.primary },
   giftThisBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     backgroundColor: '#FFF0EC', borderRadius: Radius.md, paddingVertical: 8,

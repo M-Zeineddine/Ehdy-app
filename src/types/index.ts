@@ -27,6 +27,8 @@ export interface MerchantItem {
   price: number | null;
   currency_code: string;
   item_sku: string | null;
+  /** [] or absent = redeemable at all branches */
+  available_branches?: { id: string; name: string }[];
 }
 
 export interface StoreCreditPreset {

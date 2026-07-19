@@ -175,7 +175,8 @@
     "currencyLabel": "USD",
     "currencyPlaceholder": "0.00",
     "giftStoreCreditButton": "إهداء رصيد المتجر",
-    "giftThisButton": "أهدِ هذا"
+    "giftThisButton": "أهدِ هذا",
+    "branchAvailability": "متوفر فقط في {{branches}}"
   },
   "giftFlow": {
     "stepReview": "مراجعة الهدية",
