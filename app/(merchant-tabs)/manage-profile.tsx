@@ -12,8 +12,9 @@ import { AppText } from '@/src/components/ui/AppText';
 import { Button } from '@/src/components/ui/Button';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, Fonts } from '@/src/constants/layout';
+import * as ImagePicker from 'expo-image-picker';
 import {
-  getMerchantProfile, updateMerchantProfile,
+  getMerchantProfile, updateMerchantProfile, uploadPortalImage,
 } from '@/src/services/merchantPortalService';
 
 export default function ManageProfileScreen() {
@@ -32,6 +33,7 @@ export default function ManageProfileScreen() {
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState<'logo' | 'banner' | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   // Hydrate once when the profile arrives
@@ -43,6 +45,25 @@ export default function ManageProfileScreen() {
     setContactEmail(profile.contact_email ?? '');
     setContactPhone(profile.contact_phone ?? '');
     setHydrated(true);
+  }
+
+  async function pickAndUpload(kind: 'logo' | 'banner', setter: (url: string) => void) {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.8,
+      allowsEditing: kind === 'logo',
+      aspect: kind === 'logo' ? [1, 1] : undefined,
+    });
+    if (result.canceled) return;
+    setUploading(kind);
+    try {
+      const url = await uploadPortalImage(result.assets[0].uri);
+      setter(url);
+    } catch (err: any) {
+      Alert.alert('Upload failed', err.message ?? 'Could not upload image.');
+    } finally {
+      setUploading(null);
+    }
   }
 
   async function handleSave() {
@@ -112,11 +133,21 @@ export default function ManageProfileScreen() {
               <AppText variant="label" color={Colors.text.secondary}>Website</AppText>
               <TextInput style={styles.input} value={website} onChangeText={setWebsite} autoCapitalize="none" keyboardType="url" placeholder="https://…" placeholderTextColor={Colors.text.tertiary} />
 
-              <AppText variant="label" color={Colors.text.secondary}>Logo URL</AppText>
-              <TextInput style={styles.input} value={logoUrl} onChangeText={setLogoUrl} autoCapitalize="none" keyboardType="url" placeholder="https://…/logo.png" placeholderTextColor={Colors.text.tertiary} />
+              <AppText variant="label" color={Colors.text.secondary}>Logo</AppText>
+              <View style={styles.uploadRow}>
+                <TextInput style={[styles.input, { flex: 1 }]} value={logoUrl} onChangeText={setLogoUrl} autoCapitalize="none" keyboardType="url" placeholder="https://…/logo.png" placeholderTextColor={Colors.text.tertiary} />
+                <TouchableOpacity style={styles.uploadBtn} onPress={() => pickAndUpload('logo', setLogoUrl)} disabled={uploading !== null}>
+                  <Ionicons name={uploading === 'logo' ? 'hourglass' : 'image'} size={20} color={Colors.text.primary} />
+                </TouchableOpacity>
+              </View>
 
-              <AppText variant="label" color={Colors.text.secondary}>Banner image URL</AppText>
-              <TextInput style={styles.input} value={bannerUrl} onChangeText={setBannerUrl} autoCapitalize="none" keyboardType="url" placeholder="https://…/banner.jpg" placeholderTextColor={Colors.text.tertiary} />
+              <AppText variant="label" color={Colors.text.secondary}>Banner image</AppText>
+              <View style={styles.uploadRow}>
+                <TextInput style={[styles.input, { flex: 1 }]} value={bannerUrl} onChangeText={setBannerUrl} autoCapitalize="none" keyboardType="url" placeholder="https://…/banner.jpg" placeholderTextColor={Colors.text.tertiary} />
+                <TouchableOpacity style={styles.uploadBtn} onPress={() => pickAndUpload('banner', setBannerUrl)} disabled={uploading !== null}>
+                  <Ionicons name={uploading === 'banner' ? 'hourglass' : 'image'} size={20} color={Colors.text.primary} />
+                </TouchableOpacity>
+              </View>
 
               <AppText variant="label" color={Colors.text.secondary}>Contact email</AppText>
               <TextInput style={styles.input} value={contactEmail} onChangeText={setContactEmail} autoCapitalize="none" keyboardType="email-address" placeholder="hello@store.com" placeholderTextColor={Colors.text.tertiary} />
@@ -157,4 +188,9 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.medium, fontSize: 15, color: Colors.text.primary,
   },
   multiline: { minHeight: 90, textAlignVertical: 'top' },
+  uploadRow: { flexDirection: 'row', gap: Spacing.sm, alignItems: 'center' },
+  uploadBtn: {
+    width: 46, height: 46, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.border,
+  },
 });

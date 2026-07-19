@@ -91,6 +91,19 @@ export async function merchantLogin(email: string, password: string): Promise<Lo
   return res.data.data;
 }
 
+/** Upload an image (owner only); returns the public URL to store in *_url fields. */
+export async function uploadPortalImage(uri: string): Promise<string> {
+  const name = uri.split('/').pop() ?? 'image.jpg';
+  const ext = name.split('.').pop()?.toLowerCase();
+  const type = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+  const form = new FormData();
+  form.append('image', { uri, name, type } as any);
+  const res = await merchantApi.post<{ data: { url: string } }>('/merchant/images', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return res.data.data.url;
+}
+
 export async function getMerchantMe(): Promise<MerchantUser> {
   const res = await merchantApi.get<{ data: { merchant_user: MerchantUser } }>('/merchant/me');
   return res.data.data.merchant_user;
