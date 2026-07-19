@@ -6,7 +6,7 @@ import { AppText } from '@/src/components/ui/AppText';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius } from '@/src/constants/layout';
 import { useMerchantAuthStore } from '@/src/store/merchantAuthStore';
-import { getMerchantDashboard } from '@/src/services/merchantPortalService';
+import { getMerchantDashboard, getMerchantBranches } from '@/src/services/merchantPortalService';
 
 function StatCard({
   icon,
@@ -40,6 +40,18 @@ export default function MerchantDashboardScreen() {
     refetchInterval: 60_000, // auto-refresh every minute
   });
 
+  // Branch-scoped users see stats for their branches only — say so in the header
+  const scopedIds = merchantUser?.branch_ids;
+  const { data: branches } = useQuery({
+    queryKey: ['merchant-branches'],
+    queryFn: getMerchantBranches,
+    staleTime: 5 * 60_000,
+    enabled: !!scopedIds?.length,
+  });
+  const scopeNames = scopedIds?.length
+    ? (branches ?? []).filter((b) => scopedIds.includes(b.id)).map((b) => b.name).join(', ')
+    : null;
+
   const formatAmount = (amount: number, currency: string) => {
     if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M ${currency}`;
     if (amount >= 1_000) return `${(amount / 1_000).toFixed(0)}K ${currency}`;
@@ -58,11 +70,12 @@ export default function MerchantDashboardScreen() {
             <AppText variant="heading">Dashboard</AppText>
             <AppText variant="caption" color={Colors.text.secondary}>
               {merchantUser?.merchant_name}
+              {scopeNames ? ` · ${scopeNames}` : ''}
             </AppText>
           </View>
           <View style={styles.roleBadge}>
             <AppText variant="caption" color={Colors.primary} semiBold>
-              {merchantUser?.role === 'owner' ? 'Owner' : 'Staff'}
+              {merchantUser?.role === 'owner' ? 'Owner' : merchantUser?.role === 'manager' ? 'Manager' : 'Staff'}
             </AppText>
           </View>
         </View>

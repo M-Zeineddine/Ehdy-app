@@ -55,7 +55,17 @@ export interface GiftValidation {
     recipient_name: string | null;
     merchant_name: string;
     current_balance: number | null;
+    /** Branches the item can be redeemed at; null = any branch */
+    redeemable_branches: { id: string; name: string }[] | null;
   };
+}
+
+export interface MerchantBranch {
+  id: string;
+  name: string;
+  address: string | null;
+  city: string | null;
+  is_active: boolean;
 }
 
 export interface RedemptionItem {
@@ -102,13 +112,20 @@ export async function verifyRedemptionOtp(code: string, otp: string): Promise<vo
 
 export async function confirmRedemption(
   code: string,
-  amountToRedeem?: number
+  amountToRedeem?: number,
+  branchId?: string
 ): Promise<RedemptionResult> {
   const res = await merchantApi.post<{ data: RedemptionResult }>('/merchant/confirm-redemption', {
     redemption_code: code.toUpperCase(),
     amount_to_redeem: amountToRedeem,
+    branch_id: branchId,
   });
   return res.data.data;
+}
+
+export async function getMerchantBranches(): Promise<MerchantBranch[]> {
+  const res = await merchantApi.get<{ data: { branches: MerchantBranch[] } }>('/merchant/branches');
+  return res.data.data.branches;
 }
 
 export async function getMerchantRedemptions(params?: {

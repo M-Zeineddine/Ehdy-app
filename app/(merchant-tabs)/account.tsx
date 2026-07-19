@@ -55,7 +55,7 @@ export default function MerchantAccountScreen() {
           <InfoRow
             icon="shield-outline"
             label="Role"
-            value={merchantUser?.role === 'owner' ? 'Owner' : 'Staff'}
+            value={merchantUser?.role === 'owner' ? 'Owner' : merchantUser?.role === 'manager' ? 'Manager' : 'Staff'}
           />
         </View>
 

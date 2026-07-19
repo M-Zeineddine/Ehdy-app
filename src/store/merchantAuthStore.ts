@@ -12,8 +12,9 @@ export interface MerchantUser {
   last_name: string | null;
   merchant_id: string;
   merchant_name: string;
-  role: 'owner' | 'staff';
-  branch_id: string | null;
+  role: 'owner' | 'manager' | 'staff';
+  /** Branches this user is limited to; null = all branches */
+  branch_ids: string[] | null;
 }
 
 interface MerchantAuthState {

@@ -18,13 +18,17 @@ import { AppText } from '@/src/components/ui/AppText';
 import { Button } from '@/src/components/ui/Button';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, Fonts } from '@/src/constants/layout';
+import { useQuery } from '@tanstack/react-query';
 import {
   validateRedemption,
   sendRedemptionOtp,
   verifyRedemptionOtp,
   confirmRedemption,
+  getMerchantBranches,
   type GiftValidation,
+  type MerchantBranch,
 } from '@/src/services/merchantPortalService';
+import { useMerchantAuthStore } from '@/src/store/merchantAuthStore';
 
 // ── Camera overlay modal ───────────────────────────────────────────────────────
 
@@ -114,25 +118,42 @@ function CameraModal({
 // ── Redemption confirmation modal ─────────────────────────────────────────────
 
 function RedemptionModal({
-  visible, code, gift, onConfirm, onCancel, loading,
+  visible, code, gift, branchOptions, needsBranch, onConfirm, onCancel, loading,
 }: {
   visible: boolean;
   code: string;
   gift: GiftValidation['gift'] | null;
-  onConfirm: (amount?: number) => void;
+  branchOptions: MerchantBranch[];
+  needsBranch: boolean;
+  onConfirm: (amount?: number, branchId?: string) => void;
   onCancel: () => void;
   loading: boolean;
 }) {
   const [partialAmount, setPartialAmount] = useState('');
+  const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
   const isStoreCredit = gift?.type === 'store_credit';
+  // Item restricted to branches this user can't redeem at
+  const blockedByAvailability = needsBranch && branchOptions.length === 0;
 
   // Component stays mounted across redemptions — start each gift with a
-  // clean amount instead of the previous gift's
+  // clean amount instead of the previous gift's; pre-select the branch when
+  // there is only one choice
   useEffect(() => {
-    if (visible) setPartialAmount('');
-  }, [visible]);
+    if (visible) {
+      setPartialAmount('');
+      setSelectedBranchId(branchOptions.length === 1 ? branchOptions[0].id : null);
+    }
+  }, [visible, branchOptions]);
 
   function handleConfirm() {
+    let branchId: string | undefined;
+    if (needsBranch) {
+      if (!selectedBranchId) {
+        Alert.alert('Select a branch', 'Choose the branch where this gift is being redeemed.');
+        return;
+      }
+      branchId = selectedBranchId;
+    }
     if (isStoreCredit && partialAmount) {
       const amt = parseFloat(partialAmount);
       if (isNaN(amt) || amt <= 0) {
@@ -143,9 +164,9 @@ function RedemptionModal({
         Alert.alert('Exceeds balance', `Max: ${gift.current_balance.toLocaleString()} ${gift.currency}`);
         return;
       }
-      onConfirm(amt);
+      onConfirm(amt, branchId);
     } else {
-      onConfirm();
+      onConfirm(undefined, branchId);
     }
   }
 
@@ -172,7 +193,52 @@ function RedemptionModal({
                 {!isStoreCredit && gift.item_name && (
                   <DetailRow label="Item" value={gift.item_name} />
                 )}
+                {gift.redeemable_branches && (
+                  <DetailRow
+                    label="Redeemable at"
+                    value={gift.redeemable_branches.map((b) => b.name).join(', ')}
+                    highlight
+                  />
+                )}
               </View>
+            )}
+
+            {blockedByAvailability && (
+              <View style={modal.warningCard}>
+                <Ionicons name="alert-circle" size={20} color="#DC2626" />
+                <AppText variant="caption" style={{ flex: 1, color: '#DC2626' }}>
+                  This item can only be redeemed at{' '}
+                  {gift?.redeemable_branches?.map((b) => b.name).join(', ') ?? 'another branch'} — not at your branch.
+                </AppText>
+              </View>
+            )}
+
+            {needsBranch && branchOptions.length > 1 && (
+              <View style={modal.branchSection}>
+                <AppText variant="label" color={Colors.text.secondary}>Redeeming at branch</AppText>
+                <View style={modal.branchChips}>
+                  {branchOptions.map((b) => (
+                    <TouchableOpacity
+                      key={b.id}
+                      style={[modal.branchChip, selectedBranchId === b.id && modal.branchChipActive]}
+                      onPress={() => setSelectedBranchId(b.id)}
+                    >
+                      <AppText
+                        variant="caption"
+                        semiBold
+                        color={selectedBranchId === b.id ? '#fff' : Colors.text.primary}
+                      >
+                        {b.name}
+                      </AppText>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            )}
+            {needsBranch && branchOptions.length === 1 && (
+              <AppText variant="caption" color={Colors.text.secondary} style={{ textAlign: 'center' }}>
+                Redeeming at: {branchOptions[0].name}
+              </AppText>
             )}
 
             {isStoreCredit && (
@@ -192,7 +258,13 @@ function RedemptionModal({
             )}
 
             <View style={modal.actions}>
-              <Button label="Confirm Redemption" onPress={handleConfirm} loading={loading} size="lg" />
+              <Button
+                label="Confirm Redemption"
+                onPress={handleConfirm}
+                loading={loading}
+                size="lg"
+                disabled={blockedByAvailability}
+              />
               <Button label="Cancel" onPress={onCancel} variant="outline" size="lg" />
             </View>
           </View>
@@ -322,11 +394,29 @@ export default function MerchantScanScreen() {
   const [validatedGift, setValidatedGift] = useState<GiftValidation | null>(null);
   const [activeCode, setActiveCode] = useState('');
   const [pendingAmount, setPendingAmount] = useState<number | undefined>(undefined);
+  const [pendingBranchId, setPendingBranchId] = useState<string | undefined>(undefined);
   const [otpSending, setOtpSending] = useState(false);
   const otpSendingRef = useRef(false); // synchronous guard — useState updates are async and miss same-frame double-taps
   const [otpLoading, setOtpLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [successData, setSuccessData] = useState<{ balance: number | null; currency?: string } | null>(null);
+
+  // Branch context: which branches this user may redeem at, narrowed further
+  // by the validated item's own availability
+  const merchantUser = useMerchantAuthStore((s) => s.merchantUser);
+  const { data: branches = [] } = useQuery({
+    queryKey: ['merchant-branches'],
+    queryFn: getMerchantBranches,
+    staleTime: 5 * 60_000,
+  });
+  const activeBranches = branches.filter((b) => b.is_active);
+  const scopedIds = merchantUser?.branch_ids;
+  const myBranches = scopedIds ? activeBranches.filter((b) => scopedIds.includes(b.id)) : activeBranches;
+  const redeemable = validatedGift?.gift.redeemable_branches;
+  const branchOptions = redeemable
+    ? myBranches.filter((b) => redeemable.some((r) => r.id === b.id))
+    : myBranches;
+  const needsBranch = activeBranches.length > 0;
 
   async function handleValidate(code: string) {
     const trimmed = code.trim().toUpperCase();
@@ -351,11 +441,12 @@ export default function MerchantScanScreen() {
     }
   }
 
-  async function handleConfirm(amount?: number) {
+  async function handleConfirm(amount?: number, branchId?: string) {
     if (otpSendingRef.current) return;
     otpSendingRef.current = true;
     setOtpSending(true);
     setPendingAmount(amount);
+    setPendingBranchId(branchId);
     try {
       await sendRedemptionOtp(activeCode);
       setScanState('otp');
@@ -382,7 +473,7 @@ export default function MerchantScanScreen() {
     setOtpLoading(true);
     try {
       await verifyRedemptionOtp(activeCode, otp);
-      const result = await confirmRedemption(activeCode, pendingAmount);
+      const result = await confirmRedemption(activeCode, pendingAmount, pendingBranchId);
       setSuccessData({ balance: result.remaining_balance, currency: validatedGift?.gift.currency });
       setScanState('success');
     } catch (err: any) {
@@ -398,6 +489,7 @@ export default function MerchantScanScreen() {
     setValidatedGift(null);
     setActiveCode('');
     setPendingAmount(undefined);
+    setPendingBranchId(undefined);
     setSuccessData(null);
   }
 
@@ -458,6 +550,8 @@ export default function MerchantScanScreen() {
         visible={scanState === 'confirmed'}
         code={activeCode}
         gift={validatedGift?.gift ?? null}
+        branchOptions={branchOptions}
+        needsBranch={needsBranch}
         onConfirm={handleConfirm}
         onCancel={handleReset}
         loading={otpSending}
@@ -578,6 +672,19 @@ const modal = StyleSheet.create({
     padding: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.border,
   },
   amountRow: { gap: 6 },
+  warningCard: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
+    backgroundColor: '#FEF2F2', borderRadius: Radius.md,
+    borderWidth: 1, borderColor: '#FECACA', padding: Spacing.md,
+  },
+  branchSection: { gap: 8 },
+  branchChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  branchChip: {
+    paddingHorizontal: Spacing.md, paddingVertical: 8,
+    borderRadius: Radius.full, borderWidth: 1, borderColor: Colors.border,
+    backgroundColor: Colors.surface,
+  },
+  branchChipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   amountInput: {
     backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.border,
     borderRadius: Radius.md, paddingHorizontal: Spacing.md, paddingVertical: 14,
