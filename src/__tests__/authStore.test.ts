@@ -23,6 +23,7 @@ jest.mock('../services/api', () => ({
 
 jest.mock('../services/authService', () => ({
   refreshToken: jest.fn(),
+  getMe: jest.fn().mockRejectedValue(new Error('offline')),
 }));
 
 // ── Imports (after mocks) ─────────────────────────────────────────────────────

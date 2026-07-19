@@ -91,6 +91,11 @@ export async function merchantLogin(email: string, password: string): Promise<Lo
   return res.data.data;
 }
 
+export async function getMerchantMe(): Promise<MerchantUser> {
+  const res = await merchantApi.get<{ data: { merchant_user: MerchantUser } }>('/merchant/me');
+  return res.data.data.merchant_user;
+}
+
 export async function getMerchantDashboard(): Promise<DashboardData> {
   const res = await merchantApi.get<{ data: { dashboard: DashboardData } }>('/merchant/dashboard');
   return res.data.data.dashboard;

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
 import type { User } from '../types';
 import { setAuthToken, setTokenExpiredHandler } from '../services/api';
-import { refreshToken as callRefreshToken } from '../services/authService';
+import { refreshToken as callRefreshToken, getMe } from '../services/authService';
 import { queryClient } from '../lib/queryClient';
 
 const TOKEN_KEY = 'ehdy_access_token';
@@ -39,6 +39,21 @@ function registerRefreshHandler(get: () => AuthState) {
       return null;
     }
   });
+}
+
+// Fire-and-forget re-fetch of the account after restoring a cached session, so
+// a user object saved at sign-in never goes stale when the server-side shape
+// changes. Offline keeps the cached copy; a 401 goes through the interceptor's
+// refresh flow and, if that fails too, clearAuth.
+async function refreshUserFromServer() {
+  try {
+    const user = await getMe();
+    if (!useAuthStore.getState().isAuthenticated) return; // signed out meanwhile
+    await SecureStore.setItemAsync(USER_KEY, JSON.stringify(user));
+    useAuthStore.setState({ user });
+  } catch {
+    // keep the cached user
+  }
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -78,6 +93,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         setAuthToken(token);
         set({ user, token, refreshToken, isAuthenticated: true });
         registerRefreshHandler(get);
+        refreshUserFromServer();
       }
     } catch {
       // corrupted storage — clear it

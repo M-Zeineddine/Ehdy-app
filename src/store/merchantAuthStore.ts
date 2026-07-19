@@ -27,6 +27,24 @@ interface MerchantAuthState {
   loadFromStorage: () => Promise<void>;
 }
 
+// Fire-and-forget re-fetch of the account after restoring a cached session, so
+// a merchant user saved at login never goes stale when roles/branch scope
+// change server-side (e.g. the branch_id → branch_ids migration). Offline
+// keeps the cached copy; a 401 clears auth via the merchantApi interceptor.
+// Lazy import: merchantPortalService imports this store, so a static import
+// back would create a require cycle at module init.
+async function refreshMerchantUserFromServer() {
+  try {
+    const { getMerchantMe } = await import('../services/merchantPortalService');
+    const merchantUser = await getMerchantMe();
+    if (!useMerchantAuthStore.getState().isAuthenticated) return; // signed out meanwhile
+    await SecureStore.setItemAsync(USER_KEY, JSON.stringify(merchantUser));
+    useMerchantAuthStore.setState({ merchantUser });
+  } catch {
+    // keep the cached user
+  }
+}
+
 export const useMerchantAuthStore = create<MerchantAuthState>((set) => ({
   merchantUser: null,
   token: null,
@@ -55,6 +73,7 @@ export const useMerchantAuthStore = create<MerchantAuthState>((set) => ({
       if (token && userJson) {
         const merchantUser = JSON.parse(userJson) as MerchantUser;
         set({ merchantUser, token, isAuthenticated: true });
+        refreshMerchantUserFromServer();
       }
     } catch {
       // corrupted storage — ignore

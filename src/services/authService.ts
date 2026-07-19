@@ -32,6 +32,11 @@ export async function resendVerification(email: string) {
   await api.post('/auth/resend-verification', { email });
 }
 
+export async function getMe() {
+  const res = await api.get<{ data: { user: User } }>('/users/me');
+  return res.data.data.user;
+}
+
 export async function refreshToken(refresh_token: string) {
   const res = await api.post<{ data: { access_token: string } }>('/auth/refresh', { refresh_token });
   return res.data.data.access_token;
