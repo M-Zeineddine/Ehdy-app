@@ -17,10 +17,13 @@ function TabIcon({ name, focused }: { name: IoniconName; focused: boolean }) {
 }
 
 export default function MerchantTabLayout() {
-  // Staff can only redeem — the backend returns 403 on history/dashboard for
-  // them, so hide those tabs entirely (href: null removes them from the bar).
+  // Per-role visibility (href: null removes a screen from the tab bar):
+  //   owner   → Scan, Sales, Manage, Account
+  //   manager → Scan, Sales, Account
+  //   staff   → Scan, Account (backend 403s sales data for staff)
   const role = useMerchantAuthStore((s) => s.merchantUser?.role);
   const canViewSales = role === 'owner' || role === 'manager';
+  const isOwner = role === 'owner';
 
   return (
     <Tabs
@@ -47,19 +50,19 @@ export default function MerchantTabLayout() {
         }}
       />
       <Tabs.Screen
-        name="history"
+        name="sales"
         options={{
-          title: 'History',
+          title: 'Sales',
           href: canViewSales ? undefined : null,
-          tabBarIcon: ({ focused }) => <TabIcon name="receipt" focused={focused} />,
+          tabBarIcon: ({ focused }) => <TabIcon name="bar-chart" focused={focused} />,
         }}
       />
       <Tabs.Screen
-        name="dashboard"
+        name="manage"
         options={{
-          title: 'Dashboard',
-          href: canViewSales ? undefined : null,
-          tabBarIcon: ({ focused }) => <TabIcon name="bar-chart" focused={focused} />,
+          title: 'Manage',
+          href: isOwner ? undefined : null,
+          tabBarIcon: ({ focused }) => <TabIcon name="settings" focused={focused} />,
         }}
       />
       <Tabs.Screen
@@ -69,6 +72,11 @@ export default function MerchantTabLayout() {
           tabBarIcon: ({ focused }) => <TabIcon name="person" focused={focused} />,
         }}
       />
+      {/* Owner management sub-screens — reachable by navigation, never tabs */}
+      <Tabs.Screen name="manage-items" options={{ href: null }} />
+      <Tabs.Screen name="manage-staff" options={{ href: null }} />
+      <Tabs.Screen name="manage-branches" options={{ href: null }} />
+      <Tabs.Screen name="manage-profile" options={{ href: null }} />
     </Tabs>
   );
 }

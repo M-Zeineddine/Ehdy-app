@@ -1,15 +1,31 @@
 import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/src/components/ui/AppText';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius } from '@/src/constants/layout';
 import { useMerchantAuthStore } from '@/src/store/merchantAuthStore';
+import { getMerchantBranches } from '@/src/services/merchantPortalService';
 
 export default function MerchantAccountScreen() {
   const { merchantUser, clearAuth } = useMerchantAuthStore();
   const router = useRouter();
+
+  // Branch label: which branch(es) this login is tied to
+  const { data: branches } = useQuery({
+    queryKey: ['merchant-branches'],
+    queryFn: getMerchantBranches,
+    staleTime: 5 * 60_000,
+  });
+  const hasBranches = (branches ?? []).some((b) => b.is_active);
+  const scopedIds = merchantUser?.branch_ids;
+  const branchLabel = !hasBranches
+    ? null
+    : scopedIds?.length
+      ? (branches ?? []).filter((b) => scopedIds.includes(b.id)).map((b) => b.name).join(', ')
+      : 'All branches';
 
   function handleSignOut() {
     Alert.alert('Sign out', 'Are you sure you want to sign out?', [
@@ -57,6 +73,12 @@ export default function MerchantAccountScreen() {
             label="Role"
             value={merchantUser?.role === 'owner' ? 'Owner' : merchantUser?.role === 'manager' ? 'Manager' : 'Staff'}
           />
+          {branchLabel && (
+            <>
+              <View style={styles.divider} />
+              <InfoRow icon="location-outline" label="Branch" value={branchLabel} />
+            </>
+          )}
         </View>
 
         {/* Sign out */}

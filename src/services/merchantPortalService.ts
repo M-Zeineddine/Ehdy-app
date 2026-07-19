@@ -65,6 +65,7 @@ export interface MerchantBranch {
   name: string;
   address: string | null;
   city: string | null;
+  contact_phone: string | null;
   is_active: boolean;
 }
 
@@ -126,6 +127,136 @@ export async function confirmRedemption(
 export async function getMerchantBranches(): Promise<MerchantBranch[]> {
   const res = await merchantApi.get<{ data: { branches: MerchantBranch[] } }>('/merchant/branches');
   return res.data.data.branches;
+}
+
+// ── Owner management ──────────────────────────────────────────────────────────
+
+export interface PortalItem {
+  id: string;
+  name: string;
+  description: string | null;
+  image_url: string | null;
+  price: string;
+  currency_code: string;
+  item_sku: string | null;
+  is_active: boolean;
+  /** [] = available at all branches */
+  available_branches: { id: string; name: string }[];
+}
+
+export interface ItemInput {
+  name?: string;
+  description?: string | null;
+  image_url?: string | null;
+  price?: number;
+  currency_code?: string;
+  is_active?: boolean;
+  branch_ids?: string[];
+}
+
+export interface PortalStaff {
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  role: 'owner' | 'manager' | 'staff';
+  is_active: boolean;
+  branches: { id: string; name: string }[];
+}
+
+export interface StaffCreateInput {
+  email: string;
+  password: string;
+  first_name?: string;
+  last_name?: string;
+  role: 'manager' | 'staff';
+  branch_ids?: string[];
+}
+
+export interface StaffUpdateInput {
+  first_name?: string;
+  last_name?: string;
+  role?: 'manager' | 'staff';
+  is_active?: boolean;
+  password?: string;
+  branch_ids?: string[];
+}
+
+export interface MerchantProfile {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  website_url: string | null;
+  logo_url: string | null;
+  banner_image_url: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  is_active: boolean;
+  is_verified: boolean;
+  rating: number | null;
+  review_count: number;
+}
+
+export interface ProfileInput {
+  description?: string | null;
+  website_url?: string | null;
+  logo_url?: string | null;
+  banner_image_url?: string | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+}
+
+export interface BranchInput {
+  name?: string;
+  address?: string | null;
+  city?: string | null;
+  contact_phone?: string | null;
+  is_active?: boolean;
+}
+
+export async function getPortalItems(): Promise<PortalItem[]> {
+  const res = await merchantApi.get<{ data: { items: PortalItem[] } }>('/merchant/items');
+  return res.data.data.items;
+}
+
+export async function createPortalItem(input: ItemInput): Promise<void> {
+  await merchantApi.post('/merchant/items', input);
+}
+
+export async function updatePortalItem(id: string, input: ItemInput): Promise<void> {
+  await merchantApi.patch(`/merchant/items/${id}`, input);
+}
+
+export async function getPortalStaff(): Promise<PortalStaff[]> {
+  const res = await merchantApi.get<{ data: { staff: PortalStaff[] } }>('/merchant/staff');
+  return res.data.data.staff;
+}
+
+export async function createPortalStaff(input: StaffCreateInput): Promise<void> {
+  await merchantApi.post('/merchant/staff', input);
+}
+
+export async function updatePortalStaff(id: string, input: StaffUpdateInput): Promise<void> {
+  await merchantApi.patch(`/merchant/staff/${id}`, input);
+}
+
+export async function createPortalBranch(input: BranchInput): Promise<void> {
+  await merchantApi.post('/merchant/branches', input);
+}
+
+export async function updatePortalBranch(id: string, input: BranchInput): Promise<void> {
+  await merchantApi.patch(`/merchant/branches/${id}`, input);
+}
+
+export async function getMerchantProfile(): Promise<MerchantProfile> {
+  const res = await merchantApi.get<{ data: { profile: MerchantProfile } }>('/merchant/profile');
+  return res.data.data.profile;
+}
+
+export async function updateMerchantProfile(input: ProfileInput): Promise<MerchantProfile> {
+  const res = await merchantApi.patch<{ data: { profile: MerchantProfile } }>('/merchant/profile', input);
+  return res.data.data.profile;
 }
 
 export async function getMerchantRedemptions(params?: {

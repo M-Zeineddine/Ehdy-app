@@ -497,6 +497,16 @@ export default function MerchantScanScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <AppText variant="heading" style={{ marginBottom: Spacing.xs }}>Scan Gift</AppText>
+        {needsBranch && (
+          <View style={styles.branchLabel}>
+            <Ionicons name="location" size={14} color={Colors.primary} />
+            <AppText variant="caption" semiBold color={Colors.primary}>
+              {scopedIds?.length
+                ? myBranches.map((b) => b.name).join(', ')
+                : 'All branches'}
+            </AppText>
+          </View>
+        )}
         <AppText variant="body" color={Colors.text.secondary} style={{ marginBottom: Spacing.xl }}>
           Type the redemption code or tap the camera icon to scan.
         </AppText>
@@ -584,6 +594,13 @@ export default function MerchantScanScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   scroll: { padding: Spacing.lg },
+  branchLabel: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    alignSelf: 'flex-start',
+    backgroundColor: '#FFF0EC', borderRadius: Radius.full,
+    paddingHorizontal: Spacing.sm, paddingVertical: 4,
+    marginBottom: Spacing.sm,
+  },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
