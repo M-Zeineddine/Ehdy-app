@@ -232,6 +232,15 @@ export default function PaymentCallbackScreen() {
             <TouchableOpacity style={styles.primaryBtn} onPress={handleRetry} activeOpacity={0.8}>
               <AppText semiBold style={styles.primaryBtnText}>{i18n('payment.tryAgain')}</AppText>
             </TouchableOpacity>
+            {draft_id ? (
+              // The draft is kept on failure — give the user a visible way back to it
+              <TouchableOpacity style={styles.outlineBtn} onPress={() => router.replace('/gift/drafts')} activeOpacity={0.8}>
+                <Ionicons name="bookmark-outline" size={18} color={Colors.primary} />
+                <AppText semiBold style={[styles.outlineBtnText, { color: Colors.primary }]}>
+                  {i18n('payment.savedForLater')} — {i18n('payment.viewDrafts')}
+                </AppText>
+              </TouchableOpacity>
+            ) : null}
             <TouchableOpacity style={styles.ghostBtn} onPress={handleDone} activeOpacity={0.8}>
               <AppText style={styles.ghostBtnText} color={Colors.text.secondary}>{i18n('common.cancel')}</AppText>
             </TouchableOpacity>

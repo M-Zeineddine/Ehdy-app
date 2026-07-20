@@ -82,6 +82,10 @@ export default function GiftFlowScreen() {
   const [contactPickerVisible, setContactPickerVisible] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'whish'>('card');
   const [paying, setPaying] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
+  // One draft row per flow session: explicit saves, the leave dialog, and pay
+  // attempts all upsert the same id instead of inserting duplicates
+  const draftIdRef = useRef<string | undefined>(params.draft_id);
   const payingRef = useRef(false); // synchronous guard — useState updates are async and miss same-frame double-taps
   const [paymentNavigating, setPaymentNavigating] = useState(false);
 
@@ -96,6 +100,37 @@ export default function GiftFlowScreen() {
       if (draft.recipient_phone) setPhone(draft.recipient_phone);
     }).catch(() => {/* draft may have expired — silently ignore */});
   }, [params.draft_id]);
+
+  // Persist the current form state as a draft (upserts the session's draft row)
+  async function saveDraft(recipientPhone?: string): Promise<string> {
+    const draftId = await saveRetryDraft({
+      draft_id: draftIdRef.current,
+      merchant_item_id: !isCredit ? params.itemId : undefined,
+      custom_credit_amount: isCredit ? parseFloat(params.itemPrice) : undefined,
+      custom_credit_currency: isCredit ? params.itemCurrency : undefined,
+      custom_credit_merchant_id: isCredit ? params.merchantId : undefined,
+      sender_name: fromName,
+      recipient_name: toName,
+      recipient_phone: recipientPhone ?? (phone ? normalizeLebanesePhone(phone) ?? undefined : undefined),
+      personal_message: message,
+      theme: selectedTheme,
+    });
+    draftIdRef.current = draftId;
+    return draftId;
+  }
+
+  async function handleSaveDraftPress() {
+    if (savingDraft) return;
+    setSavingDraft(true);
+    try {
+      await saveDraft();
+      Alert.alert(i18n('giftFlow.draftSavedTitle'), i18n('giftFlow.draftSavedMessage'));
+    } catch {
+      Alert.alert(i18n('error.genericTitle'), i18n('giftFlow.draftSaveFailed'));
+    } finally {
+      setSavingDraft(false);
+    }
+  }
 
   async function handlePay() {
     if (payingRef.current) return;
@@ -113,17 +148,7 @@ export default function GiftFlowScreen() {
     setPaying(true);
     try {
       // Save form state so the user can retry with their customization intact
-      const draftId = await saveRetryDraft({
-        merchant_item_id: !isCredit ? params.itemId : undefined,
-        custom_credit_amount: isCredit ? parseFloat(params.itemPrice) : undefined,
-        custom_credit_currency: isCredit ? params.itemCurrency : undefined,
-        custom_credit_merchant_id: isCredit ? params.merchantId : undefined,
-        sender_name: fromName,
-        recipient_name: toName,
-        recipient_phone: normalizedPhone,
-        personal_message: message,
-        theme: selectedTheme,
-      });
+      const draftId = await saveDraft(normalizedPhone);
 
       const result = await initiateGiftPayment({
         merchant_item_id: !isCredit ? params.itemId : undefined,
@@ -211,6 +236,17 @@ export default function GiftFlowScreen() {
       i18n('giftFlow.leaveAlertMessage'),
       [
         { text: i18n('common.cancel'), style: 'cancel' },
+        {
+          text: i18n('giftFlow.leaveSaveButton'),
+          onPress: async () => {
+            try {
+              await saveDraft();
+            } catch {
+              // Leaving matters more than the save — don't trap the user here
+            }
+            navigation.dispatch(data.action);
+          },
+        },
         { text: i18n('giftFlow.leaveButton'), style: 'destructive', onPress: () => navigation.dispatch(data.action) },
       ]
     );
@@ -525,6 +561,19 @@ export default function GiftFlowScreen() {
           <AppText color={Colors.text.secondary}>{i18n('giftFlow.totalLabel')}</AppText>
           <AppText semiBold style={styles.totalAmount}>{price}</AppText>
         </View>
+        <View style={styles.bottomBtnRow}>
+        <TouchableOpacity
+          style={[styles.saveDraftBtn, savingDraft && styles.continueBtnDisabled]}
+          onPress={handleSaveDraftPress}
+          activeOpacity={0.7}
+          disabled={savingDraft || paying}
+        >
+          {savingDraft ? (
+            <ActivityIndicator size="small" color={Colors.primary} />
+          ) : (
+            <Ionicons name="bookmark-outline" size={20} color={Colors.primary} />
+          )}
+        </TouchableOpacity>
         <TouchableOpacity
           style={[styles.continueBtn, paying && styles.continueBtnDisabled]}
           onPress={() => {
@@ -556,6 +605,7 @@ export default function GiftFlowScreen() {
             </AppText>
           )}
         </TouchableOpacity>
+        </View>
       </View>
 
     </View>
@@ -750,7 +800,14 @@ const styles = StyleSheet.create({
   },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   totalAmount: { fontSize: FontSize.lg },
+  bottomBtnRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+  saveDraftBtn: {
+    width: 52, height: 52, borderRadius: Radius.full,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, borderColor: Colors.primary,
+  },
   continueBtn: {
+    flex: 1,
     backgroundColor: Colors.primary, borderRadius: Radius.full,
     paddingVertical: 16, alignItems: 'center',
   },

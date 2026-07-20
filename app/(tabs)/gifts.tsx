@@ -14,13 +14,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { Linking } from 'react-native';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
 import { AppText } from '@/src/components/ui/AppText';
 import { ErrorState } from '@/src/components/ui/ErrorState';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, FontSize, Fonts } from '@/src/constants/layout';
-import { getSentGifts, getReceivedGifts, type GiftSummary } from '@/src/services/giftService';
+import { getSentGifts, getReceivedGifts, getDrafts, type GiftSummary } from '@/src/services/giftService';
 import { GIFT_BASE_URL } from '@/src/services/api';
 import { i18n } from '@/src/i18n';
 
@@ -237,20 +237,39 @@ export default function GiftsScreen() {
   const activeQuery = activeTab === 'sent' ? sentQuery : receivedQuery;
   const data = activeQuery.data?.pages.flatMap(p => p.data) ?? [];
 
+  const draftsQuery = useQuery({ queryKey: ['gift-drafts'], queryFn: getDrafts });
+  const draftCount = draftsQuery.data?.length ?? 0;
+
   // Refresh on focus so a gift sent moments ago appears without pull-to-refresh.
   // refetch goes through a ref because its identity isn't guaranteed stable —
   // putting it in the deps could re-run the effect every render while focused.
   const refetchRef = useRef(activeQuery.refetch);
   refetchRef.current = activeQuery.refetch;
+  const refetchDraftsRef = useRef(draftsQuery.refetch);
+  refetchDraftsRef.current = draftsQuery.refetch;
   useFocusEffect(useCallback(() => {
     refetchRef.current();
+    refetchDraftsRef.current();
   }, []));
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <AppText variant="title">{i18n('gifts.title')}</AppText>
+        <AppText variant="title" style={{ flex: 1 }}>{i18n('gifts.title')}</AppText>
+        <TouchableOpacity
+          style={styles.draftsBtn}
+          onPress={() => router.push('/gift/drafts')}
+          activeOpacity={0.7}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Ionicons name="document-text-outline" size={22} color={Colors.text.primary} />
+          {draftCount > 0 && (
+            <View style={styles.draftsBadge}>
+              <AppText style={styles.draftsBadgeText}>{draftCount > 99 ? '99+' : draftCount}</AppText>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
 
       {/* Tabs */}
@@ -354,10 +373,19 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
 
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.md,
   },
+  draftsBtn: { padding: 4 },
+  draftsBadge: {
+    position: 'absolute', top: -4, right: -6,
+    minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 4,
+    backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center',
+  },
+  draftsBadgeText: { color: '#fff', fontSize: 10, fontFamily: Fonts.semiBold },
 
   // Tabs
   tabBar: {

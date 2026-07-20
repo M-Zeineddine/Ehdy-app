@@ -54,6 +54,8 @@ export async function initiateGiftPayment(
 }
 
 export interface RetryDraftParams {
+  /** When set, updates the existing draft in place instead of inserting a new row */
+  draft_id?: string;
   merchant_item_id?: string;
   custom_credit_amount?: number;
   custom_credit_currency?: string;
@@ -116,6 +118,15 @@ export async function getRetryDraft(draftId: string): Promise<RetryDraft> {
 
 export async function deleteRetryDraft(draftId: string): Promise<void> {
   await api.delete(`/gifts/drafts/${draftId}`);
+}
+
+export interface GiftDraftSummary extends RetryDraft {
+  updated_at: string;
+}
+
+export async function getDrafts(): Promise<GiftDraftSummary[]> {
+  const res = await api.get('/gifts/drafts');
+  return res.data.data.drafts;
 }
 
 export interface GiftSummary {

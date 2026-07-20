@@ -145,6 +145,16 @@
     "emptyReceivedTitle": "لم تستلم هدايا بعد",
     "emptyReceivedSubtitle": "ستظهر الهدايا المُرسَلة إليك هنا بعد استلامها."
   },
+  "drafts": {
+    "title": "المسودّات",
+    "emptyTitle": "لا مسودّات بعد",
+    "emptySubtitle": "الهدايا التي تحفظها أثناء التخصيص ستظهر هنا.",
+    "resume": "متابعة",
+    "deleteConfirmTitle": "حذف المسودّة؟",
+    "deleteConfirmMessage": "سيتم حذف هذه المسودّة نهائيًا.",
+    "deleteButton": "حذف",
+    "savedOn": "حُفظت {{date}}"
+  },
   "profile": {
     "title": "الملف الشخصي",
     "editProfile": "تعديل الملف",
@@ -208,6 +218,11 @@
     "leaveAlertTitle": "مغادرة الهدية؟",
     "leaveAlertMessage": "سيتم فقدان التخصيصات.",
     "leaveButton": "مغادرة",
+    "leaveSaveButton": "حفظ ومغادرة",
+    "saveDraft": "حفظ مسودّة",
+    "draftSavedTitle": "تم حفظ المسودّة",
+    "draftSavedMessage": "يمكنك متابعة هذه الهدية في أي وقت من هداياي ← المسودّات.",
+    "draftSaveFailed": "تعذّر حفظ المسودّة. حاول مرة أخرى.",
     "paymentFailedTitle": "فشل الدفع"
   },
   "receipt": {
@@ -231,7 +246,9 @@
     "tryAgain": "حاول مجدداً",
     "unknownTitle": "حالة الدفع غير معروفة",
     "unknownMessage": "لم نتمكن من التأكد من إتمام عملية الدفع. تحقق من هداياك قبل المحاولة مجدداً.",
-    "checkMyGifts": "التحقق من هداياي"
+    "checkMyGifts": "التحقق من هداياي",
+    "savedForLater": "محفوظة في المسودّات",
+    "viewDrafts": "عرض المسودّات"
   },
   "error": {
     "networkTitle": "لا يوجد اتصال",

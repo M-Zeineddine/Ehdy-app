@@ -145,6 +145,16 @@
     "emptyReceivedTitle": "No gifts received yet",
     "emptyReceivedSubtitle": "Gifts sent to you will appear here once received."
   },
+  "drafts": {
+    "title": "Drafts",
+    "emptyTitle": "No drafts yet",
+    "emptySubtitle": "Gifts you save while customizing will appear here.",
+    "resume": "Resume",
+    "deleteConfirmTitle": "Delete draft?",
+    "deleteConfirmMessage": "This draft will be permanently removed.",
+    "deleteButton": "Delete",
+    "savedOn": "Saved {{date}}"
+  },
   "profile": {
     "title": "Profile",
     "editProfile": "Edit Profile",
@@ -208,6 +218,11 @@
     "leaveAlertTitle": "Leave gift?",
     "leaveAlertMessage": "Your customization will be lost.",
     "leaveButton": "Leave",
+    "leaveSaveButton": "Save & leave",
+    "saveDraft": "Save draft",
+    "draftSavedTitle": "Draft saved",
+    "draftSavedMessage": "You can pick this gift up anytime from My Gifts → Drafts.",
+    "draftSaveFailed": "Could not save the draft. Please try again.",
     "paymentFailedTitle": "Payment failed"
   },
   "receipt": {
@@ -231,7 +246,9 @@
     "tryAgain": "Try Again",
     "unknownTitle": "Payment status unknown",
     "unknownMessage": "We couldn't confirm whether your payment went through. Check your gifts before trying again.",
-    "checkMyGifts": "Check My Gifts"
+    "checkMyGifts": "Check My Gifts",
+    "savedForLater": "Saved to drafts",
+    "viewDrafts": "View Drafts"
   },
   "error": {
     "networkTitle": "No connection",

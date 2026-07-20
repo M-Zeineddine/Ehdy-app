@@ -115,7 +115,7 @@ export default function ManageProfileScreen() {
                 <View style={{ flex: 1 }}>
                   <AppText variant="body" semiBold>{profile?.name}</AppText>
                   <AppText variant="caption" color={Colors.text.secondary}>
-                    Store name is managed by Kado — contact support to change it.
+                    Store name is managed by Ehdy — contact support to change it.
                   </AppText>
                 </View>
               </View>
