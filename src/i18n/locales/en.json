@@ -247,8 +247,7 @@
     "unknownTitle": "Payment status unknown",
     "unknownMessage": "We couldn't confirm whether your payment went through. Check your gifts before trying again.",
     "checkMyGifts": "Check My Gifts",
-    "savedForLater": "Saved to drafts",
-    "viewDrafts": "View Drafts"
+    "savedForLater": "Saved to drafts"
   },
   "error": {
     "networkTitle": "No connection",

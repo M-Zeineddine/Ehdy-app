@@ -237,7 +237,7 @@ export default function PaymentCallbackScreen() {
               <TouchableOpacity style={styles.outlineBtn} onPress={() => router.replace('/gift/drafts')} activeOpacity={0.8}>
                 <Ionicons name="bookmark-outline" size={18} color={Colors.primary} />
                 <AppText semiBold style={[styles.outlineBtnText, { color: Colors.primary }]}>
-                  {i18n('payment.savedForLater')} — {i18n('payment.viewDrafts')}
+                  {i18n('payment.savedForLater')}
                 </AppText>
               </TouchableOpacity>
             ) : null}
