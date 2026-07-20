@@ -21,8 +21,8 @@ import { Spacing, Radius, Fonts } from '@/src/constants/layout';
 import { useQuery } from '@tanstack/react-query';
 import {
   validateRedemption,
-  sendRedemptionOtp,
-  verifyRedemptionOtp,
+  // sendRedemptionOtp,
+  // verifyRedemptionOtp,
   confirmRedemption,
   getMerchantBranches,
   type GiftValidation,
@@ -283,8 +283,9 @@ function DetailRow({ label, value, highlight }: { label: string; value: string; 
   );
 }
 
-// ── OTP modal ─────────────────────────────────────────────────────────────────
+// ── OTP modal (disabled — phone verification turned off; kept for later re-enable) ─
 
+/*
 function OtpModal({
   visible, code, onVerify, onResend, onCancel, loading, resending,
 }: {
@@ -350,6 +351,7 @@ function OtpModal({
     </Modal>
   );
 }
+*/
 
 // ── Success overlay ────────────────────────────────────────────────────────────
 
@@ -385,7 +387,7 @@ function SuccessOverlay({ visible, remainingBalance, currency, onDone }: {
 
 // ── Main screen ────────────────────────────────────────────────────────────────
 
-type ScanState = 'idle' | 'validating' | 'confirmed' | 'otp' | 'success';
+type ScanState = 'idle' | 'validating' | 'confirmed' | 'success';
 
 export default function MerchantScanScreen() {
   const [cameraOpen, setCameraOpen] = useState(false);
@@ -397,8 +399,8 @@ export default function MerchantScanScreen() {
   const [pendingBranchId, setPendingBranchId] = useState<string | undefined>(undefined);
   const [otpSending, setOtpSending] = useState(false);
   const otpSendingRef = useRef(false); // synchronous guard — useState updates are async and miss same-frame double-taps
-  const [otpLoading, setOtpLoading] = useState(false);
-  const [resending, setResending] = useState(false);
+  // const [otpLoading, setOtpLoading] = useState(false);
+  // const [resending, setResending] = useState(false);
   const [successData, setSuccessData] = useState<{ balance: number | null; currency?: string } | null>(null);
 
   // Branch context: which branches this user may redeem at, narrowed further
@@ -441,7 +443,29 @@ export default function MerchantScanScreen() {
     }
   }
 
+  // Phone (OTP) verification is disabled — confirming a redemption goes
+  // straight through to the API without the send/verify OTP round-trip.
+  // To re-enable: restore the commented block below and swap this body for it.
   async function handleConfirm(amount?: number, branchId?: string) {
+    if (otpSendingRef.current) return;
+    otpSendingRef.current = true;
+    setOtpSending(true);
+    setPendingAmount(amount);
+    setPendingBranchId(branchId);
+    try {
+      const result = await confirmRedemption(activeCode, amount, branchId);
+      setSuccessData({ balance: result.remaining_balance, currency: validatedGift?.gift.currency });
+      setScanState('success');
+    } catch (err: any) {
+      Alert.alert('Redemption failed', err.message ?? 'Could not confirm redemption.');
+    } finally {
+      otpSendingRef.current = false;
+      setOtpSending(false);
+    }
+  }
+
+  /*
+  async function handleConfirmWithOtp(amount?: number, branchId?: string) {
     if (otpSendingRef.current) return;
     otpSendingRef.current = true;
     setOtpSending(true);
@@ -482,6 +506,7 @@ export default function MerchantScanScreen() {
       setOtpLoading(false);
     }
   }
+  */
 
   function handleReset() {
     setManualCode('');
@@ -567,7 +592,7 @@ export default function MerchantScanScreen() {
         loading={otpSending}
       />
 
-      {/* OTP verification */}
+      {/* OTP verification — disabled, kept for later re-enable
       <OtpModal
         visible={scanState === 'otp'}
         code={activeCode}
@@ -577,6 +602,7 @@ export default function MerchantScanScreen() {
         loading={otpLoading}
         resending={resending}
       />
+      */}
 
       {/* Success */}
       <SuccessOverlay
