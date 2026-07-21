@@ -1,72 +1,44 @@
-import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/src/components/ui/AppText';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius } from '@/src/constants/layout';
 import { useMerchantAuthStore } from '@/src/store/merchantAuthStore';
-import {
-  getMerchantDashboard,
-  getMerchantRedemptions,
-  getMerchantBranches,
-  type RedemptionItem,
-} from '@/src/services/merchantPortalService';
+import { getMerchantDashboard, getMerchantBranches } from '@/src/services/merchantPortalService';
 
-function StatCard({
-  icon,
-  label,
-  value,
+function formatAmount(amount: number, currency: string) {
+  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M ${currency}`;
+  if (amount >= 1_000) return `${(amount / 1_000).toFixed(0)}K ${currency}`;
+  return `${amount.toLocaleString()} ${currency}`;
+}
+
+function StatTile({
+  icon, label, value, onPress,
 }: {
   icon: React.ComponentProps<typeof Ionicons>['name'];
   label: string;
   value: string;
+  onPress: () => void;
 }) {
   return (
-    <View style={styles.statCard}>
+    <TouchableOpacity style={styles.statCard} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.statIcon}>
         <Ionicons name={icon} size={18} color={Colors.primary} />
       </View>
       <AppText variant="caption" color={Colors.text.secondary}>{label}</AppText>
-      <AppText variant="heading" style={styles.statValue}>{value}</AppText>
-    </View>
+      <View style={styles.statValueRow}>
+        <AppText variant="heading" style={styles.statValue}>{value}</AppText>
+        <Ionicons name="chevron-forward" size={16} color={Colors.text.tertiary} />
+      </View>
+    </TouchableOpacity>
   );
 }
-
-function RedemptionRow({ item }: { item: RedemptionItem }) {
-  const date = new Date(item.redeemed_at);
-  const dateStr = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  const timeStr = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-
-  return (
-    <View style={styles.row}>
-      <View style={styles.rowIcon}>
-        <Ionicons name="checkmark-circle" size={18} color={Colors.primary} />
-      </View>
-      <View style={{ flex: 1 }}>
-        <AppText variant="body" semiBold>{item.redemption_code}</AppText>
-        <AppText variant="caption" color={Colors.text.secondary}>
-          {item.gift_card_name} · {dateStr} · {timeStr}
-        </AppText>
-      </View>
-      <View style={{ alignItems: 'flex-end' }}>
-        {item.redeemed_amount != null ? (
-          <AppText variant="body" semiBold color={Colors.primary}>
-            {item.redeemed_amount.toLocaleString()} {item.currency_code}
-          </AppText>
-        ) : (
-          <View style={styles.itemBadge}>
-            <AppText variant="caption" color={Colors.text.secondary}>Item</AppText>
-          </View>
-        )}
-      </View>
-    </View>
-  );
-}
-
-const PAGE_SIZE = 30;
 
 export default function MerchantSalesScreen() {
+  const router = useRouter();
   const merchantUser = useMerchantAuthStore((s) => s.merchantUser);
 
   const dashboard = useQuery({
@@ -74,16 +46,7 @@ export default function MerchantSalesScreen() {
     queryFn: getMerchantDashboard,
     refetchInterval: 60_000,
   });
-
-  const history = useInfiniteQuery({
-    queryKey: ['merchant-redemptions'],
-    queryFn: ({ pageParam }) => getMerchantRedemptions({ page: pageParam, limit: PAGE_SIZE }),
-    initialPageParam: 1,
-    getNextPageParam: (last) => {
-      const { page, pages } = last.pagination ?? {};
-      return page && pages && page < pages ? page + 1 : undefined;
-    },
-  });
+  const data = dashboard.data;
 
   // Branch-scoped users see stats for their branches only — say so in the header
   const scopedIds = merchantUser?.branch_ids;
@@ -97,106 +60,81 @@ export default function MerchantSalesScreen() {
     ? (branches ?? []).filter((b) => scopedIds.includes(b.id)).map((b) => b.name).join(', ')
     : null;
 
-  const redemptions = history.data?.pages.flatMap((p) => p.redemptions) ?? [];
-  const total = history.data?.pages[0]?.pagination?.total ?? 0;
-  const data = dashboard.data;
-
-  const formatAmount = (amount: number, currency: string) => {
-    if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)}M ${currency}`;
-    if (amount >= 1_000) return `${(amount / 1_000).toFixed(0)}K ${currency}`;
-    return `${amount.toLocaleString()} ${currency}`;
-  };
-
-  const refetchAll = () => {
-    dashboard.refetch();
-    history.refetch();
-  };
+  function goToRedemptions(period: 'today' | 'month') {
+    router.push({ pathname: '/(merchant-tabs)/redemption-history', params: { period } });
+  }
+  function goToPurchases(period: 'today' | 'month') {
+    router.push({ pathname: '/(merchant-tabs)/purchase-history', params: { period } });
+  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <FlatList
-        data={redemptions}
-        keyExtractor={(item, i) => `${item.redemption_code}-${item.redeemed_at}-${i}`}
-        renderItem={({ item }) => <RedemptionRow item={item} />}
-        contentContainerStyle={styles.list}
-        onEndReached={() => {
-          if (history.hasNextPage && !history.isFetchingNextPage) history.fetchNextPage();
-        }}
-        onEndReachedThreshold={0.4}
-        refreshControl={
-          <RefreshControl
-            refreshing={dashboard.isRefetching || history.isRefetching}
-            onRefresh={refetchAll}
-            tintColor={Colors.primary}
-          />
-        }
-        ListHeaderComponent={
-          <View>
-            {/* Header */}
-            <View style={styles.header}>
-              <View style={{ flex: 1 }}>
-                <AppText variant="heading">Sales</AppText>
-                <AppText variant="caption" color={Colors.text.secondary}>
-                  {merchantUser?.merchant_name}
-                  {scopeNames ? ` · ${scopeNames}` : ''}
-                </AppText>
-              </View>
-              <View style={styles.roleBadge}>
-                <AppText variant="caption" color={Colors.primary} semiBold>
-                  {merchantUser?.role === 'owner' ? 'Owner' : merchantUser?.role === 'manager' ? 'Manager' : 'Staff'}
-                </AppText>
-              </View>
-            </View>
-
-            {/* Stats */}
-            <View style={styles.statsGrid}>
-              <StatCard icon="checkmark-circle" label="Today" value={String(data?.today.redemptions ?? 0)} />
-              <StatCard icon="cash" label="Today rev." value={formatAmount(data?.today.revenue ?? 0, 'USD')} />
-            </View>
-            <View style={styles.statsGrid}>
-              <StatCard icon="calendar" label="This month" value={String(data?.month.redemptions ?? 0)} />
-              <StatCard icon="wallet" label="Month rev." value={formatAmount(data?.month.revenue ?? 0, 'USD')} />
-            </View>
-
-            <View style={styles.activeCodesCard}>
-              <Ionicons name="ticket-outline" size={18} color={Colors.primary} />
-              <AppText variant="caption" color={Colors.text.secondary} style={{ flex: 1 }}>
-                {data?.active_codes ?? 0} active gift codes
-              </AppText>
-            </View>
-
-            <View style={styles.historyHeader}>
-              <AppText variant="label" color={Colors.text.secondary}>HISTORY</AppText>
-              <AppText variant="caption" color={Colors.text.tertiary}>{total} total</AppText>
-            </View>
-          </View>
-        }
-        ListEmptyComponent={
-          history.isLoading ? null : (
-            <View style={styles.empty}>
-              <Ionicons name="receipt-outline" size={40} color={Colors.text.tertiary} />
-              <AppText variant="body" color={Colors.text.tertiary} style={{ marginTop: Spacing.sm }}>
-                No redemptions yet
-              </AppText>
-            </View>
-          )
-        }
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        ListFooterComponent={
-          history.isFetchingNextPage ? (
-            <AppText variant="caption" color={Colors.text.tertiary} style={{ textAlign: 'center', padding: Spacing.md }}>
-              Loading more…
+      <ScrollView
+        contentContainerStyle={styles.scroll}
+        refreshControl={<RefreshControl refreshing={dashboard.isRefetching} onRefresh={() => dashboard.refetch()} tintColor={Colors.primary} />}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={{ flex: 1 }}>
+            <AppText variant="heading">Sales</AppText>
+            <AppText variant="caption" color={Colors.text.secondary}>
+              {merchantUser?.merchant_name}
+              {scopeNames ? ` · ${scopeNames}` : ''}
             </AppText>
-          ) : null
-        }
-      />
+          </View>
+          <View style={styles.roleBadge}>
+            <AppText variant="caption" color={Colors.primary} semiBold>
+              {merchantUser?.role === 'owner' ? 'Owner' : merchantUser?.role === 'manager' ? 'Manager' : 'Staff'}
+            </AppText>
+          </View>
+        </View>
+
+        {/* Redemptions */}
+        <AppText variant="label" color={Colors.text.secondary} style={styles.sectionLabel}>REDEMPTIONS</AppText>
+        <View style={styles.statsGrid}>
+          <StatTile icon="checkmark-circle" label="Today" value={String(data?.today.redemptions ?? 0)} onPress={() => goToRedemptions('today')} />
+          <StatTile icon="cash" label="Today rev." value={formatAmount(data?.today.revenue ?? 0, 'USD')} onPress={() => goToRedemptions('today')} />
+        </View>
+        <View style={styles.statsGrid}>
+          <StatTile icon="calendar" label="This month" value={String(data?.month.redemptions ?? 0)} onPress={() => goToRedemptions('month')} />
+          <StatTile icon="wallet" label="Month rev." value={formatAmount(data?.month.revenue ?? 0, 'USD')} onPress={() => goToRedemptions('month')} />
+        </View>
+
+        {/* Sales (purchases) — owner only; not branch-scoped since a sale isn't tied to a branch */}
+        {data?.sales ? (
+          <>
+            <AppText variant="label" color={Colors.text.secondary} style={styles.sectionLabel}>SALES</AppText>
+            <View style={styles.statsGrid}>
+              <StatTile icon="pricetag" label="Sold today" value={String(data.sales.today.sold)} onPress={() => goToPurchases('today')} />
+              <StatTile icon="cash" label="Today rev." value={formatAmount(data.sales.today.revenue, 'USD')} onPress={() => goToPurchases('today')} />
+            </View>
+            <View style={styles.statsGrid}>
+              <StatTile icon="calendar" label="Sold this month" value={String(data.sales.month.sold)} onPress={() => goToPurchases('month')} />
+              <StatTile icon="wallet" label="Month rev." value={formatAmount(data.sales.month.revenue, 'USD')} onPress={() => goToPurchases('month')} />
+            </View>
+          </>
+        ) : null}
+
+        {/* Active codes */}
+        <TouchableOpacity
+          style={styles.activeCodesCard}
+          onPress={() => router.push('/(merchant-tabs)/active-codes')}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="ticket-outline" size={18} color={Colors.primary} />
+          <AppText variant="caption" color={Colors.text.secondary} style={{ flex: 1 }}>
+            {data?.active_codes ?? 0} active gift codes
+          </AppText>
+          <Ionicons name="chevron-forward" size={16} color={Colors.text.tertiary} />
+        </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  list: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.xl },
+  scroll: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.xl },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -210,6 +148,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.sm,
     paddingVertical: 4,
   },
+  sectionLabel: { marginTop: Spacing.md, marginBottom: Spacing.xs },
   statsGrid: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.sm },
   statCard: {
     flex: 1,
@@ -229,6 +168,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 4,
   },
+  statValueRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   statValue: { fontSize: 20 },
   activeCodesCard: {
     flexDirection: 'row',
@@ -239,34 +179,6 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.border,
+    marginTop: Spacing.sm,
   },
-  historyHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-    marginTop: Spacing.lg,
-    marginBottom: Spacing.xs,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    paddingVertical: Spacing.sm,
-  },
-  rowIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: Radius.full,
-    backgroundColor: '#FFF0EC',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  itemBadge: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.sm,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  separator: { height: 1, backgroundColor: Colors.border },
-  empty: { alignItems: 'center', paddingTop: 40 },
 });

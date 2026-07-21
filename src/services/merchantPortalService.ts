@@ -42,7 +42,12 @@ export interface DashboardData {
   today: { redemptions: number; revenue: number };
   month: { redemptions: number; revenue: number };
   active_codes: number;
-  recent_redemptions: RedemptionItem[];
+  /** Purchase (sale) stats — owner-only; null for managers/staff. Not
+   *  branch-scoped, since a purchase happens online, not at a branch. */
+  sales: {
+    today: { sold: number; revenue: number };
+    month: { sold: number; revenue: number };
+  } | null;
 }
 
 export interface GiftValidation {
@@ -70,10 +75,35 @@ export interface MerchantBranch {
 }
 
 export interface RedemptionItem {
+  id: string;
   redemption_code: string;
   redeemed_at: string;
-  redeemed_amount: number | null;
+  /** Numeric columns come back as strings from Postgres — parse before formatting */
+  redeemed_amount: string | null;
   currency_code: string;
+  branch_name: string | null;
+  gift_card_name: string;
+  type: string;
+}
+
+export interface PurchaseItem {
+  id: string;
+  sent_at: string;
+  recipient_name: string | null;
+  amount: string | null;
+  currency_code: string;
+  gift_card_name: string;
+  type: string;
+}
+
+export interface ActiveCodeItem {
+  id: string;
+  redemption_code: string;
+  current_balance: string | null;
+  initial_balance: string | null;
+  currency_code: string;
+  expiration_date: string | null;
+  created_at: string;
   gift_card_name: string;
   type: string;
 }
@@ -280,12 +310,37 @@ export async function updateMerchantProfile(input: ProfileInput): Promise<Mercha
 export async function getMerchantRedemptions(params?: {
   page?: number;
   limit?: number;
-  date_from?: string;
-  date_to?: string;
+  /** Server owns the definition of "today"/"this month" so the dashboard
+   *  tiles and this list can never disagree on the boundary. */
+  period?: 'today' | 'month';
 }): Promise<{ redemptions: RedemptionItem[]; pagination: any }> {
   const res = await merchantApi.get<{ data: RedemptionItem[]; pagination: any }>(
     '/merchant/redemptions',
     { params }
   );
   return { redemptions: res.data.data, pagination: res.data.pagination };
+}
+
+/** Owner-only — purchases (gift cards sold) aren't branch-scoped. */
+export async function getMerchantPurchases(params?: {
+  page?: number;
+  limit?: number;
+  period?: 'today' | 'month';
+}): Promise<{ purchases: PurchaseItem[]; pagination: any }> {
+  const res = await merchantApi.get<{ data: PurchaseItem[]; pagination: any }>(
+    '/merchant/purchases',
+    { params }
+  );
+  return { purchases: res.data.data, pagination: res.data.pagination };
+}
+
+export async function getMerchantActiveCodes(params?: {
+  page?: number;
+  limit?: number;
+}): Promise<{ codes: ActiveCodeItem[]; pagination: any }> {
+  const res = await merchantApi.get<{ data: ActiveCodeItem[]; pagination: any }>(
+    '/merchant/active-codes',
+    { params }
+  );
+  return { codes: res.data.data, pagination: res.data.pagination };
 }
