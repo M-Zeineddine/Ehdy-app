@@ -145,6 +145,20 @@
     "emptyReceivedTitle": "لم تستلم هدايا بعد",
     "emptyReceivedSubtitle": "ستظهر الهدايا المُرسَلة إليك هنا بعد استلامها."
   },
+  "viewGift": {
+    "title": "الهدية",
+    "voucherCode": "رمز القسيمة",
+    "qrHint": "امسح الرمز عند الدفع لاستبدالها",
+    "shareMessage": "رمز قسيمتي: {{code}}",
+    "remaining": "المتبقي",
+    "original": "المبلغ الأصلي",
+    "totalSpent": "إجمالي المُستخدم",
+    "history": "السجل",
+    "redeemed": "تم الاستبدال",
+    "at": "في",
+    "redeemableAtSome": "قابلة للاستبدال في فرع {{branches}} فقط",
+    "redeemableAtAny": "قابلة للاستبدال في أي فرع لـ {{merchant}}"
+  },
   "drafts": {
     "title": "المسودّات",
     "emptyTitle": "لا مسودّات بعد",

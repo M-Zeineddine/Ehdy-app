@@ -145,6 +145,20 @@
     "emptyReceivedTitle": "No gifts received yet",
     "emptyReceivedSubtitle": "Gifts sent to you will appear here once received."
   },
+  "viewGift": {
+    "title": "Gift",
+    "voucherCode": "Voucher Code",
+    "qrHint": "Scan at the counter to redeem",
+    "shareMessage": "My gift voucher code: {{code}}",
+    "remaining": "Remaining",
+    "original": "Original",
+    "totalSpent": "Total Spent",
+    "history": "History",
+    "redeemed": "Redeemed",
+    "at": "at",
+    "redeemableAtSome": "Redeemable at {{branches}} branch only",
+    "redeemableAtAny": "Redeemable at any {{merchant}} branch"
+  },
   "drafts": {
     "title": "Drafts",
     "emptyTitle": "No drafts yet",

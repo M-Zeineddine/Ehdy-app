@@ -167,6 +167,66 @@ export async function getSentGifts(
   return { data: res.data.data, pagination: res.data.pagination };
 }
 
+// ── Received gift detail (in-app "view gift" page) ────────────────────────────
+
+export interface GiftBranch {
+  id: string;
+  name: string;
+  address: string | null;
+  city: string | null;
+  latitude: string | null;
+  longitude: string | null;
+}
+
+export interface GiftBalanceEntry {
+  amount: string;
+  currency_code: string;
+  redeemed_at: string;
+  branch_name: string | null;
+}
+
+export interface GiftBalance {
+  currency: string;
+  initial: string;
+  current: string;
+  merchantName: string | null;
+  history: GiftBalanceEntry[];
+}
+
+export interface GiftItemStatus {
+  redeemedAt: string;
+  merchantName: string | null;
+  branchName: string | null;
+}
+
+export interface ReceivedGiftDetail {
+  id: string;
+  sender_name: string | null;
+  recipient_name: string | null;
+  personal_message: string | null;
+  theme: string | null;
+  sent_at: string;
+  is_credit: boolean;
+  merchant_name: string | null;
+  merchant_logo: string | null;
+  item_name: string | null;
+  item_description: string | null;
+  item_price: string | null;
+  item_currency: string | null;
+  item_image: string | null;
+  redemption_code: string | null;
+  redemption_qr_code: string | null;
+  branches: GiftBranch[];
+  redeemable_at: string[] | null;
+  balance: GiftBalance | null;
+  item_status: GiftItemStatus | null;
+}
+
+export async function getReceivedGiftDetail(giftId: string): Promise<ReceivedGiftDetail> {
+  const res = await api.get(`/gifts/received/${giftId}`);
+  return res.data.data.gift;
+}
+
 export async function getReceivedGifts(
   page = 1,
   sortOrder: 'asc' | 'desc' = 'desc',

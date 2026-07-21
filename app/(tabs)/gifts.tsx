@@ -13,7 +13,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
-import { Linking } from 'react-native';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
 import { AppText } from '@/src/components/ui/AppText';
@@ -144,9 +143,6 @@ function ReceivedGiftCard({ gift }: { gift: GiftSummary }) {
   const senderName   = gift.sender_name ?? [gift.sender_first_name, gift.sender_last_name].filter(Boolean).join(' ') ?? '—';
   const status       = gift.redemption_status ?? 'active';
   const statusCfg    = STATUS_CONFIG[status] ?? STATUS_CONFIG.active;
-  const giftUrl      = gift.unique_share_link
-    ? (gift.unique_share_link.startsWith('http') ? gift.unique_share_link : `${GIFT_BASE_URL}/${gift.unique_share_link}`)
-    : null;
 
   return (
     <View style={styles.card}>
@@ -176,16 +172,14 @@ function ReceivedGiftCard({ gift }: { gift: GiftSummary }) {
       </View>
 
       {/* View Gift button */}
-      {giftUrl ? (
-        <TouchableOpacity
-          style={styles.viewGiftBtn}
-          onPress={() => Linking.openURL(giftUrl)}
-          activeOpacity={0.7}
-        >
-          <AppText style={styles.viewGiftBtnText}>{i18n('gifts.viewGift')}</AppText>
-          <Ionicons name="arrow-forward" size={15} color={Colors.primary} />
-        </TouchableOpacity>
-      ) : null}
+      <TouchableOpacity
+        style={styles.viewGiftBtn}
+        onPress={() => router.push({ pathname: '/gift/received/[id]', params: { id: gift.id } })}
+        activeOpacity={0.7}
+      >
+        <AppText style={styles.viewGiftBtnText}>{i18n('gifts.viewGift')}</AppText>
+        <Ionicons name="arrow-forward" size={15} color={Colors.primary} />
+      </TouchableOpacity>
     </View>
   );
 }
