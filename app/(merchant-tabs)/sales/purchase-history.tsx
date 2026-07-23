@@ -201,7 +201,7 @@ export default function PurchaseHistoryScreen() {
         <Ionicons name="search" size={16} color={Colors.text.tertiary} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search name, phone, or code"
+          placeholder="Search item, name, phone, or code"
           placeholderTextColor={Colors.text.tertiary}
           value={searchInput}
           onChangeText={setSearchInput}

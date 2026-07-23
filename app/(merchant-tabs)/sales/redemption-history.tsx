@@ -387,7 +387,7 @@ export default function RedemptionHistoryScreen() {
         <Ionicons name="search" size={16} color={Colors.text.tertiary} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search code, name, or phone"
+          placeholder="Search code, item, name, or phone"
           placeholderTextColor={Colors.text.tertiary}
           value={searchInput}
           onChangeText={setSearchInput}

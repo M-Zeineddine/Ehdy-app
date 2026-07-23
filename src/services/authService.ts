@@ -18,8 +18,8 @@ export async function signup(data: {
   return res.data.data;
 }
 
-export async function signin(email: string, password: string) {
-  const res = await api.post<{ data: AuthResponse }>('/auth/signin', { email, password });
+export async function signin(credentials: { email?: string; phone?: string; password: string }) {
+  const res = await api.post<{ data: AuthResponse }>('/auth/signin', credentials);
   return res.data.data;
 }
 
