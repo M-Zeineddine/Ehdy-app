@@ -76,7 +76,10 @@ export default function ActiveCodesScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
+        {/* This is a hidden Tabs.Screen, not a stack push, so router.back()
+            falls through to the tab navigator's first tab (Scan) instead of
+            wherever this was actually opened from — navigate explicitly. */}
+        <TouchableOpacity onPress={() => router.replace('/(merchant-tabs)/sales')} style={styles.backBtn} hitSlop={8}>
           <Ionicons name="chevron-back" size={24} color={Colors.text.primary} />
         </TouchableOpacity>
         <AppText variant="heading">Active Codes</AppText>
