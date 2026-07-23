@@ -72,15 +72,6 @@ export default function MerchantTabLayout() {
           tabBarIcon: ({ focused }) => <TabIcon name="person" focused={focused} />,
         }}
       />
-      {/* Owner management sub-screens — reachable by navigation, never tabs */}
-      <Tabs.Screen name="manage-items" options={{ href: null }} />
-      <Tabs.Screen name="manage-staff" options={{ href: null }} />
-      <Tabs.Screen name="manage-branches" options={{ href: null }} />
-      <Tabs.Screen name="manage-profile" options={{ href: null }} />
-      {/* Sales drill-down sub-screens — reachable by navigation, never tabs */}
-      <Tabs.Screen name="redemption-history" options={{ href: null }} />
-      <Tabs.Screen name="purchase-history" options={{ href: null }} />
-      <Tabs.Screen name="active-codes" options={{ href: null }} />
     </Tabs>
   );
 }

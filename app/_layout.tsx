@@ -35,12 +35,21 @@ function AuthGate() {
     const inMerchantAuth = segments[0] === '(merchant-auth)';
     const inMerchantTabs = segments[0] === '(merchant-tabs)';
 
-    // Merchant flow: once logged in, stay in merchant tabs
+    // Merchant flow: once logged in, stay in merchant tabs. dismissAll()
+    // first collapses whatever's still underneath (e.g. welcome -> login,
+    // pushed on entry so login's own back arrow works) — otherwise those
+    // screens linger in the native stack and an edge-swipe-back gesture from
+    // inside merchant-tabs can reveal the login screen instead of exiting
+    // straight to it, since replace() alone only swaps the current screen.
+    // canDismiss() guards a cold start straight into an already-authenticated
+    // session, where the stack has only one screen and there's nothing to pop.
     if (merchantAuth && inMerchantAuth) {
+      if (router.canDismiss()) router.dismissAll();
       router.replace('/(merchant-tabs)/scan');
       return;
     }
     if (merchantAuth && !inMerchantTabs && !inAuth) {
+      if (router.canDismiss()) router.dismissAll();
       router.replace('/(merchant-tabs)/scan');
       return;
     }

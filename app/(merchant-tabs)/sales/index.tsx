@@ -134,10 +134,10 @@ export default function MerchantSalesScreen() {
     : null;
 
   function goToRedemptions(period: 'today' | 'month' | 'all', status?: 'failed') {
-    router.push({ pathname: '/(merchant-tabs)/redemption-history', params: { period, ...(status ? { status } : {}) } });
+    router.push({ pathname: '/(merchant-tabs)/sales/redemption-history', params: { period, ...(status ? { status } : {}) } });
   }
   function goToPurchases(period: 'today' | 'month' | 'all') {
-    router.push({ pathname: '/(merchant-tabs)/purchase-history', params: { period } });
+    router.push({ pathname: '/(merchant-tabs)/sales/purchase-history', params: { period } });
   }
 
   // All-time totals — deliberately just the same summary endpoints the
@@ -292,7 +292,7 @@ export default function MerchantSalesScreen() {
             label="Unredeemed"
             countLabel={`${lifetimeUnredeemed.data.count} active codes`}
             value={lifetimeUnredeemed.data.value}
-            onPress={() => router.push('/(merchant-tabs)/active-codes')}
+            onPress={() => router.push('/(merchant-tabs)/sales/active-codes')}
           />
         ) : null}
       </ScrollView>

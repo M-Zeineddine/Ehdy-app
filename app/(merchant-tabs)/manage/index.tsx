@@ -49,25 +49,25 @@ export default function MerchantManageScreen() {
           icon="pricetags"
           title="Items"
           subtitle="Gift items, prices, and branch availability"
-          onPress={() => router.push('/(merchant-tabs)/manage-items')}
+          onPress={() => router.push('/(merchant-tabs)/manage/items')}
         />
         <MenuRow
           icon="people"
           title="Staff"
           subtitle="Cashier and manager accounts, branch assignment"
-          onPress={() => router.push('/(merchant-tabs)/manage-staff')}
+          onPress={() => router.push('/(merchant-tabs)/manage/staff')}
         />
         <MenuRow
           icon="location"
           title="Branches"
           subtitle="Store locations and contact details"
-          onPress={() => router.push('/(merchant-tabs)/manage-branches')}
+          onPress={() => router.push('/(merchant-tabs)/manage/branches')}
         />
         <MenuRow
           icon="storefront"
           title="Store profile"
           subtitle="Description, images, and contact info"
-          onPress={() => router.push('/(merchant-tabs)/manage-profile')}
+          onPress={() => router.push('/(merchant-tabs)/manage/profile')}
         />
       </View>
     </SafeAreaView>

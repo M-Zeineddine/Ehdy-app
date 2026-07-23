@@ -89,10 +89,7 @@ export default function ManageProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        {/* This is a hidden Tabs.Screen, not a stack push, so router.back()
-            falls through to the tab navigator's first tab (Scan) instead of
-            wherever this was actually opened from — navigate explicitly. */}
-        <TouchableOpacity onPress={() => router.replace('/(merchant-tabs)/manage')} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={24} color={Colors.text.primary} />
         </TouchableOpacity>
         <AppText variant="heading" style={{ flex: 1 }}>Store profile</AppText>
