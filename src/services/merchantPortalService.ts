@@ -40,14 +40,22 @@ export interface LoginResponse {
 
 export interface DashboardData {
   today: { redemptions: number; revenue: number };
+  yesterday: { redemptions: number; revenue: number };
   month: { redemptions: number; revenue: number };
-  active_codes: number;
+  last_month: { redemptions: number; revenue: number };
+  failed_attempts_today: number;
   /** Purchase (sale) stats — owner-only; null for managers/staff. Not
    *  branch-scoped, since a purchase happens online, not at a branch. */
   sales: {
     today: { sold: number; revenue: number };
+    yesterday: { sold: number; revenue: number };
     month: { sold: number; revenue: number };
+    last_month: { sold: number; revenue: number };
   } | null;
+  /** Owner-only */
+  best_seller: { name: string; count: number } | null;
+  /** Owner-only; null unless the merchant has more than one active branch */
+  branch_breakdown: { branch_id: string; branch_name: string; redemptions: number }[] | null;
 }
 
 export interface GiftValidation {
@@ -76,24 +84,50 @@ export interface MerchantBranch {
 
 export interface RedemptionItem {
   id: string;
+  /** For a failed row, this is the raw code text the staff attempted — it may not resolve to a real gift */
   redemption_code: string;
   redeemed_at: string;
   /** Numeric columns come back as strings from Postgres — parse before formatting */
   redeemed_amount: string | null;
-  currency_code: string;
+  currency_code: string | null;
   branch_name: string | null;
-  gift_card_name: string;
-  type: string;
+  gift_card_name: string | null;
+  type: string | null;
+  /** 'partial'/'completed' only ever occur for real redemptions; a 'failed'
+   *  row never touched a gift instance, so most other fields are null. */
+  status: 'partial' | 'completed' | 'failed';
+  notes: string | null;
+  item_description: string | null;
+  item_image: string | null;
+  sender_name: string | null;
+  recipient_name: string | null;
+  recipient_phone: string | null;
+  /** Only set when status === 'failed' */
+  error_code: string | null;
+  error_message: string | null;
+  /** Only meaningful for store_credit; null for gift_item and failed rows */
+  remaining_balance: string | null;
+  initial_balance: string | null;
 }
 
 export interface PurchaseItem {
   id: string;
   sent_at: string;
+  sender_name: string | null;
   recipient_name: string | null;
+  recipient_phone: string | null;
+  personal_message: string | null;
   amount: string | null;
   currency_code: string;
   gift_card_name: string;
+  /** Current redemption state of the gift this purchase created */
+  is_redeemed: boolean | null;
+  current_balance: string | null;
+  initial_balance: string | null;
+  redemption_status: 'active' | 'partially_redeemed' | 'redeemed';
   type: string;
+  item_description: string | null;
+  item_image: string | null;
 }
 
 export interface ActiveCodeItem {
@@ -112,6 +146,29 @@ export interface RedemptionResult {
   success: boolean;
   remaining_balance: number | null;
   message: string;
+}
+
+/** Aggregate stats matching whatever filters are currently applied on the
+ *  redemption history list — never derived by summing loaded rows client
+ *  side, since pagination means only one page is ever in memory. */
+export interface RedemptionsSummary {
+  count: number;
+  revenue: number;
+  completed_count: number;
+  partial_count: number;
+  failed_count: number;
+}
+
+export interface PurchasesSummary {
+  count: number;
+  revenue: number;
+}
+
+/** value = $ still redeemable across active codes (0 for pure gift-item codes,
+ *  which carry no balance) */
+export interface ActiveCodesSummary {
+  count: number;
+  value: number;
 }
 
 // ── API calls ─────────────────────────────────────────────────────────────────
@@ -313,6 +370,11 @@ export async function getMerchantRedemptions(params?: {
   /** Server owns the definition of "today"/"this month" so the dashboard
    *  tiles and this list can never disagree on the boundary. */
   period?: 'today' | 'month';
+  type?: 'store_credit' | 'gift_item';
+  status?: 'partial' | 'completed' | 'failed';
+  /** Narrows further within the caller's own permitted scope; the server
+   *  403s if this isn't a branch the caller already has access to. */
+  branch_id?: string;
 }): Promise<{ redemptions: RedemptionItem[]; pagination: any }> {
   const res = await merchantApi.get<{ data: RedemptionItem[]; pagination: any }>(
     '/merchant/redemptions',
@@ -321,11 +383,27 @@ export async function getMerchantRedemptions(params?: {
   return { redemptions: res.data.data, pagination: res.data.pagination };
 }
 
+/** Same filters as getMerchantRedemptions, but returns aggregate stats
+ *  (count/revenue) for that exact filter set instead of the rows. */
+export async function getMerchantRedemptionsSummary(params?: {
+  period?: 'today' | 'month';
+  type?: 'store_credit' | 'gift_item';
+  status?: 'partial' | 'completed' | 'failed';
+  branch_id?: string;
+}): Promise<RedemptionsSummary> {
+  const res = await merchantApi.get<{ data: { summary: RedemptionsSummary } }>(
+    '/merchant/redemptions/summary',
+    { params }
+  );
+  return res.data.data.summary;
+}
+
 /** Owner-only — purchases (gift cards sold) aren't branch-scoped. */
 export async function getMerchantPurchases(params?: {
   page?: number;
   limit?: number;
   period?: 'today' | 'month';
+  type?: 'store_credit' | 'gift_item';
 }): Promise<{ purchases: PurchaseItem[]; pagination: any }> {
   const res = await merchantApi.get<{ data: PurchaseItem[]; pagination: any }>(
     '/merchant/purchases',
@@ -334,13 +412,36 @@ export async function getMerchantPurchases(params?: {
   return { purchases: res.data.data, pagination: res.data.pagination };
 }
 
+/** Owner-only — same filters as getMerchantPurchases, aggregate stats only. */
+export async function getMerchantPurchasesSummary(params?: {
+  period?: 'today' | 'month';
+  type?: 'store_credit' | 'gift_item';
+}): Promise<PurchasesSummary> {
+  const res = await merchantApi.get<{ data: { summary: PurchasesSummary } }>(
+    '/merchant/purchases/summary',
+    { params }
+  );
+  return res.data.data.summary;
+}
+
 export async function getMerchantActiveCodes(params?: {
   page?: number;
   limit?: number;
+  type?: 'store_credit' | 'gift_item';
 }): Promise<{ codes: ActiveCodeItem[]; pagination: any }> {
   const res = await merchantApi.get<{ data: ActiveCodeItem[]; pagination: any }>(
     '/merchant/active-codes',
     { params }
   );
   return { codes: res.data.data, pagination: res.data.pagination };
+}
+
+export async function getMerchantActiveCodesSummary(params?: {
+  type?: 'store_credit' | 'gift_item';
+}): Promise<ActiveCodesSummary> {
+  const res = await merchantApi.get<{ data: { summary: ActiveCodesSummary } }>(
+    '/merchant/active-codes/summary',
+    { params }
+  );
+  return res.data.data.summary;
 }

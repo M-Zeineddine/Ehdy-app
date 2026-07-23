@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { View, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -8,6 +9,7 @@ import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius } from '@/src/constants/layout';
 import { getMerchantActiveCodes, type ActiveCodeItem } from '@/src/services/merchantPortalService';
 
+type GiftType = 'all' | 'store_credit' | 'gift_item';
 const PAGE_SIZE = 30;
 
 function ActiveCodeRow({ item }: { item: ActiveCodeItem }) {
@@ -52,10 +54,15 @@ function ActiveCodeRow({ item }: { item: ActiveCodeItem }) {
 
 export default function ActiveCodesScreen() {
   const router = useRouter();
+  const [giftType, setGiftType] = useState<GiftType>('all');
 
   const codes = useInfiniteQuery({
-    queryKey: ['merchant-active-codes'],
-    queryFn: ({ pageParam }) => getMerchantActiveCodes({ page: pageParam, limit: PAGE_SIZE }),
+    queryKey: ['merchant-active-codes', giftType],
+    queryFn: ({ pageParam }) => getMerchantActiveCodes({
+      page: pageParam,
+      limit: PAGE_SIZE,
+      ...(giftType === 'all' ? {} : { type: giftType }),
+    }),
     initialPageParam: 1,
     getNextPageParam: (last) => {
       const { page, pages } = last.pagination ?? {};
@@ -74,6 +81,21 @@ export default function ActiveCodesScreen() {
         </TouchableOpacity>
         <AppText variant="heading">Active Codes</AppText>
         <View style={styles.backBtn} />
+      </View>
+
+      <View style={styles.filterRow}>
+        {(['all', 'store_credit', 'gift_item'] as GiftType[]).map((t) => (
+          <TouchableOpacity
+            key={t}
+            style={[styles.filterChip, giftType === t && styles.filterChipActive]}
+            onPress={() => setGiftType(t)}
+            activeOpacity={0.7}
+          >
+            <AppText variant="caption" color={giftType === t ? '#fff' : Colors.text.secondary} semiBold={giftType === t}>
+              {t === 'all' ? 'All types' : t === 'store_credit' ? 'Store credit' : 'Items'}
+            </AppText>
+          </TouchableOpacity>
+        ))}
       </View>
 
       <FlatList
@@ -123,6 +145,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg, paddingTop: Spacing.sm, paddingBottom: Spacing.sm,
   },
   backBtn: { width: 36 },
+  filterRow: { flexDirection: 'row', gap: Spacing.sm, paddingHorizontal: Spacing.lg, marginBottom: Spacing.sm },
+  filterChip: {
+    paddingHorizontal: Spacing.md, paddingVertical: 6, borderRadius: Radius.full,
+    backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.border,
+  },
+  filterChipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   list: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.xl },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm, paddingVertical: Spacing.sm },
   rowIcon: {
