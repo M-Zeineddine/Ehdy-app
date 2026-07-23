@@ -1,9 +1,11 @@
-import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { useState } from 'react';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/src/components/ui/AppText';
+import { ConfirmModal } from '@/src/components/ui/ConfirmModal';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius } from '@/src/constants/layout';
 import { useMerchantAuthStore } from '@/src/store/merchantAuthStore';
@@ -12,6 +14,7 @@ import { getMerchantBranches } from '@/src/services/merchantPortalService';
 export default function MerchantAccountScreen() {
   const { merchantUser, clearAuth } = useMerchantAuthStore();
   const router = useRouter();
+  const [signOutVisible, setSignOutVisible] = useState(false);
 
   // Branch label: which branch(es) this login is tied to
   const { data: branches } = useQuery({
@@ -27,18 +30,10 @@ export default function MerchantAccountScreen() {
       ? (branches ?? []).filter((b) => scopedIds.includes(b.id)).map((b) => b.name).join(', ')
       : 'All branches';
 
-  function handleSignOut() {
-    Alert.alert('Sign out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign out',
-        style: 'destructive',
-        onPress: async () => {
-          await clearAuth();
-          router.replace('/(merchant-auth)/login');
-        },
-      },
-    ]);
+  async function confirmSignOut() {
+    setSignOutVisible(false);
+    await clearAuth();
+    router.replace('/(merchant-auth)/login');
   }
 
   const initials = [merchantUser?.first_name?.[0], merchantUser?.last_name?.[0]]
@@ -82,11 +77,22 @@ export default function MerchantAccountScreen() {
         </View>
 
         {/* Sign out */}
-        <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
+        <TouchableOpacity style={styles.signOutBtn} onPress={() => setSignOutVisible(true)}>
           <Ionicons name="log-out-outline" size={20} color={Colors.error} />
           <AppText variant="body" color={Colors.error} semiBold>Sign out</AppText>
         </TouchableOpacity>
       </View>
+
+      <ConfirmModal
+        visible={signOutVisible}
+        title="Sign out"
+        message="Are you sure you want to sign out?"
+        onDismiss={() => setSignOutVisible(false)}
+        actions={[
+          { text: 'Cancel', style: 'cancel', onPress: () => setSignOutVisible(false) },
+          { text: 'Sign out', style: 'destructive', onPress: confirmSignOut },
+        ]}
+      />
     </SafeAreaView>
   );
 }

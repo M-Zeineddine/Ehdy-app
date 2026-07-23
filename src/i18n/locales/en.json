@@ -245,7 +245,12 @@
     "draftSavedTitle": "Draft saved",
     "draftSavedMessage": "You can pick this gift up anytime from My Gifts → Drafts.",
     "draftSaveFailed": "Could not save the draft. Please try again.",
-    "paymentFailedTitle": "Payment failed"
+    "paymentFailedTitle": "Payment failed",
+    "confirmRecipientTitle": "Confirm recipient",
+    "sendingToPrefix": "Sending to ",
+    "confirmRecipientMessageNoName": "If this number is wrong, your gift can't be recovered, double-check before continuing.",
+    "changeNumberButton": "Change number",
+    "confirmContinueButton": "Yes, continue"
   },
   "receipt": {
     "title": "Receipt",

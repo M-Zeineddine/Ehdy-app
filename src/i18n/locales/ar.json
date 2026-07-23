@@ -245,7 +245,12 @@
     "draftSavedTitle": "تم حفظ المسودّة",
     "draftSavedMessage": "يمكنك متابعة هذه الهدية في أي وقت من هداياي ← المسودّات.",
     "draftSaveFailed": "تعذّر حفظ المسودّة. حاول مرة أخرى.",
-    "paymentFailedTitle": "فشل الدفع"
+    "paymentFailedTitle": "فشل الدفع",
+    "confirmRecipientTitle": "تأكيد المستلم",
+    "sendingToPrefix": "الإرسال إلى ",
+    "confirmRecipientMessageNoName": "إذا كان هذا الرقم خاطئاً، لا يمكن استرداد الهدية — تأكد قبل المتابعة.",
+    "changeNumberButton": "تغيير الرقم",
+    "confirmContinueButton": "نعم، متابعة"
   },
   "receipt": {
     "title": "الإيصال",

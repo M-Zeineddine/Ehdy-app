@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View, Image, FlatList, TouchableOpacity, StyleSheet,
   ActivityIndicator, RefreshControl, Alert,
@@ -10,6 +10,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { AppText } from '@/src/components/ui/AppText';
 import { ErrorState } from '@/src/components/ui/ErrorState';
+import { ConfirmModal } from '@/src/components/ui/ConfirmModal';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, FontSize, Fonts } from '@/src/constants/layout';
 import { getDrafts, deleteRetryDraft, type GiftDraftSummary } from '@/src/services/giftService';
@@ -96,32 +97,26 @@ function DraftRow({ draft, onDelete }: { draft: GiftDraftSummary; onDelete: () =
 
 export default function DraftsScreen() {
   const queryClient = useQueryClient();
+  const [deleteTarget, setDeleteTarget] = useState<GiftDraftSummary | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const { data, isLoading, isError, error, refetch, isRefetching } = useQuery({
     queryKey: ['gift-drafts'],
     queryFn: getDrafts,
   });
 
-  function handleDelete(draft: GiftDraftSummary) {
-    Alert.alert(
-      i18n('drafts.deleteConfirmTitle'),
-      i18n('drafts.deleteConfirmMessage'),
-      [
-        { text: i18n('common.cancel'), style: 'cancel' },
-        {
-          text: i18n('drafts.deleteButton'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteRetryDraft(draft.id);
-              queryClient.invalidateQueries({ queryKey: ['gift-drafts'] });
-            } catch (err: any) {
-              Alert.alert(i18n('error.genericTitle'), err.message);
-            }
-          },
-        },
-      ]
-    );
+  async function confirmDelete() {
+    if (!deleteTarget || deleting) return;
+    setDeleting(true);
+    try {
+      await deleteRetryDraft(deleteTarget.id);
+      queryClient.invalidateQueries({ queryKey: ['gift-drafts'] });
+      setDeleteTarget(null);
+    } catch (err: any) {
+      Alert.alert(i18n('error.genericTitle'), err.message);
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
@@ -154,10 +149,21 @@ export default function DraftsScreen() {
               <AppText variant="caption" style={styles.emptySubtitle}>{i18n('drafts.emptySubtitle')}</AppText>
             </View>
           }
-          renderItem={({ item }) => <DraftRow draft={item} onDelete={() => handleDelete(item)} />}
+          renderItem={({ item }) => <DraftRow draft={item} onDelete={() => setDeleteTarget(item)} />}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
         />
       )}
+
+      <ConfirmModal
+        visible={!!deleteTarget}
+        title={i18n('drafts.deleteConfirmTitle')}
+        message={i18n('drafts.deleteConfirmMessage')}
+        onDismiss={() => setDeleteTarget(null)}
+        actions={[
+          { text: i18n('common.cancel'), style: 'cancel', onPress: () => setDeleteTarget(null) },
+          { text: i18n('drafts.deleteButton'), style: 'destructive', onPress: confirmDelete },
+        ]}
+      />
     </SafeAreaView>
   );
 }

@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/src/components/ui/AppText';
+import { ConfirmModal } from '@/src/components/ui/ConfirmModal';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, FontSize, Fonts } from '@/src/constants/layout';
 import { useAuthStore } from '@/src/store/authStore';
@@ -11,13 +13,7 @@ import { i18n } from '@/src/i18n';
 export default function ProfileScreen() {
   const { user, clearAuth } = useAuthStore();
   const { language, setLanguage } = useLanguageStore();
-
-  function handleLogout() {
-    Alert.alert(i18n('profile.signOutConfirmTitle'), i18n('profile.signOutConfirmMessage'), [
-      { text: i18n('common.cancel'), style: 'cancel' },
-      { text: i18n('profile.signOut'), style: 'destructive', onPress: () => clearAuth() },
-    ]);
-  }
+  const [signOutVisible, setSignOutVisible] = useState(false);
 
   function handleLanguage() {
     Alert.alert(
@@ -67,11 +63,22 @@ export default function ProfileScreen() {
         </View>
 
         {/* Sign out */}
-        <TouchableOpacity style={styles.signOutBtn} onPress={handleLogout} activeOpacity={0.55}>
+        <TouchableOpacity style={styles.signOutBtn} onPress={() => setSignOutVisible(true)} activeOpacity={0.55}>
           <Ionicons name="log-out-outline" size={20} color="#E53E3E" />
           <AppText variant="body" color="#E53E3E" semiBold>{i18n('profile.signOut')}</AppText>
         </TouchableOpacity>
       </View>
+
+      <ConfirmModal
+        visible={signOutVisible}
+        title={i18n('profile.signOutConfirmTitle')}
+        message={i18n('profile.signOutConfirmMessage')}
+        onDismiss={() => setSignOutVisible(false)}
+        actions={[
+          { text: i18n('common.cancel'), style: 'cancel', onPress: () => setSignOutVisible(false) },
+          { text: i18n('profile.signOut'), style: 'destructive', onPress: () => { setSignOutVisible(false); clearAuth(); } },
+        ]}
+      />
     </SafeAreaView>
   );
 }

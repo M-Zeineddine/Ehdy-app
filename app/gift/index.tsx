@@ -17,6 +17,7 @@ import { Spacing, Radius, Fonts, FontSize } from '@/src/constants/layout';
 import { GiftCardPreview } from '@/src/components/gift/GiftCardPreview';
 import { GIFT_THEMES } from '@/src/constants/giftThemes';
 import { ContactPickerModal } from '@/src/components/gift/ContactPickerModal';
+import { ConfirmModal } from '@/src/components/ui/ConfirmModal';
 import { i18n } from '@/src/i18n';
 
 const STEP_TITLES = () => [i18n('giftFlow.stepReview'), i18n('giftFlow.stepCustomize'), i18n('giftFlow.stepCheckout')];
@@ -80,6 +81,9 @@ export default function GiftFlowScreen() {
   const [selectedTheme, setSelectedTheme] = useState('birthday');
   const [phone, setPhone] = useState('');
   const [contactPickerVisible, setContactPickerVisible] = useState(false);
+  const [confirmRecipientVisible, setConfirmRecipientVisible] = useState(false);
+  const [draftSavedVisible, setDraftSavedVisible] = useState(false);
+  const [leavePrompt, setLeavePrompt] = useState<{ visible: boolean; action: any }>({ visible: false, action: null });
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'whish'>('card');
   const [paying, setPaying] = useState(false);
   const [savingDraft, setSavingDraft] = useState(false);
@@ -124,7 +128,7 @@ export default function GiftFlowScreen() {
     setSavingDraft(true);
     try {
       await saveDraft();
-      Alert.alert(i18n('giftFlow.draftSavedTitle'), i18n('giftFlow.draftSavedMessage'));
+      setDraftSavedVisible(true);
     } catch {
       Alert.alert(i18n('error.genericTitle'), i18n('giftFlow.draftSaveFailed'));
     } finally {
@@ -231,25 +235,7 @@ export default function GiftFlowScreen() {
   const isDirty = !paymentNavigating && (fromName !== '' || toName !== '' || message !== '' || phone !== '' || selectedTheme !== 'birthday');
 
   usePreventRemove(isDirty, ({ data }) => {
-    Alert.alert(
-      i18n('giftFlow.leaveAlertTitle'),
-      i18n('giftFlow.leaveAlertMessage'),
-      [
-        { text: i18n('common.cancel'), style: 'cancel' },
-        {
-          text: i18n('giftFlow.leaveSaveButton'),
-          onPress: async () => {
-            try {
-              await saveDraft();
-            } catch {
-              // Leaving matters more than the save — don't trap the user here
-            }
-            navigation.dispatch(data.action);
-          },
-        },
-        { text: i18n('giftFlow.leaveButton'), style: 'destructive', onPress: () => navigation.dispatch(data.action) },
-      ]
-    );
+    setLeavePrompt({ visible: true, action: data.action });
   });
 
   // ── Step 1: Review ──────────────────────────────────────────────────────────
@@ -555,6 +541,66 @@ export default function GiftFlowScreen() {
         }}
       />
 
+      <ConfirmModal
+        visible={confirmRecipientVisible}
+        title={i18n('giftFlow.confirmRecipientTitle')}
+        highlight={`+961 ${phone.trim()}`}
+        emphasisLine={toName.trim() ? { prefix: i18n('giftFlow.sendingToPrefix'), value: toName.trim() } : undefined}
+        message={i18n('giftFlow.confirmRecipientMessageNoName')}
+        onDismiss={() => setConfirmRecipientVisible(false)}
+        actions={[
+          { text: i18n('giftFlow.changeNumberButton'), style: 'cancel', onPress: () => setConfirmRecipientVisible(false) },
+          {
+            text: i18n('giftFlow.confirmContinueButton'),
+            style: 'default',
+            onPress: () => {
+              setConfirmRecipientVisible(false);
+              goToStep(3);
+            },
+          },
+        ]}
+      />
+
+      <ConfirmModal
+        visible={draftSavedVisible}
+        title={i18n('giftFlow.draftSavedTitle')}
+        message={i18n('giftFlow.draftSavedMessage')}
+        onDismiss={() => setDraftSavedVisible(false)}
+        actions={[{ text: i18n('common.ok'), onPress: () => setDraftSavedVisible(false) }]}
+      />
+
+      <ConfirmModal
+        visible={leavePrompt.visible}
+        title={i18n('giftFlow.leaveAlertTitle')}
+        message={i18n('giftFlow.leaveAlertMessage')}
+        onDismiss={() => setLeavePrompt({ visible: false, action: null })}
+        actions={[
+          {
+            text: i18n('giftFlow.leaveButton'),
+            style: 'destructive',
+            onPress: () => {
+              const action = leavePrompt.action;
+              setLeavePrompt({ visible: false, action: null });
+              navigation.dispatch(action);
+            },
+          },
+          {
+            text: i18n('giftFlow.leaveSaveButton'),
+            style: 'default',
+            onPress: async () => {
+              const action = leavePrompt.action;
+              try {
+                await saveDraft();
+              } catch {
+                // Leaving matters more than the save — don't trap the user here
+              }
+              setLeavePrompt({ visible: false, action: null });
+              navigation.dispatch(action);
+            },
+          },
+        ]}
+      />
+
       {/* Bottom bar */}
       <View style={[styles.bottomBar, { paddingBottom: insets.bottom + Spacing.md }]}>
         <View style={styles.totalRow}>
@@ -578,16 +624,7 @@ export default function GiftFlowScreen() {
           style={[styles.continueBtn, paying && styles.continueBtnDisabled]}
           onPress={() => {
             if (step === 2 && phone.trim()) {
-              const displayPhone = `+961 ${phone.trim()}`;
-              const displayName = toName.trim() ? ` (${toName.trim()})` : '';
-              Alert.alert(
-                'Confirm recipient',
-                `You're sending this gift to ${displayPhone}${displayName}.\n\nIs this the right number?`,
-                [
-                  { text: 'Change number', style: 'cancel' },
-                  { text: 'Yes, continue', onPress: () => goToStep(3) },
-                ]
-              );
+              setConfirmRecipientVisible(true);
             } else if (step < 3) {
               goToStep(step + 1);
             } else {
