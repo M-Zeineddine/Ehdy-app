@@ -38,18 +38,25 @@ export interface LoginResponse {
   merchant_user: MerchantUser;
 }
 
+/** Percent change vs. the previous period, computed server-side — the app
+ *  only ever renders it, never re-derives it from raw revenue numbers. */
+export interface Trend {
+  text: string;
+  up: boolean;
+}
+
 export interface DashboardData {
-  today: { redemptions: number; revenue: number };
+  today: { redemptions: number; revenue: number; trend: Trend | null };
   yesterday: { redemptions: number; revenue: number };
-  month: { redemptions: number; revenue: number };
+  month: { redemptions: number; revenue: number; trend: Trend | null };
   last_month: { redemptions: number; revenue: number };
   failed_attempts_today: number;
   /** Purchase (sale) stats — owner-only; null for managers/staff. Not
    *  branch-scoped, since a purchase happens online, not at a branch. */
   sales: {
-    today: { sold: number; revenue: number };
+    today: { sold: number; revenue: number; trend: Trend | null };
     yesterday: { sold: number; revenue: number };
-    month: { sold: number; revenue: number };
+    month: { sold: number; revenue: number; trend: Trend | null };
     last_month: { sold: number; revenue: number };
   } | null;
   /** Owner-only */
@@ -375,6 +382,9 @@ export async function getMerchantRedemptions(params?: {
   /** Narrows further within the caller's own permitted scope; the server
    *  403s if this isn't a branch the caller already has access to. */
   branch_id?: string;
+  /** Matches redemption code, sender name, recipient name, or recipient
+   *  phone — server-side (ILIKE), never filtered client-side. */
+  search?: string;
 }): Promise<{ redemptions: RedemptionItem[]; pagination: any }> {
   const res = await merchantApi.get<{ data: RedemptionItem[]; pagination: any }>(
     '/merchant/redemptions',
@@ -390,6 +400,7 @@ export async function getMerchantRedemptionsSummary(params?: {
   type?: 'store_credit' | 'gift_item';
   status?: 'partial' | 'completed' | 'failed';
   branch_id?: string;
+  search?: string;
 }): Promise<RedemptionsSummary> {
   const res = await merchantApi.get<{ data: { summary: RedemptionsSummary } }>(
     '/merchant/redemptions/summary',
@@ -404,6 +415,9 @@ export async function getMerchantPurchases(params?: {
   limit?: number;
   period?: 'today' | 'month';
   type?: 'store_credit' | 'gift_item';
+  /** Matches sender name, recipient name, recipient phone, or redemption
+   *  code — server-side (ILIKE), never filtered client-side. */
+  search?: string;
 }): Promise<{ purchases: PurchaseItem[]; pagination: any }> {
   const res = await merchantApi.get<{ data: PurchaseItem[]; pagination: any }>(
     '/merchant/purchases',
@@ -416,6 +430,7 @@ export async function getMerchantPurchases(params?: {
 export async function getMerchantPurchasesSummary(params?: {
   period?: 'today' | 'month';
   type?: 'store_credit' | 'gift_item';
+  search?: string;
 }): Promise<PurchasesSummary> {
   const res = await merchantApi.get<{ data: { summary: PurchasesSummary } }>(
     '/merchant/purchases/summary',

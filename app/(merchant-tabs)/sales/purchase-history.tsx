@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Image, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Modal, ScrollView, Platform } from 'react-native';
+import { View, Image, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Modal, ScrollView, Platform, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
@@ -142,6 +142,16 @@ export default function PurchaseHistoryScreen() {
   const [giftType, setGiftType] = useState<GiftType>('all');
   const [selected, setSelected] = useState<PurchaseItem | null>(null);
 
+  // Debounced so typing doesn't fire a request per keystroke — search always
+  // runs server-side (sender/recipient name, phone, or redemption code),
+  // never as a client-side filter over whatever page happens to be loaded.
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput.trim()), 400);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
   // This screen is a hidden tab (not a stack push), so the tab navigator keeps
   // it mounted and reuses the same instance across visits — re-sync the local
   // filter whenever the Sales tile navigates here with a new period, instead
@@ -151,12 +161,13 @@ export default function PurchaseHistoryScreen() {
   }, [params.period]);
 
   const history = useInfiniteQuery({
-    queryKey: ['merchant-purchases', period, giftType],
+    queryKey: ['merchant-purchases', period, giftType, search],
     queryFn: ({ pageParam }) => getMerchantPurchases({
       page: pageParam,
       limit: PAGE_SIZE,
       ...(period === 'all' ? {} : { period }),
       ...(giftType === 'all' ? {} : { type: giftType }),
+      ...(search ? { search } : {}),
     }),
     initialPageParam: 1,
     getNextPageParam: (last) => {
@@ -168,10 +179,11 @@ export default function PurchaseHistoryScreen() {
   const purchases = history.data?.pages.flatMap((p) => p.purchases) ?? [];
 
   const summary = useQuery({
-    queryKey: ['merchant-purchases-summary', period, giftType],
+    queryKey: ['merchant-purchases-summary', period, giftType, search],
     queryFn: () => getMerchantPurchasesSummary({
       ...(period === 'all' ? {} : { period }),
       ...(giftType === 'all' ? {} : { type: giftType }),
+      ...(search ? { search } : {}),
     }),
   });
 
@@ -183,6 +195,24 @@ export default function PurchaseHistoryScreen() {
         </TouchableOpacity>
         <AppText variant="heading">Purchase History</AppText>
         <View style={styles.backBtn} />
+      </View>
+
+      <View style={styles.searchRow}>
+        <Ionicons name="search" size={16} color={Colors.text.tertiary} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search name, phone, or code"
+          placeholderTextColor={Colors.text.tertiary}
+          value={searchInput}
+          onChangeText={setSearchInput}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        {searchInput ? (
+          <TouchableOpacity onPress={() => setSearchInput('')} hitSlop={8}>
+            <Ionicons name="close-circle" size={16} color={Colors.text.tertiary} />
+          </TouchableOpacity>
+        ) : null}
       </View>
 
       <View style={styles.filterRow}>
@@ -261,6 +291,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg, paddingTop: Spacing.sm, paddingBottom: Spacing.sm,
   },
   backBtn: { width: 36 },
+  searchRow: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
+    marginHorizontal: Spacing.lg, marginBottom: Spacing.sm,
+    backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.border,
+    borderRadius: Radius.full, paddingHorizontal: Spacing.md, paddingVertical: 8,
+  },
+  searchInput: { flex: 1, fontFamily: Fonts.regular, fontSize: 14, color: Colors.text.primary, padding: 0 },
   filterRow: { flexDirection: 'row', gap: Spacing.sm, paddingHorizontal: Spacing.lg, marginBottom: Spacing.sm },
   filterChip: {
     paddingHorizontal: Spacing.md, paddingVertical: 6, borderRadius: Radius.full,

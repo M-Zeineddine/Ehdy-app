@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Image, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Modal, ScrollView, Platform } from 'react-native';
+import { View, Image, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Modal, ScrollView, Platform, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
@@ -7,7 +7,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/src/components/ui/AppText';
 import { Colors } from '@/src/constants/colors';
 import { Spacing, Radius, Fonts } from '@/src/constants/layout';
-import { useMerchantAuthStore } from '@/src/store/merchantAuthStore';
 import { getMerchantRedemptions, getMerchantRedemptionsSummary, getMerchantBranches, type RedemptionItem } from '@/src/services/merchantPortalService';
 
 type Period = 'today' | 'month' | 'all';
@@ -311,6 +310,16 @@ export default function RedemptionHistoryScreen() {
   const [showFilters, setShowFilters] = useState(false);
   const activeFilterCount = (giftType !== 'all' ? 1 : 0) + (status !== 'all' ? 1 : 0) + (branchId !== null ? 1 : 0);
 
+  // Debounced so typing doesn't fire a request per keystroke — the search
+  // itself always runs server-side (redemption code / customer name/phone),
+  // never as a client-side filter over whatever page happens to be loaded.
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput.trim()), 400);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
   // This screen is a hidden tab (not a stack push), so the tab navigator keeps
   // it mounted and reuses the same instance across visits — re-sync the local
   // filters whenever the Sales screen navigates here with new params, instead
@@ -321,20 +330,17 @@ export default function RedemptionHistoryScreen() {
   }, [params.period, params.status]);
 
   // Owners see every branch; a manager only ever sees their own assigned
-  // branches here — anything else 403s server-side, so don't even offer it.
-  const merchantUser = useMerchantAuthStore((s) => s.merchantUser);
-  const scopedIds = merchantUser?.branch_ids;
-  const { data: allBranches } = useQuery({
+  // branches here — anything else 403s server-side. /merchant/branches
+  // already scopes the response to the caller's permitted branch_ids, so
+  // nothing further needs filtering client-side.
+  const { data: selectableBranches = [] } = useQuery({
     queryKey: ['merchant-branches'],
     queryFn: getMerchantBranches,
     staleTime: 5 * 60_000,
   });
-  const selectableBranches = scopedIds?.length
-    ? (allBranches ?? []).filter((b) => scopedIds.includes(b.id))
-    : (allBranches ?? []);
 
   const history = useInfiniteQuery({
-    queryKey: ['merchant-redemptions', period, giftType, status, branchId],
+    queryKey: ['merchant-redemptions', period, giftType, status, branchId, search],
     queryFn: ({ pageParam }) => getMerchantRedemptions({
       page: pageParam,
       limit: PAGE_SIZE,
@@ -342,6 +348,7 @@ export default function RedemptionHistoryScreen() {
       ...(giftType === 'all' ? {} : { type: giftType }),
       ...(status === 'all' ? {} : { status }),
       ...(branchId ? { branch_id: branchId } : {}),
+      ...(search ? { search } : {}),
     }),
     initialPageParam: 1,
     getNextPageParam: (last) => {
@@ -356,12 +363,13 @@ export default function RedemptionHistoryScreen() {
   // server-side, not by summing loaded rows (pagination only ever holds one
   // page in memory, so a client-side sum would silently undercount).
   const summary = useQuery({
-    queryKey: ['merchant-redemptions-summary', period, giftType, status, branchId],
+    queryKey: ['merchant-redemptions-summary', period, giftType, status, branchId, search],
     queryFn: () => getMerchantRedemptionsSummary({
       ...(period === 'all' ? {} : { period }),
       ...(giftType === 'all' ? {} : { type: giftType }),
       ...(status === 'all' ? {} : { status }),
       ...(branchId ? { branch_id: branchId } : {}),
+      ...(search ? { search } : {}),
     }),
   });
 
@@ -373,6 +381,24 @@ export default function RedemptionHistoryScreen() {
         </TouchableOpacity>
         <AppText variant="heading">Redemption History</AppText>
         <View style={styles.backBtn} />
+      </View>
+
+      <View style={styles.searchRow}>
+        <Ionicons name="search" size={16} color={Colors.text.tertiary} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search code, name, or phone"
+          placeholderTextColor={Colors.text.tertiary}
+          value={searchInput}
+          onChangeText={setSearchInput}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        {searchInput ? (
+          <TouchableOpacity onPress={() => setSearchInput('')} hitSlop={8}>
+            <Ionicons name="close-circle" size={16} color={Colors.text.tertiary} />
+          </TouchableOpacity>
+        ) : null}
       </View>
 
       <View style={[styles.filterRow, { alignItems: 'center' }]}>
@@ -472,6 +498,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg, paddingTop: Spacing.sm, paddingBottom: Spacing.sm,
   },
   backBtn: { width: 36 },
+  searchRow: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.sm,
+    marginHorizontal: Spacing.lg, marginBottom: Spacing.sm,
+    backgroundColor: Colors.card, borderWidth: 1, borderColor: Colors.border,
+    borderRadius: Radius.full, paddingHorizontal: Spacing.md, paddingVertical: 8,
+  },
+  searchInput: { flex: 1, fontFamily: Fonts.regular, fontSize: 14, color: Colors.text.primary, padding: 0 },
   filterRow: { flexDirection: 'row', gap: Spacing.sm, paddingHorizontal: Spacing.lg, marginBottom: Spacing.sm },
   filterChip: {
     paddingHorizontal: Spacing.md, paddingVertical: 6, borderRadius: Radius.full,

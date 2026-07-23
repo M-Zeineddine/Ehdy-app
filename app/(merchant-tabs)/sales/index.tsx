@@ -10,6 +10,7 @@ import { useMerchantAuthStore } from '@/src/store/merchantAuthStore';
 import {
   getMerchantDashboard, getMerchantBranches,
   getMerchantRedemptionsSummary, getMerchantPurchasesSummary, getMerchantActiveCodesSummary,
+  type Trend,
 } from '@/src/services/merchantPortalService';
 
 function money(amount: number) {
@@ -22,17 +23,7 @@ function moneyCompact(amount: number) {
   return money(amount);
 }
 
-// Percent change vs the previous period. Null means "nothing to compare"
-// (both periods empty) — showing "+0%" there would read as a real number
-// when it's really just an absence of data.
-function trend(current: number, previous: number): { text: string; up: boolean } | null {
-  if (previous === 0 && current === 0) return null;
-  if (previous === 0) return { text: 'New', up: true };
-  const pct = ((current - previous) / previous) * 100;
-  return { text: `${pct >= 0 ? '+' : ''}${pct.toFixed(0)}%`, up: pct >= 0 };
-}
-
-function TrendBadge({ t }: { t: { text: string; up: boolean } | null }) {
+function TrendBadge({ t }: { t: Trend | null }) {
   if (!t) return null;
   const color = t.up ? '#16A34A' : '#DC2626';
   return (
@@ -54,7 +45,7 @@ function PeriodTile({
   count: number;
   countLabel: string;
   revenue: number;
-  trendPct: { text: string; up: boolean } | null;
+  trendPct: Trend | null;
   onPress: () => void;
 }) {
   return (
@@ -121,7 +112,10 @@ export default function MerchantSalesScreen() {
   });
   const data = dashboard.data;
 
-  // Branch-scoped users see stats for their branches only — say so in the header
+  // Branch-scoped users see stats for their branches only — say so in the
+  // header. The server already scopes /merchant/branches to the caller's
+  // permitted branch_ids, so whatever comes back here needs no further
+  // client-side filtering.
   const scopedIds = merchantUser?.branch_ids;
   const { data: branches } = useQuery({
     queryKey: ['merchant-branches'],
@@ -129,9 +123,7 @@ export default function MerchantSalesScreen() {
     staleTime: 5 * 60_000,
     enabled: !!scopedIds?.length,
   });
-  const scopeNames = scopedIds?.length
-    ? (branches ?? []).filter((b) => scopedIds.includes(b.id)).map((b) => b.name).join(', ')
-    : null;
+  const scopeNames = scopedIds?.length ? (branches ?? []).map((b) => b.name).join(', ') : null;
 
   function goToRedemptions(period: 'today' | 'month' | 'all', status?: 'failed') {
     router.push({ pathname: '/(merchant-tabs)/sales/redemption-history', params: { period, ...(status ? { status } : {}) } });
@@ -205,13 +197,13 @@ export default function MerchantSalesScreen() {
         <PeriodTile
           icon="checkmark-circle" label="Today"
           count={data?.today.redemptions ?? 0} countLabel="redemptions" revenue={data?.today.revenue ?? 0}
-          trendPct={data ? trend(data.today.revenue, data.yesterday.revenue) : null}
+          trendPct={data?.today.trend ?? null}
           onPress={() => goToRedemptions('today')}
         />
         <PeriodTile
           icon="calendar" label="This month"
           count={data?.month.redemptions ?? 0} countLabel="redemptions" revenue={data?.month.revenue ?? 0}
-          trendPct={data ? trend(data.month.revenue, data.last_month.revenue) : null}
+          trendPct={data?.month.trend ?? null}
           onPress={() => goToRedemptions('month')}
         />
 
@@ -222,13 +214,13 @@ export default function MerchantSalesScreen() {
             <PeriodTile
               icon="pricetag" label="Sold today"
               count={data.sales.today.sold} countLabel="sold" revenue={data.sales.today.revenue}
-              trendPct={trend(data.sales.today.revenue, data.sales.yesterday.revenue)}
+              trendPct={data.sales.today.trend}
               onPress={() => goToPurchases('today')}
             />
             <PeriodTile
               icon="pricetag" label="Sold this month"
               count={data.sales.month.sold} countLabel="sold" revenue={data.sales.month.revenue}
-              trendPct={trend(data.sales.month.revenue, data.sales.last_month.revenue)}
+              trendPct={data.sales.month.trend}
               onPress={() => goToPurchases('month')}
             />
           </>
