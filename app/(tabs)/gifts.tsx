@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery, keepPreviousData } from '@tanstack/react-query';
 
 import { AppText } from '@/src/components/ui/AppText';
 import { ErrorState } from '@/src/components/ui/ErrorState';
@@ -204,28 +204,39 @@ function EmptyState({ mode }: { mode: 'sent' | 'received' }) {
 
 type Tab = 'sent' | 'received';
 type SortOrder = 'desc' | 'asc';
+type SortBy = 'date' | 'price';
 type StatusFilter = 'active' | 'partially_redeemed' | 'redeemed' | null;
 
 export default function GiftsScreen() {
   const [activeTab, setActiveTab] = useState<Tab>('sent');
+  const [sortBy, setSortBy] = useState<SortBy>('date');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(null);
 
   // One cache entry per sort/filter combination — a slow response for an old
   // combination can never overwrite a newer one (the old hand-rolled fetch raced)
   const sentQuery = useInfiniteQuery({
-    queryKey: ['gifts', 'sent', sortOrder],
-    queryFn: ({ pageParam }) => getSentGifts(pageParam, sortOrder),
+    queryKey: ['gifts', 'sent', sortOrder, sortBy],
+    // Forwarding React Query's own AbortSignal lets it cancel a still-in-flight
+    // request for a now-obsolete filter combo (e.g. rapid taps on sort/status)
+    // instead of letting a stale response race a fresher one into state.
+    queryFn: ({ pageParam, signal }) => getSentGifts(pageParam, sortOrder, sortBy, signal),
     initialPageParam: 1,
     getNextPageParam: (last) =>
       last.pagination.page < last.pagination.pages ? last.pagination.page + 1 : undefined,
+    // Keep showing the previous filter's results while a not-yet-cached
+    // combo loads, instead of unmounting the list for a spinner that sits
+    // centered in the leftover space — which read as a big empty gap right
+    // under the filter rows.
+    placeholderData: keepPreviousData,
   });
   const receivedQuery = useInfiniteQuery({
-    queryKey: ['gifts', 'received', sortOrder, statusFilter],
-    queryFn: ({ pageParam }) => getReceivedGifts(pageParam, sortOrder, statusFilter ?? undefined),
+    queryKey: ['gifts', 'received', sortOrder, sortBy, statusFilter],
+    queryFn: ({ pageParam, signal }) => getReceivedGifts(pageParam, sortOrder, statusFilter ?? undefined, sortBy, signal),
     initialPageParam: 1,
     getNextPageParam: (last) =>
       last.pagination.page < last.pagination.pages ? last.pagination.page + 1 : undefined,
+    placeholderData: keepPreviousData,
   });
 
   const activeQuery = activeTab === 'sent' ? sentQuery : receivedQuery;
@@ -284,6 +295,21 @@ export default function GiftsScreen() {
 
       {/* Sort + Filter bar */}
       <View style={styles.controlBar}>
+        <View style={styles.sortByGroup}>
+          {(['date', 'price'] as SortBy[]).map(s => (
+            <TouchableOpacity
+              key={s}
+              style={[styles.filterChip, sortBy === s && styles.filterChipActive]}
+              onPress={() => { setSortBy(s); setSortOrder('desc'); }}
+              activeOpacity={0.7}
+            >
+              <AppText style={[styles.filterChipText, sortBy === s && styles.filterChipTextActive]}>
+                {s === 'date' ? i18n('gifts.sortByDate') : i18n('gifts.sortByPrice')}
+              </AppText>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         <TouchableOpacity
           style={styles.sortBtn}
           onPress={() => setSortOrder(o => o === 'desc' ? 'asc' : 'desc')}
@@ -295,31 +321,34 @@ export default function GiftsScreen() {
             color={Colors.text.secondary}
           />
           <AppText style={styles.sortBtnText}>
-            {sortOrder === 'desc' ? i18n('gifts.sortNewest') : i18n('gifts.sortOldest')}
+            {sortBy === 'date'
+              ? (sortOrder === 'desc' ? i18n('gifts.sortNewest') : i18n('gifts.sortOldest'))
+              : (sortOrder === 'desc' ? i18n('gifts.sortPriceHigh') : i18n('gifts.sortPriceLow'))}
           </AppText>
         </TouchableOpacity>
-
-        {activeTab === 'received' && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.filterScrollContent}
-          >
-            {([null, 'active', 'partially_redeemed', 'redeemed'] as StatusFilter[]).map(s => (
-              <TouchableOpacity
-                key={s ?? 'all'}
-                style={[styles.filterChip, statusFilter === s && styles.filterChipActive]}
-                onPress={() => setStatusFilter(s)}
-                activeOpacity={0.7}
-              >
-                <AppText style={[styles.filterChipText, statusFilter === s && styles.filterChipTextActive]}>
-                  {s === null ? i18n('gifts.filterAll') : i18n(STATUS_CONFIG[s].labelKey)}
-                </AppText>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        )}
       </View>
+
+      {activeTab === 'received' && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterScrollContent}
+          style={styles.statusFilterRow}
+        >
+          {([null, 'active', 'partially_redeemed', 'redeemed'] as StatusFilter[]).map(s => (
+            <TouchableOpacity
+              key={s ?? 'all'}
+              style={[styles.filterChip, statusFilter === s && styles.filterChipActive]}
+              onPress={() => setStatusFilter(s)}
+              activeOpacity={0.7}
+            >
+              <AppText style={[styles.filterChipText, statusFilter === s && styles.filterChipTextActive]}>
+                {s === null ? i18n('gifts.filterAll') : i18n(STATUS_CONFIG[s].labelKey)}
+              </AppText>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
 
       {/* Content */}
       {activeQuery.isLoading ? (
@@ -518,8 +547,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.md,
-    marginBottom: Spacing.sm,
+    marginBottom: 0,
     gap: Spacing.sm,
+  },
+  statusFilterRow: {
+    marginTop: -6,
+    marginBottom: -6,
+  },
+  sortByGroup: {
+    flexDirection: 'row',
+    gap: 6,
+    flexShrink: 0,
   },
   sortBtn: {
     flexDirection: 'row',
@@ -539,6 +577,7 @@ const styles = StyleSheet.create({
   filterScrollContent: {
     alignItems: 'center',
     gap: 6,
+    paddingHorizontal: Spacing.md,
   },
   filterChip: {
     paddingVertical: 6,

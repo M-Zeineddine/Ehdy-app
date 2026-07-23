@@ -89,7 +89,8 @@ describe('getSentGifts', () => {
     await getSentGifts();
 
     expect(api.get).toHaveBeenCalledWith('/gifts/sent', {
-      params: { page: 1, limit: 20, sort_order: 'desc' },
+      params: { page: 1, limit: 20, sort_order: 'desc', sort_by: 'date' },
+      signal: undefined,
     });
   });
 
@@ -99,7 +100,8 @@ describe('getSentGifts', () => {
     await getSentGifts(3, 'asc');
 
     expect(api.get).toHaveBeenCalledWith('/gifts/sent', {
-      params: { page: 3, limit: 20, sort_order: 'asc' },
+      params: { page: 3, limit: 20, sort_order: 'asc', sort_by: 'date' },
+      signal: undefined,
     });
   });
 

@@ -162,8 +162,13 @@ export interface GiftListResult {
 export async function getSentGifts(
   page = 1,
   sortOrder: 'asc' | 'desc' = 'desc',
+  sortBy: 'date' | 'price' = 'date',
+  signal?: AbortSignal,
 ): Promise<GiftListResult> {
-  const res = await api.get('/gifts/sent', { params: { page, limit: 20, sort_order: sortOrder } });
+  const res = await api.get('/gifts/sent', {
+    params: { page, limit: 20, sort_order: sortOrder, sort_by: sortBy },
+    signal,
+  });
   return { data: res.data.data, pagination: res.data.pagination };
 }
 
@@ -231,14 +236,18 @@ export async function getReceivedGifts(
   page = 1,
   sortOrder: 'asc' | 'desc' = 'desc',
   redemptionStatus?: 'active' | 'partially_redeemed' | 'redeemed',
+  sortBy: 'date' | 'price' = 'date',
+  signal?: AbortSignal,
 ): Promise<GiftListResult> {
   const res = await api.get('/gifts/received', {
     params: {
       page,
       limit: 20,
       sort_order: sortOrder,
+      sort_by: sortBy,
       ...(redemptionStatus ? { redemption_status: redemptionStatus } : {}),
     },
+    signal,
   });
   return { data: res.data.data, pagination: res.data.pagination };
 }
