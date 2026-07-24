@@ -37,6 +37,23 @@ export async function getMe() {
   return res.data.data.user;
 }
 
+export async function updateProfile(updates: Partial<User>): Promise<User> {
+  const res = await api.put<{ data: { user: User } }>('/users/me', updates);
+  return res.data.data.user;
+}
+
+export async function uploadAvatar(uri: string): Promise<User> {
+  const name = uri.split('/').pop() ?? 'avatar.jpg';
+  const ext = name.split('.').pop()?.toLowerCase();
+  const type = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+  const form = new FormData();
+  form.append('image', { uri, name, type } as any);
+  const res = await api.post<{ data: { user: User } }>('/users/me/avatar', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return res.data.data.user;
+}
+
 export async function refreshToken(refresh_token: string) {
   const res = await api.post<{ data: { access_token: string } }>('/auth/refresh', { refresh_token });
   return res.data.data.access_token;

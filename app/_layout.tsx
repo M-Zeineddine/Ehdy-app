@@ -110,6 +110,7 @@ export default function RootLayout() {
             <Stack.Screen name="(merchant-tabs)" />
             <Stack.Screen name="merchant/[id]" />
             <Stack.Screen name="gift" />
+            <Stack.Screen name="profile" />
           </Stack>
           <StatusBar style="dark" />
         </View>

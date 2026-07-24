@@ -60,6 +60,8 @@ export interface User {
   first_name: string;
   last_name: string;
   phone?: string | null;
+  profile_picture_url?: string | null;
+  date_of_birth?: string | null;
   is_email_verified: boolean;
   is_phone_verified?: boolean;
 }

@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { Image } from 'expo-image';
 import { AppText } from '@/src/components/ui/AppText';
 import { ConfirmModal } from '@/src/components/ui/ConfirmModal';
 import { Colors } from '@/src/constants/colors';
@@ -11,6 +13,7 @@ import { useLanguageStore, type AppLanguage } from '@/src/store/languageStore';
 import { i18n } from '@/src/i18n';
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { user, clearAuth } = useAuthStore();
   const { language, setLanguage } = useLanguageStore();
   const [signOutVisible, setSignOutVisible] = useState(false);
@@ -44,18 +47,22 @@ export default function ProfileScreen() {
 
         {/* Avatar + name */}
         <View style={styles.avatarSection}>
-          <View style={styles.avatar}>
-            <AppText style={styles.avatarText}>
-              {user?.first_name?.[0]?.toUpperCase()}{user?.last_name?.[0]?.toUpperCase()}
-            </AppText>
-          </View>
+          {user?.profile_picture_url ? (
+            <Image source={{ uri: user.profile_picture_url }} style={styles.avatar} contentFit="cover" />
+          ) : (
+            <View style={styles.avatar}>
+              <AppText style={styles.avatarText}>
+                {user?.first_name?.[0]?.toUpperCase()}{user?.last_name?.[0]?.toUpperCase()}
+              </AppText>
+            </View>
+          )}
           <AppText variant="subheading">{user?.first_name} {user?.last_name}</AppText>
           <AppText variant="body" color={Colors.text.secondary}>{user?.email}</AppText>
         </View>
 
         {/* Menu items */}
         <View style={styles.menu}>
-          <MenuItem icon="person-outline" label={i18n('profile.editProfile')} onPress={() => {}} />
+          <MenuItem icon="person-outline" label={i18n('profile.editProfile')} onPress={() => router.push('/profile/edit')} />
           <MenuItem icon="notifications-outline" label={i18n('profile.notifications')} onPress={() => {}} />
           <MenuItem icon="shield-checkmark-outline" label={i18n('profile.privacySecurity')} onPress={() => {}} />
           <MenuItem icon="help-circle-outline" label={i18n('profile.helpSupport')} onPress={() => {}} />
